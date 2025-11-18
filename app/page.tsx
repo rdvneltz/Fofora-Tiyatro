@@ -3,7 +3,31 @@
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { Scale, Users, FileText, Phone, Mail, MapPin, Award, Shield, Clock, ChevronRight, Star, BookOpen } from 'lucide-react'
 import Image from 'next/image'
-import { useRef } from 'react'
+import { useRef, useEffect, useState } from 'react'
+import axios from 'axios'
+
+interface HeroData {
+  title: string
+  subtitle: string
+  description: string
+  buttonText: string
+  buttonLink: string
+}
+
+interface Service {
+  id: string
+  title: string
+  description: string
+  icon: string
+}
+
+interface TeamMember {
+  id: string
+  name: string
+  title: string
+  bio: string
+  image: string
+}
 
 export default function Home() {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -15,38 +39,45 @@ export default function Home() {
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
   const scale = useTransform(scrollYProgress, [0, 0.5], [1, 0.8])
 
-  const services = [
-    {
-      icon: <Scale className="w-8 h-8" />,
-      title: "Ticaret Hukuku",
-      description: "Şirket kuruluşu, birleşme, devralma ve ticari dava süreçlerinde profesyonel danışmanlık"
-    },
-    {
-      icon: <FileText className="w-8 h-8" />,
-      title: "Sözleşme Hukuku",
-      description: "Her türlü sözleşmenin hazırlanması, incelenmesi ve müzakere süreçlerinde hukuki destek"
-    },
-    {
-      icon: <Shield className="w-8 h-8" />,
-      title: "Ceza Hukuku",
-      description: "Ceza davalarında savunma, suç mağdurları için hukuki destek ve müşteki vekâleti"
-    },
-    {
-      icon: <Users className="w-8 h-8" />,
-      title: "Aile Hukuku",
-      description: "Boşanma, velayet, nafaka ve mal paylaşımı konularında uzman hukuki danışmanlık"
-    },
-    {
-      icon: <Award className="w-8 h-8" />,
-      title: "İş ve Sosyal Güvenlik Hukuku",
-      description: "İşçi ve işveren haklarının korunması, iş sözleşmeleri ve tazminat davaları"
-    },
-    {
-      icon: <BookOpen className="w-8 h-8" />,
-      title: "Gayrimenkul Hukuku",
-      description: "Tapu işlemleri, kira sözleşmeleri, tahliye ve gayrimenkul alım-satım süreçleri"
+  const [hero, setHero] = useState<HeroData>({
+    title: 'MÜREKKEP HUKUK',
+    subtitle: 'Adaletin Kalemi',
+    description: 'Hukuki haklarınız için güvenilir, profesyonel ve etkili çözümler sunuyoruz',
+    buttonText: 'Ücretsiz Danışmanlık',
+    buttonLink: '#contact'
+  })
+
+  const [services, setServices] = useState<Service[]>([])
+  const [team, setTeam] = useState<TeamMember[]>([])
+
+  useEffect(() => {
+    // Hero verilerini çek
+    axios.get('/api/hero').then(({ data }) => {
+      if (data) setHero(data)
+    }).catch(() => {})
+
+    // Hizmetleri çek
+    axios.get('/api/services').then(({ data }) => {
+      if (data && data.length > 0) setServices(data)
+    }).catch(() => {})
+
+    // Ekip üyelerini çek
+    axios.get('/api/team').then(({ data }) => {
+      if (data && data.length > 0) setTeam(data)
+    }).catch(() => {})
+  }, [])
+
+  const getIcon = (iconName: string) => {
+    const icons: any = {
+      Scale: <Scale className="w-8 h-8" />,
+      FileText: <FileText className="w-8 h-8" />,
+      Shield: <Shield className="w-8 h-8" />,
+      Users: <Users className="w-8 h-8" />,
+      Award: <Award className="w-8 h-8" />,
+      BookOpen: <BookOpen className="w-8 h-8" />,
     }
-  ]
+    return icons[iconName] || <Scale className="w-8 h-8" />
+  }
 
   return (
     <div ref={containerRef} className="min-h-screen bg-navy-900">
@@ -81,7 +112,7 @@ export default function Home() {
             transition={{ duration: 1, delay: 0.4 }}
             className="text-6xl md:text-8xl font-bold mb-6 gradient-text"
           >
-            MÜREKKEP HUKUK
+            {hero.title}
           </motion.h1>
 
           <motion.p
@@ -90,7 +121,7 @@ export default function Home() {
             transition={{ duration: 1, delay: 0.6 }}
             className="text-2xl md:text-3xl text-white/90 mb-4"
           >
-            Adaletin Kalemi
+            {hero.subtitle}
           </motion.p>
 
           <motion.p
@@ -99,20 +130,21 @@ export default function Home() {
             transition={{ duration: 1, delay: 0.8 }}
             className="text-lg md:text-xl text-gold-300 mb-12 max-w-3xl mx-auto"
           >
-            Hukuki haklarınız için güvenilir, profesyonel ve etkili çözümler sunuyoruz
+            {hero.description}
           </motion.p>
 
-          <motion.button
+          <motion.a
+            href={hero.buttonLink}
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 1 }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="bg-gradient-to-r from-gold-600 to-gold-500 text-white px-10 py-4 rounded-full font-semibold text-lg hover:from-gold-700 hover:to-gold-600 transition-all shadow-2xl flex items-center gap-2 mx-auto"
+            className="bg-gradient-to-r from-gold-600 to-gold-500 text-white px-10 py-4 rounded-full font-semibold text-lg hover:from-gold-700 hover:to-gold-600 transition-all shadow-2xl inline-flex items-center gap-2"
           >
-            Ücretsiz Danışmanlık
+            {hero.buttonText}
             <ChevronRight className="w-5 h-5" />
-          </motion.button>
+          </motion.a>
         </motion.div>
 
         <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2">
@@ -143,9 +175,9 @@ export default function Home() {
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {services.map((service, index) => (
+            {services.length > 0 ? services.map((service, index) => (
               <motion.div
-                key={index}
+                key={service.id}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -154,75 +186,73 @@ export default function Home() {
                 className="glass rounded-2xl p-8 hover:bg-white/20 transition-all group"
               >
                 <div className="text-gold-500 mb-6 transform group-hover:scale-110 transition-transform">
-                  {service.icon}
+                  {getIcon(service.icon)}
                 </div>
                 <h3 className="text-2xl font-bold text-white mb-4">{service.title}</h3>
                 <p className="text-white/70 leading-relaxed">{service.description}</p>
               </motion.div>
-            ))}
+            )) : (
+              <div className="col-span-3 text-center text-white/70">
+                Henüz hizmet eklenmemiş. Admin panelden hizmet ekleyebilirsiniz.
+              </div>
+            )}
           </div>
         </div>
       </section>
 
       {/* About Section */}
-      <section className="py-24 px-4 bg-gradient-to-b from-navy-800 to-navy-900">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-            >
-              <Image
-                src="/assets/av-faruk-celep-foto.jpeg"
-                alt="Av. Faruk Celep"
-                width={600}
-                height={800}
-                className="rounded-2xl shadow-2xl"
-              />
-            </motion.div>
+      {team.length > 0 && (
+        <section className="py-24 px-4 bg-gradient-to-b from-navy-800 to-navy-900">
+          <div className="max-w-7xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+              <motion.div
+                initial={{ opacity: 0, x: -50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+              >
+                <Image
+                  src={team[0].image}
+                  alt={team[0].name}
+                  width={600}
+                  height={800}
+                  className="rounded-2xl shadow-2xl"
+                />
+              </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, x: 50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-            >
-              <h2 className="text-5xl font-bold text-white mb-6">Av. Faruk Celep</h2>
-              <div className="w-24 h-1 bg-gradient-to-r from-gold-600 to-gold-400 mb-8"></div>
+              <motion.div
+                initial={{ opacity: 0, x: 50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+              >
+                <h2 className="text-5xl font-bold text-white mb-6">{team[0].name}</h2>
+                <div className="w-24 h-1 bg-gradient-to-r from-gold-600 to-gold-400 mb-8"></div>
+                <p className="text-gold-400 text-xl mb-6">{team[0].title}</p>
 
-              <div className="space-y-6 text-white/80 text-lg leading-relaxed">
-                <p>
-                  Mürekkep Hukuk Bürosu, yılların deneyimi ve uzmanlığıyla müvekkillerine
-                  en kaliteli hukuki hizmeti sunma misyonuyla hareket eder.
-                </p>
-                <p>
-                  Hukuk alanında edindiğimiz derin bilgi birikimi ve güncel yaklaşımlarımızla,
-                  her davayı özenle ele alıyor ve müvekkillerimizin haklarını en iyi şekilde koruyoruz.
-                </p>
-                <p>
-                  Dürüstlük, şeffaflık ve profesyonellik ilkelerimiz doğrultusunda,
-                  sizlere güvenilir bir hukuki danışman olmaktan gurur duyuyoruz.
-                </p>
-              </div>
+                <div className="space-y-6 text-white/80 text-lg leading-relaxed">
+                  <p>{team[0].bio}</p>
+                </div>
 
-              <div className="grid grid-cols-3 gap-6 mt-12">
-                <div className="text-center">
-                  <div className="text-4xl font-bold text-gold-500 mb-2">15+</div>
-                  <div className="text-white/60">Yıl Tecrübe</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-4xl font-bold text-gold-500 mb-2">500+</div>
-                  <div className="text-white/60">Başarılı Dava</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-4xl font-bold text-gold-500 mb-2">100%</div>
-                  <div className="text-white/60">Memnuniyet</div>
-                </div>
-              </div>
-            </motion.div>
+                {team[0].email || team[0].phone ? (
+                  <div className="mt-8 space-y-2">
+                    {team[0].email && (
+                      <p className="text-white/70">
+                        <Mail className="w-5 h-5 inline mr-2" />
+                        {team[0].email}
+                      </p>
+                    )}
+                    {team[0].phone && (
+                      <p className="text-white/70">
+                        <Phone className="w-5 h-5 inline mr-2" />
+                        {team[0].phone}
+                      </p>
+                    )}
+                  </div>
+                ) : null}
+              </motion.div>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Testimonials Section */}
       <section className="py-24 px-4 bg-gradient-to-b from-navy-900 to-navy-800">
