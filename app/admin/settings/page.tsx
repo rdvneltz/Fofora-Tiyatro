@@ -15,7 +15,12 @@ export default function SettingsPage() {
         </div>
 
         <div className="glass rounded-xl p-8">
-          <p className="text-white/70">Bu sayfa yakında eklenecek...</p>
+          <div className="text-center py-12">
+            <div className="text-6xl mb-4">⚙️</div>
+            <h2 className="text-2xl font-bold text-white mb-4">Ayarlar Modülü</h2>
+            <p className="text-white/70 mb-6">Site genelini buradan yapılandırabileceksiniz.</p>
+            <p className="text-gold-400">Çok yakında...</p>
+          </div>
         </div>
       </div>
     </div>
