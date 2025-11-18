@@ -5,6 +5,7 @@ import { Scale, Users, FileText, Phone, Mail, MapPin, Award, Shield, Clock, Chev
 import Image from 'next/image'
 import { useRef, useEffect, useState } from 'react'
 import axios from 'axios'
+import Navbar from '@/components/Navbar'
 
 interface HeroData {
   title: string
@@ -115,40 +116,20 @@ export default function Home() {
 
   return (
     <div ref={containerRef} className="min-h-screen bg-navy-900">
+      <Navbar />
+
       {/* Hero Section */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden">
-        {/* Animated Background */}
-        <div className="absolute inset-0 animated-gradient">
-          {/* Overlay circles */}
-          <div className="absolute top-0 left-0 w-96 h-96 bg-gold-600/20 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-0 right-0 w-96 h-96 bg-navy-600/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gold-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
-
+      <section id="hero" className="relative h-screen flex items-center justify-center overflow-hidden">
+        {/* Full Screen Video Background */}
+        <div className="absolute inset-0">
+          <iframe
+            src="https://www.youtube.com/embed/nIl0V9p5Y08?autoplay=1&mute=1&loop=1&playlist=nIl0V9p5Y08&controls=0&showinfo=0&rel=0&modestbranding=1"
+            className="absolute top-1/2 left-1/2 w-[177.77vh] h-[56.25vw] min-w-full min-h-full -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+            allow="autoplay; encrypted-media"
+            style={{ border: 'none' }}
+          />
           {/* Dark overlay for better text readability */}
-          <div className="absolute inset-0 bg-gradient-to-b from-navy-900/60 via-navy-800/70 to-navy-900/80"></div>
-
-          {/* Animated grid pattern */}
-          <div className="absolute inset-0 opacity-20">
-            {[...Array(20)].map((_, i) => (
-              <motion.div
-                key={i}
-                className="absolute w-1 h-1 bg-gold-400 rounded-full"
-                style={{
-                  top: `${Math.random() * 100}%`,
-                  left: `${Math.random() * 100}%`,
-                }}
-                animate={{
-                  opacity: [0.2, 0.8, 0.2],
-                  scale: [1, 1.5, 1],
-                }}
-                transition={{
-                  duration: 3 + Math.random() * 2,
-                  repeat: Infinity,
-                  delay: Math.random() * 2,
-                }}
-              />
-            ))}
-          </div>
+          <div className="absolute inset-0 bg-gradient-to-b from-navy-900/70 via-navy-900/60 to-navy-900/80"></div>
         </div>
 
         <motion.div
@@ -156,44 +137,27 @@ export default function Home() {
           className="relative z-10 text-center px-4 max-w-6xl mx-auto"
         >
           <motion.div
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1, delay: 0.2, type: "spring", stiffness: 100 }}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.2 }}
             className="mb-12"
           >
-            <motion.div
-              animate={{
-                scale: [1, 1.05, 1],
-                filter: ["drop-shadow(0 0 20px rgba(193, 154, 107, 0.5))", "drop-shadow(0 0 40px rgba(193, 154, 107, 0.8))", "drop-shadow(0 0 20px rgba(193, 154, 107, 0.5))"]
-              }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <Image
-                src="/assets/murekkep-logo-saydam.png"
-                alt="Mürekkep Hukuk"
-                width={200}
-                height={200}
-                className="mx-auto"
-              />
-            </motion.div>
+            <Image
+              src="/assets/murekkep-logo-saydam.png"
+              alt="Mürekkep Hukuk"
+              width={200}
+              height={200}
+              className="mx-auto drop-shadow-2xl"
+            />
           </motion.div>
 
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.4 }}
-            className="text-6xl md:text-8xl font-bold mb-6"
+            className="text-6xl md:text-8xl font-bold mb-6 gradient-text"
           >
-            <motion.span
-              className="bg-gradient-to-r from-gold-300 via-gold-500 to-gold-300 bg-clip-text text-transparent"
-              animate={{
-                backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
-              }}
-              transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
-              style={{ backgroundSize: "200% auto" }}
-            >
-              {hero.title}
-            </motion.span>
+            {hero.title}
           </motion.h1>
 
           <motion.p
@@ -219,26 +183,12 @@ export default function Home() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 1 }}
-            whileHover={{
-              scale: 1.1,
-              boxShadow: "0 0 40px rgba(193, 154, 107, 0.8)",
-            }}
+            whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="relative bg-gradient-to-r from-gold-600 to-gold-500 text-white px-10 py-4 rounded-full font-semibold text-lg transition-all shadow-2xl inline-flex items-center gap-2 overflow-hidden group"
+            className="bg-gradient-to-r from-gold-600 to-gold-500 text-white px-10 py-4 rounded-full font-semibold text-lg shadow-xl inline-flex items-center gap-2 hover:from-gold-700 hover:to-gold-600 transition-all"
           >
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-              animate={{
-                x: ["-100%", "100%"],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: "linear",
-              }}
-            />
-            <span className="relative z-10">{hero.buttonText}</span>
-            <ChevronRight className="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform" />
+            {hero.buttonText}
+            <ChevronRight className="w-5 h-5" />
           </motion.a>
         </motion.div>
 
@@ -254,7 +204,7 @@ export default function Home() {
       </section>
 
       {/* Services Section */}
-      <section className="py-24 px-4 bg-gradient-to-b from-navy-900 to-navy-800">
+      <section id="services" className="py-24 px-4 bg-gradient-to-b from-navy-900 to-navy-800">
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -304,10 +254,20 @@ export default function Home() {
         </div>
       </section>
 
-      {/* About Section */}
+      {/* Team Section */}
       {team.length > 0 && (
-        <section className="py-24 px-4 bg-gradient-to-b from-navy-800 to-navy-900">
+        <section id="team" className="py-24 px-4 bg-gradient-to-b from-navy-800 to-navy-900">
           <div className="max-w-7xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-center mb-16"
+            >
+              <h2 className="text-5xl font-bold text-white mb-4">Ekibimiz</h2>
+              <div className="w-24 h-1 bg-gradient-to-r from-gold-600 to-gold-400 mx-auto"></div>
+            </motion.div>
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
               <motion.div
                 initial={{ opacity: 0, x: -50 }}
@@ -328,15 +288,14 @@ export default function Home() {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
               >
-                <h2 className="text-5xl font-bold text-white mb-6">{team[0].name}</h2>
-                <div className="w-24 h-1 bg-gradient-to-r from-gold-600 to-gold-400 mb-8"></div>
+                <h3 className="text-4xl font-bold text-white mb-6">{team[0].name}</h3>
                 <p className="text-gold-400 text-xl mb-6">{team[0].title}</p>
 
                 <div className="space-y-6 text-white/80 text-lg leading-relaxed">
                   <p>{team[0].bio}</p>
                 </div>
 
-                {team[0].email || team[0].phone ? (
+                {(team[0].email || team[0].phone) && (
                   <div className="mt-8 space-y-2">
                     {team[0].email && (
                       <p className="text-white/70">
@@ -351,7 +310,7 @@ export default function Home() {
                       </p>
                     )}
                   </div>
-                ) : null}
+                )}
               </motion.div>
             </div>
           </div>
