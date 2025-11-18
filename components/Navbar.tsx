@@ -65,14 +65,6 @@ export default function Navbar() {
                 {item.label}
               </motion.button>
             ))}
-
-            <motion.a
-              href="/admin/login"
-              whileHover={{ scale: 1.05 }}
-              className="bg-gradient-to-r from-gold-600 to-gold-500 text-white px-6 py-2 rounded-full font-semibold hover:from-gold-700 hover:to-gold-600 transition-all"
-            >
-              Admin
-            </motion.a>
           </div>
         </div>
       </div>

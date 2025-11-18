@@ -1,7 +1,7 @@
 'use client'
 
 import { motion, useScroll, useTransform } from 'framer-motion'
-import { Scale, Users, FileText, Phone, Mail, MapPin, Award, Shield, Clock, ChevronRight, Star, BookOpen } from 'lucide-react'
+import { Scale, Users, FileText, Phone, Mail, MapPin, Award, Shield, Clock, ChevronRight, Star, BookOpen, Settings } from 'lucide-react'
 import Image from 'next/image'
 import { useRef, useEffect, useState } from 'react'
 import axios from 'axios'
@@ -41,6 +41,14 @@ interface ContactInfo {
   mapUrl?: string
 }
 
+interface AboutSection {
+  id: string
+  title: string
+  mission: string
+  vision: string
+  values: string[]
+}
+
 export default function Home() {
   const containerRef = useRef<HTMLDivElement>(null)
   const { scrollYProgress } = useScroll({
@@ -61,6 +69,7 @@ export default function Home() {
 
   const [services, setServices] = useState<Service[]>([])
   const [team, setTeam] = useState<TeamMember[]>([])
+  const [about, setAbout] = useState<AboutSection | null>(null)
   const [contact, setContact] = useState<ContactInfo>({
     id: '',
     address: 'İstanbul, Türkiye',
@@ -100,6 +109,14 @@ export default function Home() {
       console.log('Contact data:', data)
       if (data) setContact(data)
     }).catch((err) => console.error('Contact error:', err))
+
+    // Hakkımızda bilgilerini çek
+    axios.get('/api/about', {
+      headers: { 'Cache-Control': 'no-cache' }
+    }).then(({ data }) => {
+      console.log('About data:', data)
+      if (data) setAbout(data)
+    }).catch((err) => console.error('About error:', err))
   }, [])
 
   const getIcon = (iconName: string) => {
@@ -122,12 +139,15 @@ export default function Home() {
       <section id="hero" className="relative h-screen flex items-center justify-center overflow-hidden">
         {/* Full Screen Video Background */}
         <div className="absolute inset-0">
-          <iframe
-            src="https://www.youtube.com/embed/nIl0V9p5Y08?autoplay=1&mute=1&loop=1&playlist=nIl0V9p5Y08&controls=0&showinfo=0&rel=0&modestbranding=1"
-            className="absolute top-1/2 left-1/2 w-[177.77vh] h-[56.25vw] min-w-full min-h-full -translate-x-1/2 -translate-y-1/2 pointer-events-none"
-            allow="autoplay; encrypted-media"
-            style={{ border: 'none' }}
-          />
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="absolute top-0 left-0 w-full h-full object-cover"
+          >
+            <source src="/videos/istanbul-bosphorus.mp4" type="video/mp4" />
+          </video>
           {/* Dark overlay for better text readability */}
           <div className="absolute inset-0 bg-gradient-to-b from-navy-900/70 via-navy-900/60 to-navy-900/80"></div>
         </div>
@@ -207,9 +227,10 @@ export default function Home() {
       <section id="services" className="py-24 px-4 bg-gradient-to-b from-navy-900 to-navy-800">
         <div className="max-w-7xl mx-auto">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
             viewport={{ once: true }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
             className="text-center mb-16"
           >
             <h2 className="text-5xl font-bold text-white mb-4">Hukuki Hizmetlerimiz</h2>
@@ -254,14 +275,94 @@ export default function Home() {
         </div>
       </section>
 
+      {/* About Section */}
+      {about && (
+        <section id="about" className="py-24 px-4 bg-gradient-to-b from-navy-800 to-navy-900">
+          <div className="max-w-7xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 50, scale: 0.9 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="text-center mb-16"
+            >
+              <h2 className="text-5xl font-bold text-white mb-4">{about.title}</h2>
+              <div className="w-24 h-1 bg-gradient-to-r from-gold-600 to-gold-400 mx-auto"></div>
+            </motion.div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-16">
+              <motion.div
+                initial={{ opacity: 0, x: -80, scale: 0.8 }}
+                whileInView={{ opacity: 1, x: 0, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.7, ease: "easeOut" }}
+                className="glass rounded-2xl p-8"
+              >
+                <h3 className="text-3xl font-bold text-gold-400 mb-6 flex items-center gap-3">
+                  <Award className="w-8 h-8" />
+                  Misyonumuz
+                </h3>
+                <p className="text-white/80 text-lg leading-relaxed">{about.mission}</p>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: 80, scale: 0.8 }}
+                whileInView={{ opacity: 1, x: 0, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.7, ease: "easeOut", delay: 0.2 }}
+                className="glass rounded-2xl p-8"
+              >
+                <h3 className="text-3xl font-bold text-gold-400 mb-6 flex items-center gap-3">
+                  <Shield className="w-8 h-8" />
+                  Vizyonumuz
+                </h3>
+                <p className="text-white/80 text-lg leading-relaxed">{about.vision}</p>
+              </motion.div>
+            </div>
+
+            {about.values && about.values.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="glass rounded-2xl p-8"
+              >
+                <h3 className="text-3xl font-bold text-gold-400 mb-8 text-center flex items-center justify-center gap-3">
+                  <Star className="w-8 h-8" />
+                  Değerlerimiz
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {about.values.map((value, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: index * 0.1 }}
+                      className="text-center"
+                    >
+                      <div className="w-12 h-12 bg-gradient-to-br from-gold-500 to-gold-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span className="text-white font-bold text-lg">{index + 1}</span>
+                      </div>
+                      <p className="text-white/80 text-lg">{value}</p>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </div>
+        </section>
+      )}
+
       {/* Team Section */}
       {team.length > 0 && (
         <section id="team" className="py-24 px-4 bg-gradient-to-b from-navy-800 to-navy-900">
           <div className="max-w-7xl mx-auto">
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 50, scale: 0.9 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
               className="text-center mb-16"
             >
               <h2 className="text-5xl font-bold text-white mb-4">Ekibimiz</h2>
@@ -270,9 +371,10 @@ export default function Home() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
               <motion.div
-                initial={{ opacity: 0, x: -50 }}
-                whileInView={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, x: -80, scale: 0.8 }}
+                whileInView={{ opacity: 1, x: 0, scale: 1 }}
                 viewport={{ once: true }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
               >
                 <Image
                   src={team[0].image}
@@ -284,9 +386,10 @@ export default function Home() {
               </motion.div>
 
               <motion.div
-                initial={{ opacity: 0, x: 50 }}
-                whileInView={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, x: 80, scale: 0.8 }}
+                whileInView={{ opacity: 1, x: 0, scale: 1 }}
                 viewport={{ once: true }}
+                transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
               >
                 <h3 className="text-4xl font-bold text-white mb-6">{team[0].name}</h3>
                 <p className="text-gold-400 text-xl mb-6">{team[0].title}</p>
@@ -321,9 +424,10 @@ export default function Home() {
       <section className="py-24 px-4 bg-gradient-to-b from-navy-900 to-navy-800">
         <div className="max-w-7xl mx-auto">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
             viewport={{ once: true }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
             className="text-center mb-16"
           >
             <h2 className="text-5xl font-bold text-white mb-4">Müvekkil Görüşleri</h2>
@@ -334,10 +438,10 @@ export default function Home() {
             {[1, 2, 3].map((item, index) => (
               <motion.div
                 key={item}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, y: 50, scale: 0.8 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
+                transition={{ delay: index * 0.15, duration: 0.6, ease: "easeOut" }}
                 className="glass rounded-2xl p-8"
               >
                 <div className="flex gap-1 mb-4">
@@ -363,12 +467,13 @@ export default function Home() {
       </section>
 
       {/* Contact Section */}
-      <section className="py-24 px-4 bg-gradient-to-b from-navy-800 to-navy-900">
+      <section id="contact" className="py-24 px-4 bg-gradient-to-b from-navy-800 to-navy-900">
         <div className="max-w-7xl mx-auto">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
             viewport={{ once: true }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
             className="text-center mb-16"
           >
             <h2 className="text-5xl font-bold text-white mb-4">İletişim</h2>
@@ -380,9 +485,10 @@ export default function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 50, scale: 0.8 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
               className="glass rounded-2xl p-8 text-center"
             >
               <Phone className="w-12 h-12 text-gold-500 mx-auto mb-4" />
@@ -391,10 +497,10 @@ export default function Home() {
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 50, scale: 0.8 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true }}
-              transition={{ delay: 0.1 }}
+              transition={{ delay: 0.15, duration: 0.6, ease: "easeOut" }}
               className="glass rounded-2xl p-8 text-center"
             >
               <Mail className="w-12 h-12 text-gold-500 mx-auto mb-4" />
@@ -403,10 +509,10 @@ export default function Home() {
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 50, scale: 0.8 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true }}
-              transition={{ delay: 0.2 }}
+              transition={{ delay: 0.3, duration: 0.6, ease: "easeOut" }}
               className="glass rounded-2xl p-8 text-center"
             >
               <MapPin className="w-12 h-12 text-gold-500 mx-auto mb-4" />
@@ -417,9 +523,10 @@ export default function Home() {
           </div>
 
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
             viewport={{ once: true }}
+            transition={{ duration: 0.7, ease: "easeOut" }}
             className="glass rounded-2xl p-12 mt-12"
           >
             <h3 className="text-3xl font-bold text-white mb-8 text-center">Mesaj Gönderin</h3>
@@ -470,10 +577,17 @@ export default function Home() {
           <p className="text-white/60 mb-4">
             © 2024 Mürekkep Hukuk Bürosu. Tüm hakları saklıdır.
           </p>
-          <div className="flex justify-center gap-6 text-white/60">
+          <div className="flex justify-center items-center gap-6 text-white/60">
             <a href="#" className="hover:text-gold-500 transition">Gizlilik Politikası</a>
             <span>|</span>
             <a href="#" className="hover:text-gold-500 transition">Kullanım Koşulları</a>
+            <a
+              href="/admin/login"
+              className="ml-4 text-white/40 hover:text-gold-500 transition-colors"
+              title="Admin Paneli"
+            >
+              <Settings className="w-4 h-4" />
+            </a>
           </div>
         </div>
       </footer>
