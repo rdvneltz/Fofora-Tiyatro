@@ -3,7 +3,9 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET() {
   try {
-    const contact = await prisma.contactInfo.findFirst()
+    const contact = await prisma.contactInfo.findFirst({
+      orderBy: { updatedAt: 'desc' }
+    })
     return NextResponse.json(contact)
   } catch (error) {
     return NextResponse.json({ error: 'Veri alınamadı' }, { status: 500 })

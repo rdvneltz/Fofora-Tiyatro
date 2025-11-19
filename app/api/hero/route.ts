@@ -5,6 +5,7 @@ export async function GET() {
   try {
     const hero = await prisma.heroSection.findFirst({
       where: { active: true },
+      orderBy: { updatedAt: 'desc' } // En son güncellenen aktif hero'yu getir
     })
     return NextResponse.json(hero)
   } catch (error) {
@@ -15,9 +16,17 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const hero = await prisma.heroSection.create({
-      data: body,
+
+    // Önce tüm hero'ları pasif yap
+    await prisma.heroSection.updateMany({
+      data: { active: false }
     })
+
+    // Yeni hero'yu aktif olarak oluştur
+    const hero = await prisma.heroSection.create({
+      data: { ...body, active: true },
+    })
+
     return NextResponse.json(hero)
   } catch (error) {
     return NextResponse.json({ error: 'Veri oluşturulamadı' }, { status: 500 })
@@ -28,10 +37,20 @@ export async function PUT(request: NextRequest) {
   try {
     const body = await request.json()
     const { id, ...data } = body
+
+    // Eğer active true yapılıyorsa, diğerlerini pasif yap
+    if (data.active === true) {
+      await prisma.heroSection.updateMany({
+        where: { id: { not: id } },
+        data: { active: false }
+      })
+    }
+
     const hero = await prisma.heroSection.update({
       where: { id },
       data,
     })
+
     return NextResponse.json(hero)
   } catch (error) {
     return NextResponse.json({ error: 'Veri güncellenemedi' }, { status: 500 })

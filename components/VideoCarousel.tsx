@@ -4,14 +4,14 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion } from 'framer-motion'
 
 interface VideoCarouselProps {
-  videoCount: number
-  videoPath: string
+  videos?: string[]
+  videoPath?: string
   fadeDuration?: number
 }
 
 export default function VideoCarousel({
-  videoCount = 21,
-  videoPath = '/videos/optimized',
+  videos = [],
+  videoPath = '/videos',
   fadeDuration = 1200
 }: VideoCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -22,14 +22,17 @@ export default function VideoCarousel({
   const video2Ref = useRef<HTMLVideoElement>(null)
   const isTransitioningRef = useRef(false)
 
+  const videoCount = videos.length
+
   // Video path generator
   const getVideoPath = useCallback((index: number) => {
-    return `${videoPath}/${index + 1}.mp4`
-  }, [videoPath])
+    if (!videos[index]) return ''
+    return `${videoPath}/${videos[index]}`
+  }, [videoPath, videos])
 
   // Initialize videos
   useEffect(() => {
-    if (video1Ref.current && video2Ref.current) {
+    if (video1Ref.current && video2Ref.current && videoCount > 0) {
       // Set initial videos
       video1Ref.current.src = getVideoPath(0)
       video2Ref.current.src = getVideoPath(1)
@@ -39,9 +42,11 @@ export default function VideoCarousel({
       video1Ref.current.play().catch(err => console.error('Video play error:', err))
 
       // Preload second video
-      video2Ref.current.load()
+      if (videoCount > 1) {
+        video2Ref.current.load()
+      }
     }
-  }, [getVideoPath])
+  }, [getVideoPath, videoCount])
 
   // Add event listeners
   useEffect(() => {

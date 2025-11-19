@@ -25,6 +25,10 @@ model HeroSection {
   buttonLink  String
   backgroundImage String?
   videoUrl    String?
+  logo        String?  @default("/assets/murekkep-logo-saydam.png")
+  logoWidth   Int      @default(200)
+  logoHeight  Int      @default(200)
+  showButton  Boolean  @default(true)
   active      Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -119,6 +123,7 @@ model SiteSettings {
   secondaryColor String @default("#243b53")
   footerText  String?
   socialMedia Json?
+  sectionVisibility Json? // {hero: true, services: true, about: true, team: true, contact: true}
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }

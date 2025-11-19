@@ -7,6 +7,7 @@ import { useRef, useEffect, useState } from 'react'
 import axios from 'axios'
 import Navbar from '@/components/Navbar'
 import VideoCarousel from '@/components/VideoCarousel'
+import AppointmentModal from '@/components/AppointmentModal'
 
 interface HeroData {
   title: string
@@ -14,6 +15,10 @@ interface HeroData {
   description: string
   buttonText: string
   buttonLink: string
+  logo?: string
+  logoWidth?: number
+  logoHeight?: number
+  showButton?: boolean
 }
 
 interface Service {
@@ -65,64 +70,76 @@ export default function Home() {
   const y = useTransform(scrollYProgress, [0, 1], [0, -100])
   const blur = useTransform(scrollYProgress, [0, 0.5], [0, 10])
 
-  const [hero, setHero] = useState<HeroData>({
-    title: 'MÜREKKEP HUKUK',
-    subtitle: 'Adaletin Kalemi',
-    description: 'Hukuki haklarınız için güvenilir, profesyonel ve etkili çözümler sunuyoruz',
-    buttonText: 'Online Randevu & Danışma',
-    buttonLink: '#contact'
-  })
-
+  const [hero, setHero] = useState<HeroData | null>(null)
   const [services, setServices] = useState<Service[]>([])
   const [team, setTeam] = useState<TeamMember[]>([])
   const [about, setAbout] = useState<AboutSection | null>(null)
-  const [contact, setContact] = useState<ContactInfo>({
-    id: '',
-    address: 'İstanbul, Türkiye',
-    phone: '+90 212 XXX XX XX',
-    email: 'info@murekkephukuk.com',
-    workingHours: 'Pazartesi - Cuma: 09:00 - 18:00'
+  const [contact, setContact] = useState<ContactInfo | null>(null)
+  const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false)
+  const [heroVideos, setHeroVideos] = useState<string[]>([])
+  const [loading, setLoading] = useState(true)
+  const [sectionVisibility, setSectionVisibility] = useState({
+    hero: true,
+    services: true,
+    about: true,
+    team: true,
+    contact: true
   })
 
   useEffect(() => {
-    // Hero verilerini çek
-    axios.get('/api/hero', {
-      headers: { 'Cache-Control': 'no-cache' }
-    }).then(({ data }) => {
-      if (data) setHero(data)
-    }).catch((err) => console.error('Hero error:', err))
+    const fetchAllData = async () => {
+      try {
+        // Tüm verileri paralel olarak çek
+        const [heroRes, servicesRes, teamRes, contactRes, aboutRes, videosRes, settingsRes] = await Promise.all([
+          axios.get('/api/hero', { headers: { 'Cache-Control': 'no-cache' } }),
+          axios.get('/api/services', { headers: { 'Cache-Control': 'no-cache' } }),
+          axios.get('/api/team', { headers: { 'Cache-Control': 'no-cache' } }),
+          axios.get('/api/contact', { headers: { 'Cache-Control': 'no-cache' } }),
+          axios.get('/api/about', { headers: { 'Cache-Control': 'no-cache' } }),
+          axios.get('/api/hero-videos', { headers: { 'Cache-Control': 'no-cache' } }),
+          axios.get('/api/settings', { headers: { 'Cache-Control': 'no-cache' } })
+        ])
 
-    // Hizmetleri çek
-    axios.get('/api/services', {
-      headers: { 'Cache-Control': 'no-cache' }
-    }).then(({ data }) => {
-      console.log('Services data:', data)
-      if (data && data.length > 0) setServices(data)
-    }).catch((err) => console.error('Services error:', err))
+        // Hero verilerini set et
+        if (heroRes.data) setHero(heroRes.data)
 
-    // Ekip üyelerini çek
-    axios.get('/api/team', {
-      headers: { 'Cache-Control': 'no-cache' }
-    }).then(({ data }) => {
-      console.log('Team data:', data)
-      if (data && data.length > 0) setTeam(data)
-    }).catch((err) => console.error('Team error:', err))
+        // Hizmetleri set et
+        if (servicesRes.data && servicesRes.data.length > 0) {
+          setServices(servicesRes.data)
+        }
 
-    // İletişim bilgilerini çek
-    axios.get('/api/contact', {
-      headers: { 'Cache-Control': 'no-cache' }
-    }).then(({ data }) => {
-      console.log('Contact data:', data)
-      if (data) setContact(data)
-    }).catch((err) => console.error('Contact error:', err))
+        // Ekip üyelerini set et
+        if (teamRes.data && teamRes.data.length > 0) {
+          setTeam(teamRes.data)
+        }
 
-    // Hakkımızda bilgilerini çek
-    axios.get('/api/about', {
-      headers: { 'Cache-Control': 'no-cache' }
-    }).then(({ data }) => {
-      console.log('About data:', data)
-      if (data) setAbout(data)
-    }).catch((err) => console.error('About error:', err))
+        // İletişim bilgilerini set et
+        if (contactRes.data) setContact(contactRes.data)
+
+        // Hakkımızda bilgilerini set et
+        if (aboutRes.data) setAbout(aboutRes.data)
+
+        // Hero videoları set et
+        if (videosRes.data && videosRes.data.length > 0) {
+          const activeVideos = videosRes.data
+            .filter((v: any) => v.active)
+            .sort((a: any, b: any) => a.order - b.order)
+            .map((v: any) => v.fileName)
+          setHeroVideos(activeVideos)
+        }
+
+        // Section visibility ayarlarını set et
+        if (settingsRes.data && settingsRes.data.sectionVisibility) {
+          setSectionVisibility(settingsRes.data.sectionVisibility)
+        }
+      } catch (error) {
+        console.error('Data fetch error:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchAllData()
   }, [])
 
   const getIcon = (iconName: string) => {
@@ -137,14 +154,26 @@ export default function Home() {
     return icons[iconName] || <Scale className="w-8 h-8" />
   }
 
+  if (loading || !hero) {
+    return (
+      <div className="min-h-screen bg-navy-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-gold-500 mx-auto mb-4"></div>
+          <p className="text-white/60">Yükleniyor...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div ref={containerRef} className="min-h-screen bg-navy-900 scroll-smooth">
       <Navbar />
 
       {/* Hero Section */}
-      <section id="hero" className="relative h-screen flex items-center justify-center overflow-hidden">
+      {sectionVisibility.hero && (
+        <section id="hero" className="relative h-screen flex items-center justify-center overflow-hidden">
         {/* Full Screen Video Carousel Background */}
-        <VideoCarousel videoCount={21} videoPath="/videos/optimized" fadeDuration={1500} />
+        <VideoCarousel videos={heroVideos} videoPath="/videos" fadeDuration={1500} />
 
         <motion.div
           style={{ opacity, scale }}
@@ -157,10 +186,10 @@ export default function Home() {
             className="mb-12"
           >
             <Image
-              src="/assets/murekkep-logo-saydam.png"
+              src={hero.logo || "/assets/murekkep-logo-saydam.png"}
               alt="Mürekkep Hukuk"
-              width={200}
-              height={200}
+              width={hero.logoWidth || 200}
+              height={hero.logoHeight || 200}
               className="mx-auto drop-shadow-2xl"
             />
           </motion.div>
@@ -192,18 +221,20 @@ export default function Home() {
             {hero.description}
           </motion.p>
 
-          <motion.a
-            href={hero.buttonLink}
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 1 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="bg-gradient-to-r from-gold-600 to-gold-500 text-white px-10 py-4 rounded-full font-semibold text-lg shadow-xl inline-flex items-center gap-2 hover:from-gold-700 hover:to-gold-600 transition-all"
-          >
-            {hero.buttonText}
-            <ChevronRight className="w-5 h-5" />
-          </motion.a>
+          {hero.showButton !== false && (
+            <motion.button
+              onClick={() => setIsAppointmentModalOpen(true)}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1, delay: 1 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="bg-gradient-to-r from-gold-600 to-gold-500 text-white px-10 py-4 rounded-full font-semibold text-lg shadow-xl inline-flex items-center gap-2 hover:from-gold-700 hover:to-gold-600 transition-all cursor-pointer"
+            >
+              {hero.buttonText}
+              <ChevronRight className="w-5 h-5" />
+            </motion.button>
+          )}
         </motion.div>
 
         <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-20">
@@ -216,8 +247,10 @@ export default function Home() {
           </motion.div>
         </div>
       </section>
+      )}
 
       {/* Services Section */}
+      {sectionVisibility.services && services.length > 0 && (
       <section id="services" className="py-24 px-4 bg-gradient-to-b from-navy-900 to-navy-800 relative overflow-hidden">
         {/* Background decoration */}
         <motion.div
@@ -295,9 +328,10 @@ export default function Home() {
           </div>
         </div>
       </section>
+      )}
 
       {/* About Section */}
-      {about && (
+      {sectionVisibility.about && about && (
         <section id="about" className="py-24 px-4 bg-gradient-to-b from-navy-800 to-navy-900 relative overflow-hidden">
           {/* Animated background */}
           <motion.div
@@ -408,7 +442,7 @@ export default function Home() {
       )}
 
       {/* Team Section */}
-      {team.length > 0 && (
+      {sectionVisibility.team && team.length > 0 && (
         <section id="team" className="py-24 px-4 bg-gradient-to-b from-navy-800 to-navy-900 relative overflow-hidden">
           {/* Floating particles */}
           {[...Array(5)].map((_, i) => (
@@ -545,6 +579,7 @@ export default function Home() {
       </section>
 
       {/* Contact Section */}
+      {sectionVisibility.contact && contact && (
       <section id="contact" className="py-24 px-4 bg-gradient-to-b from-navy-800 to-navy-900 relative overflow-hidden">
         {/* Gradient orbs */}
         <motion.div
@@ -655,6 +690,7 @@ export default function Home() {
           </motion.div>
         </div>
       </section>
+      )}
 
       {/* Footer */}
       <footer className="bg-navy-900 border-t border-white/10 py-12 px-4">
