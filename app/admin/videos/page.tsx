@@ -17,6 +17,8 @@ export default function AdminVideos() {
   const [videos, setVideos] = useState<HeroVideo[]>([])
   const [loading, setLoading] = useState(true)
   const [newVideoName, setNewVideoName] = useState('')
+  const [videoFile, setVideoFile] = useState<File | null>(null)
+  const [uploading, setUploading] = useState(false)
 
   useEffect(() => {
     fetchVideos()
@@ -33,18 +35,64 @@ export default function AdminVideos() {
     }
   }
 
+  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setVideoFile(file)
+      // Auto-fill filename from uploaded file
+      setNewVideoName(file.name)
+    }
+  }
+
+  const uploadVideo = async () => {
+    if (!videoFile) return null
+
+    setUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', videoFile)
+      formData.append('type', 'video')
+
+      const uploadRes = await axios.post('/api/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+
+      return uploadRes.data.filename
+    } catch (error) {
+      console.error('Video yükleme hatası:', error)
+      alert('Video yüklenemedi. Dosya boyutu çok büyük olabilir.')
+      return null
+    } finally {
+      setUploading(false)
+    }
+  }
+
   const addVideo = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!newVideoName.trim()) return
+
+    let fileName = newVideoName.trim()
+
+    // If user uploaded a video file, upload it first
+    if (videoFile) {
+      const uploadedFileName = await uploadVideo()
+      if (!uploadedFileName) return // Upload failed
+      fileName = uploadedFileName
+    }
+
+    if (!fileName) {
+      alert('Lütfen bir video dosyası yükleyin veya dosya adı girin')
+      return
+    }
 
     try {
       const maxOrder = videos.length > 0 ? Math.max(...videos.map(v => v.order)) : -1
       await axios.post('/api/hero-videos', {
-        fileName: newVideoName.trim(),
+        fileName,
         order: maxOrder + 1,
         active: true
       })
       setNewVideoName('')
+      setVideoFile(null)
       fetchVideos()
     } catch (error) {
       alert('Video eklenemedi')
@@ -121,27 +169,59 @@ export default function AdminVideos() {
             <h1 className="text-4xl font-bold text-white">Hero Video Yönetimi</h1>
           </div>
           <p className="text-white/60">
-            Video dosya adlarını girin (örn: 1.mp4, 2.mp4). Dosyalar /public/videos/ klasöründe olmalıdır.
+            Video dosyası yükleyebilir veya manuel olarak dosya adı girebilirsiniz.
           </p>
         </div>
 
         {/* Add Video Form */}
         <form onSubmit={addVideo} className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10 mb-8">
-          <div className="flex gap-4">
-            <input
-              type="text"
-              value={newVideoName}
-              onChange={(e) => setNewVideoName(e.target.value)}
-              placeholder="Video dosya adı (örn: 22.mp4)"
-              className="flex-1 px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-gold-500"
-            />
-            <button
-              type="submit"
-              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-gold-600 to-gold-500 text-white rounded-lg font-semibold hover:from-gold-700 hover:to-gold-600 transition-all"
-            >
-              <Plus className="w-5 h-5" />
-              Ekle
-            </button>
+          <div className="space-y-4">
+            {/* Video Upload */}
+            <div>
+              <label className="block text-white mb-2 text-sm font-medium">Video Dosyası Yükle</label>
+              <input
+                type="file"
+                accept="video/mp4,video/webm"
+                onChange={handleVideoChange}
+                className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-gold-500 file:text-white hover:file:bg-gold-600"
+              />
+              <p className="text-white/40 text-xs mt-1">MP4 veya WebM formatında. Maksimum 50MB önerilir.</p>
+            </div>
+
+            {/* OR Divider */}
+            <div className="flex items-center gap-4">
+              <div className="flex-1 h-px bg-white/20"></div>
+              <span className="text-white/40 text-sm">VEYA</span>
+              <div className="flex-1 h-px bg-white/20"></div>
+            </div>
+
+            {/* Manual Filename Input */}
+            <div className="flex gap-4">
+              <input
+                type="text"
+                value={newVideoName}
+                onChange={(e) => setNewVideoName(e.target.value)}
+                placeholder="Manuel dosya adı girin (örn: 1.mp4)"
+                className="flex-1 px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-gold-500"
+              />
+              <button
+                type="submit"
+                disabled={uploading}
+                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-gold-600 to-gold-500 text-white rounded-lg font-semibold hover:from-gold-700 hover:to-gold-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {uploading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    Yükleniyor...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-5 h-5" />
+                    Ekle
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </form>
 
