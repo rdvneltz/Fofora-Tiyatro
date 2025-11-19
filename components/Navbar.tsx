@@ -25,7 +25,11 @@ export default function Navbar() {
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id)
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth' })
+      const offsetTop = element.offsetTop
+      window.scrollTo({
+        top: offsetTop,
+        behavior: 'smooth'
+      })
     }
   }
 

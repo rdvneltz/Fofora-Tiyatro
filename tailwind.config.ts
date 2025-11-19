@@ -8,6 +8,11 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      perspective: {
+        '500': '500px',
+        '1000': '1000px',
+        '2000': '2000px',
+      },
       fontFamily: {
         gotham: ['var(--font-gotham)', 'sans-serif'],
       },

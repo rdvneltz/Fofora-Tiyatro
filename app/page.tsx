@@ -136,7 +136,7 @@ export default function Home() {
   }
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-navy-900">
+    <div ref={containerRef} className="min-h-screen bg-navy-900 scroll-smooth">
       <Navbar />
 
       {/* Hero Section */}
@@ -216,14 +216,25 @@ export default function Home() {
       </section>
 
       {/* Services Section */}
-      <section id="services" className="py-24 px-4 bg-gradient-to-b from-navy-900 to-navy-800">
-        <div className="max-w-7xl mx-auto">
+      <section id="services" className="py-24 px-4 bg-gradient-to-b from-navy-900 to-navy-800 relative overflow-hidden">
+        {/* Background decoration */}
+        <motion.div
+          className="absolute top-0 right-0 w-96 h-96 bg-gold-500/5 rounded-full blur-3xl"
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.3, 0.5, 0.3],
+          }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        />
+
+        <div className="max-w-7xl mx-auto relative z-10">
           <motion.div
-            initial={{ opacity: 0, y: 50, scale: 0.9 }}
-            whileInView={{ opacity: 1, y: 0, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
+            initial={{ opacity: 0, y: 100, rotateX: -20 }}
+            whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 1, ease: [0.25, 0.46, 0.45, 0.94] }}
             className="text-center mb-16"
+            style={{ transformStyle: "preserve-3d" }}
           >
             <h2 className="text-5xl font-bold text-white mb-4">Hukuki Hizmetlerimiz</h2>
             <div className="w-24 h-1 bg-gradient-to-r from-gold-600 to-gold-400 mx-auto mb-6"></div>
@@ -236,17 +247,33 @@ export default function Home() {
             {services.length > 0 ? services.map((service, index) => (
               <motion.div
                 key={service.id}
-                initial={{ opacity: 0, y: 50, scale: 0.9 }}
-                whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1, type: "spring", stiffness: 100 }}
-                whileHover={{
-                  y: -15,
-                  scale: 1.05,
-                  boxShadow: "0 20px 60px rgba(193, 154, 107, 0.3)",
-                  borderColor: "rgba(193, 154, 107, 0.5)",
+                initial={{
+                  opacity: 0,
+                  y: 100,
+                  rotateY: -30,
+                  scale: 0.8,
                 }}
-                className="glass rounded-2xl p-8 transition-all group cursor-pointer border-2 border-transparent"
+                whileInView={{
+                  opacity: 1,
+                  y: 0,
+                  rotateY: 0,
+                  scale: 1,
+                }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{
+                  delay: index * 0.15,
+                  duration: 0.8,
+                  ease: [0.25, 0.46, 0.45, 0.94],
+                }}
+                whileHover={{
+                  y: -20,
+                  scale: 1.05,
+                  rotateY: 5,
+                  boxShadow: "0 25px 70px rgba(193, 154, 107, 0.4)",
+                  borderColor: "rgba(193, 154, 107, 0.6)",
+                }}
+                className="glass rounded-2xl p-8 transition-all group cursor-pointer border-2 border-transparent perspective-1000"
+                style={{ transformStyle: "preserve-3d" }}
               >
                 <motion.div
                   className="text-gold-500 mb-6"
