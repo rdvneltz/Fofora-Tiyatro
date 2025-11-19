@@ -35,3 +35,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# original videos (only use optimized versions)
+/public/videos/*.mp4
+!/public/videos/optimized/*.mp4
+optimize-videos.sh

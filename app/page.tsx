@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { useRef, useEffect, useState } from 'react'
 import axios from 'axios'
 import Navbar from '@/components/Navbar'
+import VideoCarousel from '@/components/VideoCarousel'
 
 interface HeroData {
   title: string
@@ -137,24 +138,12 @@ export default function Home() {
 
       {/* Hero Section */}
       <section id="hero" className="relative h-screen flex items-center justify-center overflow-hidden">
-        {/* Full Screen Video Background */}
-        <div className="absolute inset-0">
-          <video
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="absolute top-0 left-0 w-full h-full object-cover"
-          >
-            <source src="/videos/istanbul-bosphorus.mp4" type="video/mp4" />
-          </video>
-          {/* Dark overlay for better text readability */}
-          <div className="absolute inset-0 bg-gradient-to-b from-navy-900/70 via-navy-900/60 to-navy-900/80"></div>
-        </div>
+        {/* Full Screen Video Carousel Background */}
+        <VideoCarousel videoCount={21} videoPath="/videos/optimized" fadeDuration={1500} />
 
         <motion.div
           style={{ opacity, scale }}
-          className="relative z-10 text-center px-4 max-w-6xl mx-auto"
+          className="relative z-20 text-center px-4 max-w-6xl mx-auto"
         >
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -212,7 +201,7 @@ export default function Home() {
           </motion.a>
         </motion.div>
 
-        <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2">
+        <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-20">
           <motion.div
             animate={{ y: [0, 10, 0] }}
             transition={{ duration: 2, repeat: Infinity }}
