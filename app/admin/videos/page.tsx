@@ -179,10 +179,14 @@ export default function AdminVideos() {
     if (!confirm('Bu videoyu listeden çıkarmak istediğinizden emin misiniz?')) return
 
     try {
-      await axios.delete(`/api/hero-videos?id=${id}`)
+      console.log('Deleting video with id:', id)
+      const response = await axios.delete(`/api/hero-videos?id=${id}`)
+      console.log('Delete response:', response.data)
+      alert('Video başarıyla silindi')
       fetchVideos()
     } catch (error) {
-      alert('Silme işlemi başarısız oldu')
+      console.error('Delete error:', error)
+      alert('Silme işlemi başarısız oldu: ' + (error as any).message)
     }
   }
 

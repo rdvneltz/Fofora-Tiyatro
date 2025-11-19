@@ -120,12 +120,16 @@ export default function Home() {
         if (aboutRes.data) setAbout(aboutRes.data)
 
         // Hero videoları set et
+        console.log('Video data from API:', videosRes.data)
         if (videosRes.data && videosRes.data.length > 0) {
           const activeVideos = videosRes.data
             .filter((v: any) => v.active)
             .sort((a: any, b: any) => a.order - b.order)
             .map((v: any) => v.fileName)
+          console.log('Active videos:', activeVideos)
           setHeroVideos(activeVideos)
+        } else {
+          console.log('No videos found or empty array')
         }
 
         // Section visibility ayarlarını set et
