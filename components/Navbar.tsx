@@ -1,16 +1,23 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
+  const [showLogo, setShowLogo] = useState(false)
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 50)
+      const scrollPosition = window.scrollY
+      const heroHeight = window.innerHeight
+
+      setScrolled(scrollPosition > 50)
+      setShowLogo(scrollPosition > heroHeight * 0.7) // Show logo after 70% of hero section
     }
+
+    handleScroll() // Initial check
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
@@ -34,23 +41,30 @@ export default function Navbar() {
     >
       <div className="max-w-7xl mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            className="cursor-pointer"
-            onClick={() => scrollToSection('hero')}
-          >
-            <Image
-              src="/assets/murekkep-logo-saydam.png"
-              alt="Mürekkep Hukuk"
-              width={60}
-              height={60}
-              className="drop-shadow-lg"
-            />
-          </motion.div>
+          <AnimatePresence>
+            {showLogo && (
+              <motion.div
+                initial={{ opacity: 0, x: -20, scale: 0.8 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                exit={{ opacity: 0, x: -20, scale: 0.8 }}
+                transition={{ duration: 0.3 }}
+                whileHover={{ scale: 1.1 }}
+                className="cursor-pointer"
+                onClick={() => scrollToSection('hero')}
+              >
+                <Image
+                  src="/assets/murekkep-logo-saydam.png"
+                  alt="Mürekkep Hukuk"
+                  width={80}
+                  height={80}
+                  className="drop-shadow-2xl"
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-          <div className="flex gap-6">
+          <div className="flex gap-6 ml-auto">
             {[
-              { id: 'hero', label: 'Ana Sayfa' },
               { id: 'services', label: 'Hizmetler' },
               { id: 'about', label: 'Hakkımızda' },
               { id: 'team', label: 'Ekip' },

@@ -45,9 +45,12 @@ interface ContactInfo {
 interface AboutSection {
   id: string
   title: string
-  mission: string
-  vision: string
+  content: string
+  mission?: string
+  vision?: string
   values: string[]
+  image?: string
+  active: boolean
 }
 
 export default function Home() {
@@ -276,38 +279,49 @@ export default function Home() {
               className="text-center mb-16"
             >
               <h2 className="text-5xl font-bold text-white mb-4">{about.title}</h2>
-              <div className="w-24 h-1 bg-gradient-to-r from-gold-600 to-gold-400 mx-auto"></div>
+              <div className="w-24 h-1 bg-gradient-to-r from-gold-600 to-gold-400 mx-auto mb-8"></div>
+              {about.content && (
+                <p className="text-white/80 text-xl leading-relaxed max-w-4xl mx-auto">
+                  {about.content}
+                </p>
+              )}
             </motion.div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-16">
-              <motion.div
-                initial={{ opacity: 0, x: -80, scale: 0.8 }}
-                whileInView={{ opacity: 1, x: 0, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.7, ease: "easeOut" }}
-                className="glass rounded-2xl p-8"
-              >
-                <h3 className="text-3xl font-bold text-gold-400 mb-6 flex items-center gap-3">
-                  <Award className="w-8 h-8" />
-                  Misyonumuz
-                </h3>
-                <p className="text-white/80 text-lg leading-relaxed">{about.mission}</p>
-              </motion.div>
+            {(about.mission || about.vision) && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-16">
+                {about.mission && (
+                  <motion.div
+                    initial={{ opacity: 0, x: -80, scale: 0.8 }}
+                    whileInView={{ opacity: 1, x: 0, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.7, ease: "easeOut" }}
+                    className="glass rounded-2xl p-8"
+                  >
+                    <h3 className="text-3xl font-bold text-gold-400 mb-6 flex items-center gap-3">
+                      <Award className="w-8 h-8" />
+                      Misyonumuz
+                    </h3>
+                    <p className="text-white/80 text-lg leading-relaxed">{about.mission}</p>
+                  </motion.div>
+                )}
 
-              <motion.div
-                initial={{ opacity: 0, x: 80, scale: 0.8 }}
-                whileInView={{ opacity: 1, x: 0, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.7, ease: "easeOut", delay: 0.2 }}
-                className="glass rounded-2xl p-8"
-              >
-                <h3 className="text-3xl font-bold text-gold-400 mb-6 flex items-center gap-3">
-                  <Shield className="w-8 h-8" />
-                  Vizyonumuz
-                </h3>
-                <p className="text-white/80 text-lg leading-relaxed">{about.vision}</p>
-              </motion.div>
-            </div>
+                {about.vision && (
+                  <motion.div
+                    initial={{ opacity: 0, x: 80, scale: 0.8 }}
+                    whileInView={{ opacity: 1, x: 0, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.7, ease: "easeOut", delay: 0.2 }}
+                    className="glass rounded-2xl p-8"
+                  >
+                    <h3 className="text-3xl font-bold text-gold-400 mb-6 flex items-center gap-3">
+                      <Shield className="w-8 h-8" />
+                      Vizyonumuz
+                    </h3>
+                    <p className="text-white/80 text-lg leading-relaxed">{about.vision}</p>
+                  </motion.div>
+                )}
+              </div>
+            )}
 
             {about.values && about.values.length > 0 && (
               <motion.div
@@ -358,52 +372,50 @@ export default function Home() {
               <div className="w-24 h-1 bg-gradient-to-r from-gold-600 to-gold-400 mx-auto"></div>
             </motion.div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-              <motion.div
-                initial={{ opacity: 0, x: -80, scale: 0.8 }}
-                whileInView={{ opacity: 1, x: 0, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.8, ease: "easeOut" }}
-              >
-                <Image
-                  src={team[0].image}
-                  alt={team[0].name}
-                  width={600}
-                  height={800}
-                  className="rounded-2xl shadow-2xl"
-                />
-              </motion.div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+              {team.map((member, index) => (
+                <motion.div
+                  key={member.id}
+                  initial={{ opacity: 0, y: 50, scale: 0.9 }}
+                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, delay: index * 0.1, ease: "easeOut" }}
+                  className="glass rounded-2xl overflow-hidden group hover:shadow-2xl hover:shadow-gold-500/20 transition-all"
+                >
+                  <div className="relative overflow-hidden aspect-[3/4]">
+                    <Image
+                      src={member.image}
+                      alt={member.name}
+                      fill
+                      className="object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-navy-900 via-navy-900/50 to-transparent opacity-60"></div>
+                  </div>
 
-              <motion.div
-                initial={{ opacity: 0, x: 80, scale: 0.8 }}
-                whileInView={{ opacity: 1, x: 0, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-              >
-                <h3 className="text-4xl font-bold text-white mb-6">{team[0].name}</h3>
-                <p className="text-gold-400 text-xl mb-6">{team[0].title}</p>
+                  <div className="p-6">
+                    <h3 className="text-2xl font-bold text-white mb-2">{member.name}</h3>
+                    <p className="text-gold-400 text-lg mb-4">{member.title}</p>
+                    <p className="text-white/70 leading-relaxed mb-6 line-clamp-4">{member.bio}</p>
 
-                <div className="space-y-6 text-white/80 text-lg leading-relaxed">
-                  <p>{team[0].bio}</p>
-                </div>
-
-                {(team[0].email || team[0].phone) && (
-                  <div className="mt-8 space-y-2">
-                    {team[0].email && (
-                      <p className="text-white/70">
-                        <Mail className="w-5 h-5 inline mr-2" />
-                        {team[0].email}
-                      </p>
-                    )}
-                    {team[0].phone && (
-                      <p className="text-white/70">
-                        <Phone className="w-5 h-5 inline mr-2" />
-                        {team[0].phone}
-                      </p>
+                    {(member.email || member.phone) && (
+                      <div className="space-y-2 border-t border-white/10 pt-4">
+                        {member.email && (
+                          <p className="text-white/60 text-sm flex items-center gap-2">
+                            <Mail className="w-4 h-4" />
+                            {member.email}
+                          </p>
+                        )}
+                        {member.phone && (
+                          <p className="text-white/60 text-sm flex items-center gap-2">
+                            <Phone className="w-4 h-4" />
+                            {member.phone}
+                          </p>
+                        )}
+                      </div>
                     )}
                   </div>
-                )}
-              </motion.div>
+                </motion.div>
+              ))}
             </div>
           </div>
         </section>
