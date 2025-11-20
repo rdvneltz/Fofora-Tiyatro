@@ -578,9 +578,8 @@ export default function Home() {
       )}
 
       {/* Testimonials Section */}
-      {/* Testimonials Section */}
       {sectionVisibility.testimonials && testimonials.length > 0 && (
-      <section className="py-24 px-4 bg-gradient-to-b from-navy-900 to-navy-800">
+      <section id="testimonials" className="py-24 px-4 bg-gradient-to-b from-navy-900 to-navy-800">
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 50, scale: 0.9 }}

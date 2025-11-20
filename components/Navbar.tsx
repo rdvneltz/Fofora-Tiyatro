@@ -3,10 +3,32 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
+import axios from 'axios'
+import { Menu, X } from 'lucide-react'
+
+interface SectionVisibility {
+  hero: boolean
+  services: boolean
+  about: boolean
+  team: boolean
+  testimonials: boolean
+  blog: boolean
+  contact: boolean
+}
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [showLogo, setShowLogo] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [sectionVisibility, setSectionVisibility] = useState<SectionVisibility>({
+    hero: true,
+    services: true,
+    about: true,
+    team: true,
+    testimonials: true,
+    blog: true,
+    contact: true
+  })
 
   useEffect(() => {
     const handleScroll = () => {
@@ -22,6 +44,21 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await axios.get('/api/settings')
+        if (res.data && res.data.sectionVisibility) {
+          setSectionVisibility(res.data.sectionVisibility)
+        }
+      } catch (error) {
+        console.error('Failed to fetch navbar settings:', error)
+      }
+    }
+
+    fetchSettings()
+  }, [])
+
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id)
     if (element) {
@@ -30,8 +67,18 @@ export default function Navbar() {
         top: offsetTop,
         behavior: 'smooth'
       })
+      setMobileMenuOpen(false) // Close mobile menu after clicking
     }
   }
+
+  const navItems = [
+    { id: 'services', label: 'Hizmetler', visible: sectionVisibility.services },
+    { id: 'about', label: 'Hakkımızda', visible: sectionVisibility.about },
+    { id: 'team', label: 'Ekip', visible: sectionVisibility.team },
+    { id: 'testimonials', label: 'Yorumlar', visible: sectionVisibility.testimonials },
+    { id: 'blog', label: 'Blog', visible: sectionVisibility.blog },
+    { id: 'contact', label: 'İletişim', visible: sectionVisibility.contact },
+  ].filter(item => item.visible)
 
   return (
     <motion.nav
@@ -67,24 +114,53 @@ export default function Navbar() {
             )}
           </AnimatePresence>
 
-          <div className="flex gap-6 ml-auto">
-            {[
-              { id: 'services', label: 'Hizmetler' },
-              { id: 'about', label: 'Hakkımızda' },
-              { id: 'team', label: 'Ekip' },
-              { id: 'contact', label: 'İletişim' },
-            ].map((item) => (
+          {/* Desktop Menu */}
+          <div className="hidden md:flex gap-6 ml-auto">
+            {navItems.map((item) => (
               <motion.button
                 key={item.id}
                 onClick={() => scrollToSection(item.id)}
                 whileHover={{ scale: 1.1, color: '#c19a6b' }}
-                className="text-white font-medium transition-colors hidden md:block"
+                className="text-white font-medium transition-colors"
               >
                 {item.label}
               </motion.button>
             ))}
           </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden ml-auto text-white p-2"
+          >
+            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
         </div>
+
+        {/* Mobile Menu */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="md:hidden overflow-hidden"
+            >
+              <div className="flex flex-col gap-4 py-4 px-2">
+                {navItems.map((item) => (
+                  <motion.button
+                    key={item.id}
+                    onClick={() => scrollToSection(item.id)}
+                    whileTap={{ scale: 0.95 }}
+                    className="text-white font-medium text-left p-3 rounded-lg hover:bg-white/10 transition-colors"
+                  >
+                    {item.label}
+                  </motion.button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </motion.nav>
   )
