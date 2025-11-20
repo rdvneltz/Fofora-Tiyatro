@@ -248,12 +248,17 @@ export default function AdminSlots() {
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-xl font-bold text-white flex items-center gap-2">
                     <Calendar className="w-5 h-5 text-gold-500" />
-                    {new Date(date + 'T12:00:00').toLocaleDateString('tr-TR', {
-                      weekday: 'long',
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
+                    {(() => {
+                      // Parse date string safely (YYYY-MM-DD format)
+                      const [year, month, day] = date.split('-').map(Number)
+                      const dateObj = new Date(year, month - 1, day)
+                      return dateObj.toLocaleDateString('tr-TR', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })
+                    })()}
                   </h3>
                   <span className="text-white/60 text-sm">{groupedSlots[date].length} slot</span>
                 </div>

@@ -37,7 +37,13 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    return NextResponse.json(slots)
+    // Convert date objects to YYYY-MM-DD format strings
+    const formattedSlots = slots.map(slot => ({
+      ...slot,
+      date: slot.date.toISOString().split('T')[0]
+    }))
+
+    return NextResponse.json(formattedSlots)
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch slots' }, { status: 500 })
   }
@@ -58,7 +64,13 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    return NextResponse.json(slot, { status: 201 })
+    // Convert date to YYYY-MM-DD format
+    const formattedSlot = {
+      ...slot,
+      date: slot.date.toISOString().split('T')[0]
+    }
+
+    return NextResponse.json(formattedSlot, { status: 201 })
   } catch (error) {
     return NextResponse.json({ error: 'Failed to create slot' }, { status: 500 })
   }
@@ -81,7 +93,13 @@ export async function PUT(request: NextRequest) {
       data: updateData
     })
 
-    return NextResponse.json(slot)
+    // Convert date to YYYY-MM-DD format
+    const formattedSlot = {
+      ...slot,
+      date: slot.date.toISOString().split('T')[0]
+    }
+
+    return NextResponse.json(formattedSlot)
   } catch (error) {
     return NextResponse.json({ error: 'Failed to update slot' }, { status: 500 })
   }
