@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Calendar, Clock, Plus, Trash2, ArrowLeft, Repeat, CalendarDays } from 'lucide-react'
 import axios from 'axios'
@@ -24,6 +26,8 @@ interface RecurringPattern {
 }
 
 export default function AdminSlots() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
   const [slots, setSlots] = useState<Slot[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
@@ -44,6 +48,12 @@ export default function AdminSlots() {
 
   const daysOfWeekNames = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi']
   const workDays = [1, 2, 3, 4, 5] // Monday to Friday
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/admin/login')
+    }
+  }, [status, router])
 
   useEffect(() => {
     fetchSlots()

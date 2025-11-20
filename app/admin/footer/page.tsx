@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import axios from 'axios'
 import Link from 'next/link'
@@ -14,6 +16,8 @@ interface LegalLink {
 }
 
 export default function FooterSettingsPage() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
   const [copyrightText, setCopyrightText] = useState('© 2024 Mürekkep Hukuk Bürosu. Tüm hakları saklıdır.')
   const [legalLinks, setLegalLinks] = useState<LegalLink[]>([
     {
@@ -31,6 +35,12 @@ export default function FooterSettingsPage() {
   ])
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/admin/login')
+    }
+  }, [status, router])
 
   useEffect(() => {
     fetchSettings()

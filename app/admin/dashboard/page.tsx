@@ -3,7 +3,7 @@
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { LayoutDashboard, FileText, Users, Phone, Settings, Image, Star, BookOpen, Calendar, Clock, Video, Layout } from 'lucide-react'
+import { LayoutDashboard, FileText, Users, Phone, Settings, Image, Star, BookOpen, Calendar, Clock, Video, Layout, UserCog } from 'lucide-react'
 import Link from 'next/link'
 import axios from 'axios'
 
@@ -79,9 +79,18 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-gradient-to-br from-navy-900 via-navy-800 to-navy-900">
       <div className="relative z-10 p-8">
         <div className="max-w-7xl mx-auto">
-          <div className="mb-12">
-            <h1 className="text-4xl font-bold text-white mb-2">Admin Panel</h1>
-            <p className="text-gold-300">Hoş geldiniz, {session?.user?.name}</p>
+          <div className="mb-12 flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold text-white mb-2">Admin Panel</h1>
+              <p className="text-gold-300">Hoş geldiniz, {session?.user?.name}</p>
+            </div>
+            <Link
+              href="/admin/profile"
+              className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-white transition-colors"
+            >
+              <UserCog className="w-5 h-5" />
+              Profil Ayarları
+            </Link>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

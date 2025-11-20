@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Save, Upload, Palette, Globe, ArrowLeft } from 'lucide-react'
 import axios from 'axios'
@@ -30,6 +32,8 @@ interface SiteSettings {
 }
 
 export default function AdminSettings() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
   const [settings, setSettings] = useState<SiteSettings>({
     siteName: 'Mürekkep Hukuk',
     siteTitle: 'Mürekkep Hukuk - Adaletin Kalemi',
@@ -51,6 +55,12 @@ export default function AdminSettings() {
   const [saving, setSaving] = useState(false)
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [logoPreview, setLogoPreview] = useState<string>('')
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/admin/login')
+    }
+  }, [status, router])
 
   useEffect(() => {
     fetchSettings()

@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { ChevronUp, ChevronDown, Trash2, Plus, Video as VideoIcon, ArrowLeft } from 'lucide-react'
 import axios from 'axios'
@@ -14,6 +16,8 @@ interface HeroVideo {
 }
 
 export default function AdminVideos() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
   const [videos, setVideos] = useState<HeroVideo[]>([])
   const [loading, setLoading] = useState(true)
   const [newVideoName, setNewVideoName] = useState('')
@@ -24,6 +28,12 @@ export default function AdminVideos() {
     videoId: null,
     videoName: ''
   })
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/admin/login')
+    }
+  }, [status, router])
 
   useEffect(() => {
     fetchVideos()

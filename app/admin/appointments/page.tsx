@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Calendar, Clock, Phone, Mail, Video, Check, X, Eye, Trash2, ArrowLeft, MessageCircle, Bell, Edit } from 'lucide-react'
 import axios from 'axios'
@@ -25,12 +27,20 @@ interface Appointment {
 }
 
 export default function AdminAppointments() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [filter, setFilter] = useState<string>('all')
   const [loading, setLoading] = useState(true)
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null)
   const [editingLink, setEditingLink] = useState<string | null>(null)
   const [meetingLinkInput, setMeetingLinkInput] = useState('')
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/admin/login')
+    }
+  }, [status, router])
 
   useEffect(() => {
     fetchAppointments()
