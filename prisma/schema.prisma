@@ -136,8 +136,13 @@ model Appointment {
   date            DateTime
   time            String
   meetingPlatform String   // whatsapp, telegram, zoom, site
+  meetingLink     String?  // Generated Zoom/Telegram/Site meeting link
   status          String   @default("pending") // pending, approved, cancelled, completed
   notes           String?
+  notificationSent Boolean @default(false) // Status change notification sent
+  reminderSent    Boolean @default(false) // 30-min reminder sent
+  previousDate    DateTime? // For tracking changes
+  previousTime    String?   // For tracking changes
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }

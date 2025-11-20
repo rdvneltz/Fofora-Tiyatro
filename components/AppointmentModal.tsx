@@ -183,11 +183,11 @@ export default function AppointmentModal({ isOpen, onClose }: AppointmentModalPr
                       setSelectedDate(e.target.value)
                       setFormData({ ...formData, date: e.target.value, time: '' })
                     }}
-                    className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-gold-500"
+                    className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-gold-500 [&>option]:bg-navy-800 [&>option]:text-white"
                   >
-                    <option value="">Tarih seçin</option>
+                    <option value="" className="bg-navy-800 text-white">Tarih seçin</option>
                     {availableDates.map(date => (
-                      <option key={date} value={date}>
+                      <option key={date} value={date} className="bg-navy-800 text-white">
                         {new Date(date).toLocaleDateString('tr-TR', {
                           weekday: 'long',
                           year: 'numeric',
