@@ -53,16 +53,36 @@ export async function DELETE(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
 
+    console.log('DELETE request received for video ID:', id)
+
     if (!id) {
+      console.error('No ID provided in delete request')
       return NextResponse.json({ error: 'ID required' }, { status: 400 })
     }
+
+    // Check if video exists first
+    const existingVideo = await prisma.heroVideo.findUnique({
+      where: { id }
+    })
+
+    if (!existingVideo) {
+      console.error('Video not found with ID:', id)
+      return NextResponse.json({ error: 'Video not found' }, { status: 404 })
+    }
+
+    console.log('Deleting video:', existingVideo)
 
     await prisma.heroVideo.delete({
       where: { id }
     })
 
-    return NextResponse.json({ success: true })
+    console.log('Video deleted successfully')
+    return NextResponse.json({ success: true, message: 'Video deleted successfully' })
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to delete video' }, { status: 500 })
+    console.error('Delete error details:', error)
+    return NextResponse.json({
+      error: 'Failed to delete video',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
 }

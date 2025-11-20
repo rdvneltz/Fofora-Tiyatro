@@ -184,9 +184,10 @@ export default function AdminVideos() {
       console.log('Delete response:', response.data)
       alert('Video başarıyla silindi')
       fetchVideos()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Delete error:', error)
-      alert('Silme işlemi başarısız oldu: ' + (error as any).message)
+      const errorMessage = error.response?.data?.details || error.response?.data?.error || error.message || 'Bilinmeyen hata'
+      alert('Silme işlemi başarısız oldu: ' + errorMessage)
     }
   }
 
