@@ -107,6 +107,7 @@ model BlogPost {
   image       String?
   category    String
   tags        String[]
+  videoUrl    String?  // YouTube URL or uploaded video path
   published   Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

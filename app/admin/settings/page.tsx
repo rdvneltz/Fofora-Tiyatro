@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Save, Upload, Palette, Globe, ArrowLeft } from 'lucide-react'
+import { Save, Upload, Palette, Globe, ArrowLeft, Instagram, Youtube } from 'lucide-react'
 import axios from 'axios'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -41,6 +41,10 @@ export default function AdminSettings() {
     primaryColor: '#c19a6b',
     secondaryColor: '#243b53',
     footerText: '© 2024 Mürekkep Hukuk. Tüm hakları saklıdır.',
+    socialMedia: [
+      { platform: 'instagram', url: '', active: false },
+      { platform: 'youtube', url: '', active: false }
+    ],
     sectionVisibility: {
       hero: true,
       services: true,
@@ -72,11 +76,17 @@ export default function AdminSettings() {
       if (data) {
         setSettings({
           ...data,
+          socialMedia: data.socialMedia || [
+            { platform: 'instagram', url: '', active: false },
+            { platform: 'youtube', url: '', active: false }
+          ],
           sectionVisibility: data.sectionVisibility || {
             hero: true,
             services: true,
             about: true,
             team: true,
+            testimonials: true,
+            blog: true,
             contact: true
           }
         })
@@ -423,6 +433,92 @@ export default function AdminSettings() {
 
             <p className="text-white/40 text-sm mt-4">
               Not: İşaretlenmemiş bölümler ana sayfada gizlenecektir.
+            </p>
+          </div>
+
+          {/* Social Media Links */}
+          <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
+            <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+              <Instagram className="w-6 h-6 text-gold-500" />
+              Sosyal Medya Linkleri
+            </h2>
+
+            <div className="space-y-4">
+              {/* Instagram */}
+              <div className="bg-white/5 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Instagram className="w-5 h-5 text-white/70" />
+                    <span className="text-white font-medium">Instagram</span>
+                  </div>
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={settings.socialMedia?.find((s: any) => s.platform === 'instagram')?.active ?? false}
+                      onChange={(e) => {
+                        const newSocialMedia = settings.socialMedia?.map((s: any) =>
+                          s.platform === 'instagram' ? { ...s, active: e.target.checked } : s
+                        ) || []
+                        setSettings({ ...settings, socialMedia: newSocialMedia })
+                      }}
+                      className="w-5 h-5 rounded border-white/20 text-gold-500 focus:ring-gold-500"
+                    />
+                    <span className="ml-2 text-white/70 text-sm">Aktif</span>
+                  </label>
+                </div>
+                <input
+                  type="url"
+                  value={settings.socialMedia?.find((s: any) => s.platform === 'instagram')?.url ?? ''}
+                  onChange={(e) => {
+                    const newSocialMedia = settings.socialMedia?.map((s: any) =>
+                      s.platform === 'instagram' ? { ...s, url: e.target.value } : s
+                    ) || []
+                    setSettings({ ...settings, socialMedia: newSocialMedia })
+                  }}
+                  className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-gold-500"
+                  placeholder="https://instagram.com/yourpage"
+                />
+              </div>
+
+              {/* YouTube */}
+              <div className="bg-white/5 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Youtube className="w-5 h-5 text-white/70" />
+                    <span className="text-white font-medium">YouTube</span>
+                  </div>
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={settings.socialMedia?.find((s: any) => s.platform === 'youtube')?.active ?? false}
+                      onChange={(e) => {
+                        const newSocialMedia = settings.socialMedia?.map((s: any) =>
+                          s.platform === 'youtube' ? { ...s, active: e.target.checked } : s
+                        ) || []
+                        setSettings({ ...settings, socialMedia: newSocialMedia })
+                      }}
+                      className="w-5 h-5 rounded border-white/20 text-gold-500 focus:ring-gold-500"
+                    />
+                    <span className="ml-2 text-white/70 text-sm">Aktif</span>
+                  </label>
+                </div>
+                <input
+                  type="url"
+                  value={settings.socialMedia?.find((s: any) => s.platform === 'youtube')?.url ?? ''}
+                  onChange={(e) => {
+                    const newSocialMedia = settings.socialMedia?.map((s: any) =>
+                      s.platform === 'youtube' ? { ...s, url: e.target.value } : s
+                    ) || []
+                    setSettings({ ...settings, socialMedia: newSocialMedia })
+                  }}
+                  className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-gold-500"
+                  placeholder="https://youtube.com/@yourchannel"
+                />
+              </div>
+            </div>
+
+            <p className="text-white/40 text-sm mt-4">
+              Not: Aktif olan sosyal medya ikonları navbar'da sağ tarafta görünecektir.
             </p>
           </div>
 

@@ -17,6 +17,7 @@ interface BlogPost {
   image?: string
   category: string
   tags: string[]
+  videoUrl?: string
   published: boolean
   createdAt: string
   updatedAt: string
@@ -40,6 +41,7 @@ export default function BlogPage() {
     image: '',
     category: '',
     tags: [] as string[],
+    videoUrl: '',
     published: false,
   })
 
@@ -141,6 +143,7 @@ export default function BlogPage() {
         image: '',
         category: '',
         tags: [],
+        videoUrl: '',
         published: false,
       })
       fetchPosts()
@@ -160,6 +163,7 @@ export default function BlogPage() {
       image: post.image || '',
       category: post.category,
       tags: post.tags,
+      videoUrl: post.videoUrl || '',
       published: post.published,
     })
     setImagePreview(post.image || '')
@@ -218,6 +222,7 @@ export default function BlogPage() {
                 image: '',
                 category: '',
                 tags: [],
+                videoUrl: '',
                 published: false,
               })
               setImagePreview('')
@@ -321,6 +326,20 @@ export default function BlogPage() {
                   className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white"
                   required
                 />
+              </div>
+
+              <div>
+                <label className="block text-white mb-2">Video URL (Opsiyonel)</label>
+                <input
+                  type="url"
+                  value={formData.videoUrl}
+                  onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
+                  className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white"
+                  placeholder="https://www.youtube.com/watch?v=... veya /videos/dosya.mp4"
+                />
+                <p className="text-white/40 text-sm mt-2">
+                  YouTube linki veya yüklü video dosyası yolu girin. Video blog detay modalında görüntülenecektir.
+                </p>
               </div>
 
               <div>

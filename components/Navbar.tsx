@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import axios from 'axios'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, Instagram, Youtube } from 'lucide-react'
 
 interface SectionVisibility {
   hero: boolean
@@ -14,6 +14,12 @@ interface SectionVisibility {
   testimonials: boolean
   blog: boolean
   contact: boolean
+}
+
+interface SocialMediaLink {
+  platform: string
+  url: string
+  active: boolean
 }
 
 export default function Navbar() {
@@ -29,6 +35,7 @@ export default function Navbar() {
     blog: true,
     contact: true
   })
+  const [socialMediaLinks, setSocialMediaLinks] = useState<SocialMediaLink[]>([])
 
   useEffect(() => {
     const handleScroll = () => {
@@ -51,6 +58,9 @@ export default function Navbar() {
         if (res.data && res.data.sectionVisibility) {
           setSectionVisibility(res.data.sectionVisibility)
         }
+        if (res.data && res.data.socialMedia) {
+          setSocialMediaLinks(res.data.socialMedia)
+        }
       } catch (error) {
         console.error('Failed to fetch navbar settings:', error)
       }
@@ -68,6 +78,17 @@ export default function Navbar() {
         behavior: 'smooth'
       })
       setMobileMenuOpen(false) // Close mobile menu after clicking
+    }
+  }
+
+  const getSocialIcon = (platform: string) => {
+    switch (platform.toLowerCase()) {
+      case 'instagram':
+        return <Instagram className="w-5 h-5" />
+      case 'youtube':
+        return <Youtube className="w-5 h-5" />
+      default:
+        return null
     }
   }
 
@@ -115,7 +136,7 @@ export default function Navbar() {
           </AnimatePresence>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex gap-6 ml-auto">
+          <div className="hidden md:flex gap-6 ml-auto items-center">
             {navItems.map((item) => (
               <motion.button
                 key={item.id}
@@ -125,6 +146,20 @@ export default function Navbar() {
               >
                 {item.label}
               </motion.button>
+            ))}
+
+            {/* Social Media Icons */}
+            {socialMediaLinks.filter(link => link.active).map((link, index) => (
+              <motion.a
+                key={index}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                whileHover={{ scale: 1.2, color: '#c19a6b' }}
+                className="text-white transition-colors"
+              >
+                {getSocialIcon(link.platform)}
+              </motion.a>
             ))}
           </div>
 
@@ -157,6 +192,24 @@ export default function Navbar() {
                     {item.label}
                   </motion.button>
                 ))}
+
+                {/* Social Media Icons in Mobile */}
+                {socialMediaLinks.filter(link => link.active).length > 0 && (
+                  <div className="flex gap-6 pt-4 px-3 border-t border-white/10">
+                    {socialMediaLinks.filter(link => link.active).map((link, index) => (
+                      <motion.a
+                        key={index}
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        whileTap={{ scale: 0.9 }}
+                        className="text-white"
+                      >
+                        {getSocialIcon(link.platform)}
+                      </motion.a>
+                    ))}
+                  </div>
+                )}
               </div>
             </motion.div>
           )}

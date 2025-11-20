@@ -78,6 +78,7 @@ interface BlogPost {
   image?: string
   category: string
   tags: string[]
+  videoUrl?: string
   published: boolean
   createdAt: string
 }
@@ -925,6 +926,38 @@ export default function Home() {
                     }}
                   />
                 </div>
+
+                {/* Video Section */}
+                {selectedBlogPost.videoUrl && (
+                  <div className="mt-8">
+                    <h3 className="text-xl font-bold text-white mb-4">Video</h3>
+                    {selectedBlogPost.videoUrl.includes('youtube.com') || selectedBlogPost.videoUrl.includes('youtu.be') ? (
+                      // YouTube embed
+                      <div className="relative w-full pb-[56.25%] rounded-lg overflow-hidden bg-black">
+                        <iframe
+                          className="absolute top-0 left-0 w-full h-full"
+                          src={`https://www.youtube.com/embed/${
+                            selectedBlogPost.videoUrl.includes('youtu.be')
+                              ? selectedBlogPost.videoUrl.split('youtu.be/')[1]?.split('?')[0]
+                              : selectedBlogPost.videoUrl.split('v=')[1]?.split('&')[0]
+                          }`}
+                          title="YouTube video"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
+                      </div>
+                    ) : (
+                      // Native video player
+                      <video
+                        controls
+                        className="w-full rounded-lg"
+                        src={selectedBlogPost.videoUrl}
+                      >
+                        Tarayıcınız video oynatmayı desteklemiyor.
+                      </video>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Modal Footer */}
