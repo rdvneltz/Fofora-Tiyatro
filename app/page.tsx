@@ -850,8 +850,44 @@ export default function Home() {
               onClick={(e) => e.stopPropagation()}
               className="bg-navy-800 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden border border-white/10 my-8"
             >
-              {/* Modal Header with Image */}
-              {selectedBlogPost.image && (
+              {/* Modal Header with Video or Image */}
+              {selectedBlogPost.videoUrl ? (
+                // Header with Video
+                <div className="relative w-full bg-black">
+                  {selectedBlogPost.videoUrl.includes('youtube.com') || selectedBlogPost.videoUrl.includes('youtu.be') ? (
+                    // YouTube embed
+                    <div className="relative w-full pb-[56.25%]">
+                      <iframe
+                        className="absolute top-0 left-0 w-full h-full"
+                        src={`https://www.youtube.com/embed/${
+                          selectedBlogPost.videoUrl.includes('youtu.be')
+                            ? selectedBlogPost.videoUrl.split('youtu.be/')[1]?.split('?')[0]
+                            : selectedBlogPost.videoUrl.split('v=')[1]?.split('&')[0]
+                        }`}
+                        title="YouTube video"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </div>
+                  ) : (
+                    // Native video player
+                    <video
+                      controls
+                      className="w-full"
+                      src={selectedBlogPost.videoUrl}
+                    >
+                      Tarayıcınız video oynatmayı desteklemiyor.
+                    </video>
+                  )}
+                  <button
+                    onClick={() => setSelectedBlogPost(null)}
+                    className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/70 rounded-full transition-colors text-white z-10"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+              ) : selectedBlogPost.image ? (
+                // Header with Image
                 <div className="relative h-64 md:h-96 w-full">
                   <Image
                     src={selectedBlogPost.image}
@@ -867,10 +903,8 @@ export default function Home() {
                     <X className="w-6 h-6" />
                   </button>
                 </div>
-              )}
-
-              {/* Close button for posts without image */}
-              {!selectedBlogPost.image && (
+              ) : (
+                // Header without media
                 <div className="bg-navy-900/50 border-b border-white/10 px-8 py-4 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <BookOpen className="w-5 h-5 text-gold-400" />
@@ -926,38 +960,6 @@ export default function Home() {
                     }}
                   />
                 </div>
-
-                {/* Video Section */}
-                {selectedBlogPost.videoUrl && (
-                  <div className="mt-8">
-                    <h3 className="text-xl font-bold text-white mb-4">Video</h3>
-                    {selectedBlogPost.videoUrl.includes('youtube.com') || selectedBlogPost.videoUrl.includes('youtu.be') ? (
-                      // YouTube embed
-                      <div className="relative w-full pb-[56.25%] rounded-lg overflow-hidden bg-black">
-                        <iframe
-                          className="absolute top-0 left-0 w-full h-full"
-                          src={`https://www.youtube.com/embed/${
-                            selectedBlogPost.videoUrl.includes('youtu.be')
-                              ? selectedBlogPost.videoUrl.split('youtu.be/')[1]?.split('?')[0]
-                              : selectedBlogPost.videoUrl.split('v=')[1]?.split('&')[0]
-                          }`}
-                          title="YouTube video"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                        />
-                      </div>
-                    ) : (
-                      // Native video player
-                      <video
-                        controls
-                        className="w-full rounded-lg"
-                        src={selectedBlogPost.videoUrl}
-                      >
-                        Tarayıcınız video oynatmayı desteklemiyor.
-                      </video>
-                    )}
-                  </div>
-                )}
               </div>
 
               {/* Modal Footer */}
