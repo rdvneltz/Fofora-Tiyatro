@@ -58,6 +58,29 @@ interface AboutSection {
   active: boolean
 }
 
+interface Testimonial {
+  id: string
+  name: string
+  company?: string
+  content: string
+  rating: number
+  photo?: string
+  active: boolean
+}
+
+interface BlogPost {
+  id: string
+  title: string
+  slug: string
+  excerpt: string
+  content: string
+  featuredImage?: string
+  author: string
+  tags: string[]
+  published: boolean
+  createdAt: string
+}
+
 export default function Home() {
   const containerRef = useRef<HTMLDivElement>(null)
   const { scrollYProgress } = useScroll({
@@ -75,6 +98,8 @@ export default function Home() {
   const [team, setTeam] = useState<TeamMember[]>([])
   const [about, setAbout] = useState<AboutSection | null>(null)
   const [contact, setContact] = useState<ContactInfo | null>(null)
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([])
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([])
   const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false)
   const [heroVideos, setHeroVideos] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
@@ -83,6 +108,8 @@ export default function Home() {
     services: true,
     about: true,
     team: true,
+    testimonials: true,
+    blog: true,
     contact: true
   })
 
@@ -90,14 +117,16 @@ export default function Home() {
     const fetchAllData = async () => {
       try {
         // Tüm verileri paralel olarak çek
-        const [heroRes, servicesRes, teamRes, contactRes, aboutRes, videosRes, settingsRes] = await Promise.all([
+        const [heroRes, servicesRes, teamRes, contactRes, aboutRes, videosRes, settingsRes, testimonialsRes, blogRes] = await Promise.all([
           axios.get('/api/hero', { headers: { 'Cache-Control': 'no-cache' } }),
           axios.get('/api/services', { headers: { 'Cache-Control': 'no-cache' } }),
           axios.get('/api/team', { headers: { 'Cache-Control': 'no-cache' } }),
           axios.get('/api/contact', { headers: { 'Cache-Control': 'no-cache' } }),
           axios.get('/api/about', { headers: { 'Cache-Control': 'no-cache' } }),
           axios.get('/api/hero-videos', { headers: { 'Cache-Control': 'no-cache' } }),
-          axios.get('/api/settings', { headers: { 'Cache-Control': 'no-cache' } })
+          axios.get('/api/settings', { headers: { 'Cache-Control': 'no-cache' } }),
+          axios.get('/api/testimonials', { headers: { 'Cache-Control': 'no-cache' } }),
+          axios.get('/api/blog', { headers: { 'Cache-Control': 'no-cache' } })
         ])
 
         // Hero verilerini set et
@@ -130,6 +159,18 @@ export default function Home() {
           setHeroVideos(activeVideos)
         } else {
           console.log('No videos found or empty array')
+        }
+
+        // Testimonials set et
+        if (testimonialsRes.data && testimonialsRes.data.length > 0) {
+          const activeTestimonials = testimonialsRes.data.filter((t: any) => t.active)
+          setTestimonials(activeTestimonials)
+        }
+
+        // Blog posts set et
+        if (blogRes.data && blogRes.data.length > 0) {
+          const publishedPosts = blogRes.data.filter((p: any) => p.published)
+          setBlogPosts(publishedPosts)
         }
 
         // Section visibility ayarlarını set et
@@ -537,6 +578,8 @@ export default function Home() {
       )}
 
       {/* Testimonials Section */}
+      {/* Testimonials Section */}
+      {sectionVisibility.testimonials && testimonials.length > 0 && (
       <section className="py-24 px-4 bg-gradient-to-b from-navy-900 to-navy-800">
         <div className="max-w-7xl mx-auto">
           <motion.div
@@ -551,9 +594,9 @@ export default function Home() {
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[1, 2, 3].map((item, index) => (
+            {testimonials.slice(0, 6).map((testimonial, index) => (
               <motion.div
-                key={item}
+                key={testimonial.id}
                 initial={{ opacity: 0, y: 50, scale: 0.8 }}
                 whileInView={{ opacity: 1, y: 0, scale: 1 }}
                 viewport={{ once: true }}
@@ -562,18 +605,29 @@ export default function Home() {
               >
                 <div className="flex gap-1 mb-4">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 fill-gold-500 text-gold-500" />
+                    <Star key={i} className={`w-5 h-5 ${i < testimonial.rating ? 'fill-gold-500 text-gold-500' : 'text-gray-400'}`} />
                   ))}
                 </div>
                 <p className="text-white/80 mb-6 leading-relaxed">
-                  "Mürekkep Hukuk Bürosu ile çalışmak gerçekten harika bir deneyimdi.
-                  Profesyonellikleri ve işlerine olan hakimiyetleri takdire şayan."
+                  "{testimonial.content}"
                 </p>
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gold-500 to-gold-600"></div>
+                  {testimonial.photo ? (
+                    <Image
+                      src={testimonial.photo}
+                      alt={testimonial.name}
+                      width={48}
+                      height={48}
+                      className="rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gold-500 to-gold-600"></div>
+                  )}
                   <div>
-                    <div className="text-white font-semibold">Müvekkil {item}</div>
-                    <div className="text-white/60 text-sm">Ticaret Hukuku</div>
+                    <div className="text-white font-semibold">{testimonial.name}</div>
+                    {testimonial.company && (
+                      <div className="text-white/60 text-sm">{testimonial.company}</div>
+                    )}
                   </div>
                 </div>
               </motion.div>
@@ -581,6 +635,73 @@ export default function Home() {
           </div>
         </div>
       </section>
+      )}
+
+      {/* Blog Section */}
+      {sectionVisibility.blog && blogPosts.length > 0 && (
+      <section id="blog" className="py-24 px-4 bg-gradient-to-b from-navy-800 to-navy-900">
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-5xl font-bold text-white mb-4">Hukuk Blogu</h2>
+            <div className="w-24 h-1 bg-gradient-to-r from-gold-600 to-gold-400 mx-auto mb-6"></div>
+            <p className="text-white/70 text-lg max-w-2xl mx-auto">
+              Hukuk alanındaki güncel gelişmeler, analizler ve öneriler
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {blogPosts.slice(0, 6).map((post, index) => (
+              <motion.article
+                key={post.id}
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1, duration: 0.6 }}
+                className="glass rounded-xl overflow-hidden hover:scale-105 transition-transform duration-300"
+              >
+                {post.featuredImage && (
+                  <div className="relative h-48 w-full">
+                    <Image
+                      src={post.featuredImage}
+                      alt={post.title}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                )}
+                <div className="p-6">
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {post.tags.slice(0, 2).map((tag, idx) => (
+                      <span key={idx} className="text-xs px-2 py-1 bg-gold-500/20 text-gold-400 rounded">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-3 line-clamp-2">
+                    {post.title}
+                  </h3>
+                  <p className="text-white/70 text-sm mb-4 line-clamp-3">
+                    {post.excerpt}
+                  </p>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-white/50">{post.author}</span>
+                    <span className="text-white/50">
+                      {new Date(post.createdAt).toLocaleDateString('tr-TR')}
+                    </span>
+                  </div>
+                </div>
+              </motion.article>
+            ))}
+          </div>
+        </div>
+      </section>
+      )}
 
       {/* Contact Section */}
       {sectionVisibility.contact && contact && (

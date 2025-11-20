@@ -23,6 +23,8 @@ interface SiteSettings {
     services: boolean
     about: boolean
     team: boolean
+    testimonials: boolean
+    blog: boolean
     contact: boolean
   }
 }
@@ -40,6 +42,8 @@ export default function AdminSettings() {
       services: true,
       about: true,
       team: true,
+      testimonials: true,
+      blog: true,
       contact: true
     }
   })
@@ -352,6 +356,38 @@ export default function AdminSettings() {
                     sectionVisibility: {
                       ...settings.sectionVisibility!,
                       team: e.target.checked
+                    }
+                  })}
+                  className="w-5 h-5 rounded border-white/20 text-gold-500 focus:ring-gold-500"
+                />
+              </label>
+
+              <label className="flex items-center justify-between p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-all cursor-pointer">
+                <span className="text-white font-medium">Müvekkil Görüşleri Bölümü</span>
+                <input
+                  type="checkbox"
+                  checked={settings.sectionVisibility?.testimonials ?? true}
+                  onChange={(e) => setSettings({
+                    ...settings,
+                    sectionVisibility: {
+                      ...settings.sectionVisibility!,
+                      testimonials: e.target.checked
+                    }
+                  })}
+                  className="w-5 h-5 rounded border-white/20 text-gold-500 focus:ring-gold-500"
+                />
+              </label>
+
+              <label className="flex items-center justify-between p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-all cursor-pointer">
+                <span className="text-white font-medium">Blog Bölümü</span>
+                <input
+                  type="checkbox"
+                  checked={settings.sectionVisibility?.blog ?? true}
+                  onChange={(e) => setSettings({
+                    ...settings,
+                    sectionVisibility: {
+                      ...settings.sectionVisibility!,
+                      blog: e.target.checked
                     }
                   })}
                   className="w-5 h-5 rounded border-white/20 text-gold-500 focus:ring-gold-500"

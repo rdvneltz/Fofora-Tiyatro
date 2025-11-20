@@ -19,10 +19,18 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
+    console.log('Creating blog post with data:', body)
+
     const post = await prisma.blogPost.create({ data: body })
+    console.log('Blog post created successfully:', post.id)
+
     return NextResponse.json(post)
   } catch (error) {
-    return NextResponse.json({ error: 'Veri oluşturulamadı' }, { status: 500 })
+    console.error('Blog post creation error:', error)
+    return NextResponse.json({
+      error: 'Veri oluşturulamadı',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
 }
 
