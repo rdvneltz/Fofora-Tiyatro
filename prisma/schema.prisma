@@ -126,6 +126,7 @@ model SiteSettings {
   sectionVisibility Json? // {hero: true, services: true, about: true, team: true, contact: true}
   copyrightText String? // Customizable copyright text
   legalLinks  Json?   // [{title: string, content: string, active: boolean, order: number}]
+  appointmentFormSettings Json? // {consultationTypes: string[], showLawyerSelection: boolean, descriptionLabel: string}
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -139,6 +140,9 @@ model Appointment {
   time            String
   meetingPlatform String   // whatsapp, telegram, zoom, site
   meetingLink     String?  // Generated Zoom/Telegram/Site meeting link
+  consultationType String  // What is the consultation about (required)
+  preferredLawyer String?  // Which team member they want to meet with (optional)
+  description     String   // Detailed description (required)
   status          String   @default("pending") // pending, approved, cancelled, completed
   notes           String?
   notificationSent Boolean @default(false) // Status change notification sent

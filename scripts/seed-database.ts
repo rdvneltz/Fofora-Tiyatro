@@ -52,8 +52,8 @@ async function main() {
   console.log('🎬 Hero bölümü oluşturuluyor...')
   await prisma.heroSection.create({
     data: {
-      title: 'Adaletin Kalemi',
-      subtitle: 'Mürekkep Hukuk Bürosu',
+      title: 'Hukukun Her Alanında Profesyonel Çözümler',
+      subtitle: 'Güvenilir Danışmanlık, Etkili Savunma',
       description: 'Hukuki haklarınız için güvenilir, profesyonel ve etkili çözümler sunuyoruz. 25 yıllık tecrübemizle yanınızdayız.',
       buttonText: 'Randevu Al',
       buttonLink: '#appointment',
@@ -166,13 +166,22 @@ async function main() {
   console.log('👥 Ekip üyeleri ekleniyor...')
   const team = [
     {
+      name: 'Av. Faruk Celep',
+      title: 'Kurucu Avukat',
+      bio: 'Mürekkep Hukuk Bürosu\'nun kurucusu ve başkanı. 30 yıllık hukuk kariyerinde ticaret hukuku, ceza hukuku ve kurumsal hukuk alanlarında öncü başarılara imza atmıştır. İstanbul Barosu üyesi ve birçok ulusal ve uluslararası hukuk organizasyonunda aktif görevler almıştır.',
+      image: '/assets/faruk-celep.jpg',
+      email: 'faruk.celep@murekkephukuk.com',
+      phone: '+90 212 555 01 00',
+      order: 0
+    },
+    {
       name: 'Av. Mehmet Yılmaz',
       title: 'Kurucu Ortak Avukat',
       bio: 'İstanbul Üniversitesi Hukuk Fakültesi mezunu. 25 yıllık deneyimi ile ticaret hukuku ve şirketler hukuku alanında uzmanlaşmıştır. Türkiye Barolar Birliği üyesi.',
       image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop',
       email: 'mehmet.yilmaz@murekkephukuk.com',
       phone: '+90 212 555 01 01',
-      order: 0
+      order: 1
     },
     {
       name: 'Av. Ayşe Demir',
@@ -181,7 +190,7 @@ async function main() {
       image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop',
       email: 'ayse.demir@murekkephukuk.com',
       phone: '+90 212 555 01 02',
-      order: 1
+      order: 2
     },
     {
       name: 'Av. Ahmet Kaya',
@@ -190,7 +199,7 @@ async function main() {
       image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop',
       email: 'ahmet.kaya@murekkephukuk.com',
       phone: '+90 212 555 01 03',
-      order: 2
+      order: 3
     },
     {
       name: 'Av. Zeynep Arslan',
@@ -199,7 +208,7 @@ async function main() {
       image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop',
       email: 'zeynep.arslan@murekkephukuk.com',
       phone: '+90 212 555 01 04',
-      order: 3
+      order: 4
     },
     {
       name: 'Av. Can Özkan',
@@ -208,7 +217,7 @@ async function main() {
       image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop',
       email: 'can.ozkan@murekkephukuk.com',
       phone: '+90 212 555 01 05',
-      order: 4
+      order: 5
     },
     {
       name: 'Selin Yıldırım',
@@ -217,7 +226,7 @@ async function main() {
       image: 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=400&h=400&fit=crop',
       email: 'selin.yildirim@murekkephukuk.com',
       phone: '+90 212 555 01 06',
-      order: 5
+      order: 6
     },
     {
       name: 'Burak Şahin',
@@ -226,7 +235,7 @@ async function main() {
       image: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=400&h=400&fit=crop',
       email: 'burak.sahin@murekkephukuk.com',
       phone: '+90 212 555 01 07',
-      order: 6
+      order: 7
     }
   ]
 

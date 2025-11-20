@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, phone, email, date, time, meetingPlatform, notes } = body
+    const { name, phone, email, date, time, meetingPlatform, consultationType, preferredLawyer, description, notes } = body
 
     const appointment = await prisma.appointment.create({
       data: {
@@ -27,6 +27,9 @@ export async function POST(request: NextRequest) {
         date: new Date(date),
         time,
         meetingPlatform,
+        consultationType,
+        preferredLawyer: preferredLawyer || null,
+        description,
         notes,
         status: 'pending'
       }

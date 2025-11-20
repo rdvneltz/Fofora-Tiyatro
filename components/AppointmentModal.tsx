@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Calendar, Clock, Phone, Mail, User, Video } from 'lucide-react'
+import { X, Calendar, Clock, Phone, Mail, User, Video, FileText, Users } from 'lucide-react'
 import axios from 'axios'
 
 interface AppointmentModalProps {
@@ -17,10 +17,29 @@ interface AvailableSlot {
   endTime: string
 }
 
+interface TeamMember {
+  id: string
+  name: string
+  title: string
+  active: boolean
+}
+
+interface FormSettings {
+  consultationTypes: string[]
+  showLawyerSelection: boolean
+  descriptionLabel: string
+}
+
 export default function AppointmentModal({ isOpen, onClose }: AppointmentModalProps) {
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [slots, setSlots] = useState<AvailableSlot[]>([])
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
+  const [formSettings, setFormSettings] = useState<FormSettings>({
+    consultationTypes: ['Ticaret Hukuku', 'Ceza Hukuku', 'Aile Hukuku', 'İş Hukuku', 'Gayrimenkul Hukuku', 'Miras Hukuku', 'Diğer'],
+    showLawyerSelection: true,
+    descriptionLabel: 'Görüşmek istediğiniz konu hakkında detaylı bilgi veriniz'
+  })
   const [selectedDate, setSelectedDate] = useState('')
   const [formData, setFormData] = useState({
     name: '',
@@ -29,12 +48,17 @@ export default function AppointmentModal({ isOpen, onClose }: AppointmentModalPr
     date: '',
     time: '',
     meetingPlatform: 'whatsapp',
+    consultationType: '',
+    preferredLawyer: '',
+    description: '',
     notes: ''
   })
 
   useEffect(() => {
     if (isOpen) {
       fetchSlots()
+      fetchTeamMembers()
+      fetchFormSettings()
     }
   }, [isOpen])
 
@@ -44,6 +68,26 @@ export default function AppointmentModal({ isOpen, onClose }: AppointmentModalPr
       setSlots(data)
     } catch (error) {
       console.error('Failed to fetch slots', error)
+    }
+  }
+
+  const fetchTeamMembers = async () => {
+    try {
+      const { data } = await axios.get('/api/team')
+      setTeamMembers(data.filter((m: TeamMember) => m.active))
+    } catch (error) {
+      console.error('Failed to fetch team members', error)
+    }
+  }
+
+  const fetchFormSettings = async () => {
+    try {
+      const { data } = await axios.get('/api/settings')
+      if (data.appointmentFormSettings) {
+        setFormSettings(data.appointmentFormSettings)
+      }
+    } catch (error) {
+      console.error('Failed to fetch form settings', error)
     }
   }
 
@@ -78,6 +122,9 @@ export default function AppointmentModal({ isOpen, onClose }: AppointmentModalPr
         date: '',
         time: '',
         meetingPlatform: 'whatsapp',
+        consultationType: '',
+        preferredLawyer: '',
+        description: '',
         notes: ''
       })
       setStep(1)
@@ -254,22 +301,84 @@ export default function AppointmentModal({ isOpen, onClose }: AppointmentModalPr
                 </div>
               </div>
 
+              {/* Consultation Type */}
+              <div>
+                <label className="block text-white mb-2 flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-gold-500" />
+                  Görüşme Konusu *
+                </label>
+                <select
+                  required
+                  value={formData.consultationType}
+                  onChange={(e) => setFormData({ ...formData, consultationType: e.target.value })}
+                  className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-gold-500 [&>option]:bg-navy-800 [&>option]:text-white"
+                >
+                  <option value="" className="bg-navy-800 text-white">Konu seçin</option>
+                  {formSettings.consultationTypes.map(type => (
+                    <option key={type} value={type} className="bg-navy-800 text-white">
+                      {type}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Preferred Lawyer */}
+              {formSettings.showLawyerSelection && teamMembers.length > 0 && (
+                <div>
+                  <label className="block text-white mb-2 flex items-center gap-2">
+                    <Users className="w-4 h-4 text-gold-500" />
+                    Tercih Ettiğiniz Avukat (Opsiyonel)
+                  </label>
+                  <select
+                    value={formData.preferredLawyer}
+                    onChange={(e) => setFormData({ ...formData, preferredLawyer: e.target.value })}
+                    className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-gold-500 [&>option]:bg-navy-800 [&>option]:text-white"
+                  >
+                    <option value="" className="bg-navy-800 text-white">Farketmez</option>
+                    {teamMembers.map(member => (
+                      <option key={member.id} value={member.name} className="bg-navy-800 text-white">
+                        {member.name} - {member.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Description */}
+              <div>
+                <label className="block text-white mb-2 flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-gold-500" />
+                  {formSettings.descriptionLabel} *
+                </label>
+                <textarea
+                  required
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  rows={4}
+                  className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-gold-500 resize-none"
+                  placeholder="Görüşmek istediğiniz konu hakkında detaylı bilgi veriniz..."
+                />
+                <p className="text-white/50 text-xs mt-2">
+                  Lütfen durumunuz hakkında mümkün olduğunca detaylı bilgi verin.
+                </p>
+              </div>
+
               {/* Notes */}
               <div>
-                <label className="block text-white mb-2">Not (Opsiyonel)</label>
+                <label className="block text-white mb-2">Ek Notlar (Opsiyonel)</label>
                 <textarea
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  rows={3}
+                  rows={2}
                   className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-gold-500 resize-none"
-                  placeholder="Randevu ile ilgili notlarınız..."
+                  placeholder="Varsa eklemek istediğiniz notlar..."
                 />
               </div>
 
               {/* Submit */}
               <button
                 type="submit"
-                disabled={loading || !formData.name || !formData.phone || !formData.date || !formData.time}
+                disabled={loading || !formData.name || !formData.phone || !formData.date || !formData.time || !formData.consultationType || !formData.description}
                 className="w-full bg-gradient-to-r from-gold-600 to-gold-500 text-white py-4 rounded-lg font-semibold hover:from-gold-700 hover:to-gold-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-[1.02]"
               >
                 {loading ? 'Gönderiliyor...' : 'Randevu Talebi Oluştur'}

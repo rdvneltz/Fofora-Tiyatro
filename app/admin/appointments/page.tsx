@@ -250,6 +250,26 @@ export default function AdminAppointments() {
                       </span>
                     </div>
 
+                    {/* Consultation Type */}
+                    <div>
+                      <p className="text-white/40 text-xs mb-1">Görüşme Konusu:</p>
+                      <p className="text-white font-medium text-sm">{appointment.consultationType}</p>
+                    </div>
+
+                    {/* Preferred Lawyer */}
+                    {appointment.preferredLawyer && (
+                      <div>
+                        <p className="text-white/40 text-xs mb-1">Tercih Edilen Avukat:</p>
+                        <p className="text-white/70 text-sm">{appointment.preferredLawyer}</p>
+                      </div>
+                    )}
+
+                    {/* Description */}
+                    <div>
+                      <p className="text-white/40 text-xs mb-1">Detaylı Açıklama:</p>
+                      <p className="text-white/70 text-sm leading-relaxed">{appointment.description}</p>
+                    </div>
+
                     {/* Meeting Link */}
                     {['zoom', 'telegram', 'site'].includes(appointment.meetingPlatform) && (
                       <div>

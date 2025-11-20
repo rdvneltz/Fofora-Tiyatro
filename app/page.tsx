@@ -1,7 +1,7 @@
 'use client'
 
-import { motion, useScroll, useTransform } from 'framer-motion'
-import { Scale, Users, FileText, Phone, Mail, MapPin, Award, Shield, Clock, ChevronRight, Star, BookOpen, Settings } from 'lucide-react'
+import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
+import { Scale, Users, FileText, Phone, Mail, MapPin, Award, Shield, Clock, ChevronRight, Star, BookOpen, Settings, X } from 'lucide-react'
 import Image from 'next/image'
 import { useRef, useEffect, useState } from 'react'
 import axios from 'axios'
@@ -75,8 +75,8 @@ interface BlogPost {
   slug: string
   excerpt: string
   content: string
-  featuredImage?: string
-  author: string
+  image?: string
+  category: string
   tags: string[]
   published: boolean
   createdAt: string
@@ -102,6 +102,7 @@ export default function Home() {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([])
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([])
   const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false)
+  const [selectedBlogPost, setSelectedBlogPost] = useState<BlogPost | null>(null)
   const [heroVideos, setHeroVideos] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [sectionVisibility, setSectionVisibility] = useState({
@@ -663,12 +664,13 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1, duration: 0.6 }}
-                className="glass rounded-xl overflow-hidden hover:scale-105 transition-transform duration-300"
+                onClick={() => setSelectedBlogPost(post)}
+                className="glass rounded-xl overflow-hidden hover:scale-105 transition-transform duration-300 cursor-pointer"
               >
-                {post.featuredImage && (
+                {post.image && (
                   <div className="relative h-48 w-full">
                     <Image
-                      src={post.featuredImage}
+                      src={post.image}
                       alt={post.title}
                       fill
                       className="object-cover"
@@ -677,8 +679,11 @@ export default function Home() {
                 )}
                 <div className="p-6">
                   <div className="flex flex-wrap gap-2 mb-3">
+                    <span className="text-xs px-2 py-1 bg-gold-500/20 text-gold-400 rounded">
+                      {post.category}
+                    </span>
                     {post.tags.slice(0, 2).map((tag, idx) => (
-                      <span key={idx} className="text-xs px-2 py-1 bg-gold-500/20 text-gold-400 rounded">
+                      <span key={idx} className="text-xs px-2 py-1 bg-white/10 text-white/60 rounded">
                         {tag}
                       </span>
                     ))}
@@ -690,7 +695,7 @@ export default function Home() {
                     {post.excerpt}
                   </p>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-white/50">{post.author}</span>
+                    <span className="text-gold-400">Devamını Oku →</span>
                     <span className="text-white/50">
                       {new Date(post.createdAt).toLocaleDateString('tr-TR')}
                     </span>
@@ -825,6 +830,119 @@ export default function Home() {
         isOpen={isAppointmentModalOpen}
         onClose={() => setIsAppointmentModalOpen(false)}
       />
+
+      {/* Blog Post Modal */}
+      <AnimatePresence>
+        {selectedBlogPost && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto"
+            onClick={() => setSelectedBlogPost(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 50 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 50 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-navy-800 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden border border-white/10 my-8"
+            >
+              {/* Modal Header with Image */}
+              {selectedBlogPost.image && (
+                <div className="relative h-64 md:h-96 w-full">
+                  <Image
+                    src={selectedBlogPost.image}
+                    alt={selectedBlogPost.title}
+                    fill
+                    className="object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-navy-800 via-navy-800/50 to-transparent" />
+                  <button
+                    onClick={() => setSelectedBlogPost(null)}
+                    className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/70 rounded-full transition-colors text-white"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+              )}
+
+              {/* Close button for posts without image */}
+              {!selectedBlogPost.image && (
+                <div className="bg-navy-900/50 border-b border-white/10 px-8 py-4 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <BookOpen className="w-5 h-5 text-gold-400" />
+                    <span className="text-xs px-2 py-1 bg-gold-500/20 text-gold-400 rounded">
+                      {selectedBlogPost.category}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setSelectedBlogPost(null)}
+                    className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white/60 hover:text-white"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+              )}
+
+              {/* Modal Content */}
+              <div className="px-8 py-6 overflow-y-auto max-h-[calc(90vh-400px)]">
+                {/* Tags and Category */}
+                <div className="flex flex-wrap gap-2 mb-4">
+                  <span className="text-xs px-3 py-1 bg-gold-500/20 text-gold-400 rounded-full font-semibold">
+                    {selectedBlogPost.category}
+                  </span>
+                  {selectedBlogPost.tags.map((tag, idx) => (
+                    <span key={idx} className="text-xs px-3 py-1 bg-white/10 text-white/60 rounded-full">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+
+                {/* Title */}
+                <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                  {selectedBlogPost.title}
+                </h2>
+
+                {/* Meta Info */}
+                <div className="flex items-center gap-4 text-sm text-white/60 mb-6 pb-6 border-b border-white/10">
+                  <span>
+                    {new Date(selectedBlogPost.createdAt).toLocaleDateString('tr-TR', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </span>
+                </div>
+
+                {/* Content */}
+                <div className="prose prose-invert prose-gold max-w-none">
+                  <div
+                    className="text-white/80 leading-relaxed text-lg whitespace-pre-wrap"
+                    dangerouslySetInnerHTML={{
+                      __html: selectedBlogPost.content.replace(/\n\n/g, '</p><p class="mb-4">').replace(/\n/g, '<br/>')
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="bg-navy-900/50 border-t border-white/10 px-8 py-4 flex justify-between items-center">
+                <div className="text-sm text-white/60">
+                  {selectedBlogPost.tags.length} etiket
+                </div>
+                <button
+                  onClick={() => setSelectedBlogPost(null)}
+                  className="bg-gold-500 hover:bg-gold-600 text-navy-900 px-6 py-2 rounded-lg font-semibold transition-colors"
+                >
+                  Kapat
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
