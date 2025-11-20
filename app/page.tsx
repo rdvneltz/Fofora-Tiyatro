@@ -177,7 +177,7 @@ export default function Home() {
       {sectionVisibility.hero && (
         <section id="hero" className="relative h-screen flex items-center justify-center overflow-hidden">
         {/* Full Screen Video Carousel Background */}
-        <VideoCarousel videos={heroVideos} videoPath="/videos" fadeDuration={1500} />
+        <VideoCarousel videos={heroVideos} videoPath="/videos/optimized" fadeDuration={1500} />
 
         <motion.div
           style={{ opacity, scale }}
