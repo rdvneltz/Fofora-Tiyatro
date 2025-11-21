@@ -54,6 +54,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { date, startTime, endTime, active = true } = body
 
+    if (!date || !startTime || !endTime) {
+      return NextResponse.json({ error: 'Tarih ve saat bilgileri gerekli' }, { status: 400 })
+    }
+
     const slot = await prisma.availableSlot.create({
       data: {
         date: new Date(date),
@@ -71,8 +75,12 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(formattedSlot, { status: 201 })
-  } catch (error) {
-    return NextResponse.json({ error: 'Failed to create slot' }, { status: 500 })
+  } catch (error: any) {
+    console.error('Slot creation error:', error)
+    return NextResponse.json({
+      error: error.message || 'Failed to create slot',
+      details: error.code || 'unknown'
+    }, { status: 500 })
   }
 }
 

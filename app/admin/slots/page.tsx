@@ -32,9 +32,19 @@ export default function AdminSlots() {
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [showRecurringModal, setShowRecurringModal] = useState(false)
+  const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false)
   const [selectedDate, setSelectedDate] = useState('')
   const [startTime, setStartTime] = useState('09:00')
   const [endTime, setEndTime] = useState('10:00')
+
+  // Bulk delete criteria
+  const [bulkDeleteCriteria, setBulkDeleteCriteria] = useState({
+    deleteAll: false,
+    startDate: '',
+    endDate: '',
+    onlyEmpty: false,
+    onlyInactive: false
+  })
 
   // Recurring pattern state
   const [recurringPattern, setRecurringPattern] = useState<RecurringPattern>({
@@ -61,7 +71,7 @@ export default function AdminSlots() {
 
   const fetchSlots = async () => {
     try {
-      const { data } = await axios.get('/api/slots')
+      const { data } = await axios.get('/api/slots?admin=true')
       setSlots(data)
     } catch (error) {
       console.error('Slotlar yüklenemedi', error)
@@ -150,9 +160,10 @@ export default function AdminSlots() {
       alert(`${slotsToCreate.length} slot başarıyla oluşturuldu!`)
       setShowRecurringModal(false)
       fetchSlots()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Tekrarlayan slotlar oluşturulamadı', error)
-      alert('Bir hata oluştu')
+      const errorMessage = error.response?.data?.error || error.message || 'Bir hata oluştu'
+      alert(`Tekrarlayan slotlar oluşturulamadı: ${errorMessage}`)
     }
   }
 
@@ -167,9 +178,10 @@ export default function AdminSlots() {
       setShowModal(false)
       setSelectedDate('')
       fetchSlots()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Slot oluşturulamadı', error)
-      alert('Bir hata oluştu')
+      const errorMessage = error.response?.data?.error || error.message || 'Bir hata oluştu'
+      alert(`Slot oluşturulamadı: ${errorMessage}`)
     }
   }
 
@@ -180,6 +192,68 @@ export default function AdminSlots() {
       fetchSlots()
     } catch (error) {
       console.error('Slot silinemedi', error)
+    }
+  }
+
+  const bulkDeleteSlots = async () => {
+    try {
+      // Filter slots based on criteria
+      let slotsToDelete = slots
+
+      if (!bulkDeleteCriteria.deleteAll) {
+        // Filter by date range
+        if (bulkDeleteCriteria.startDate && bulkDeleteCriteria.endDate) {
+          slotsToDelete = slotsToDelete.filter(slot => {
+            return slot.date >= bulkDeleteCriteria.startDate &&
+                   slot.date <= bulkDeleteCriteria.endDate
+          })
+        }
+
+        // Filter by empty (not booked)
+        if (bulkDeleteCriteria.onlyEmpty) {
+          slotsToDelete = slotsToDelete.filter(slot => !slot.isBooked)
+        }
+
+        // Filter by inactive
+        if (bulkDeleteCriteria.onlyInactive) {
+          slotsToDelete = slotsToDelete.filter(slot => !slot.active)
+        }
+      }
+
+      // Prevent deleting booked slots
+      const nonBookedSlots = slotsToDelete.filter(slot => !slot.isBooked)
+
+      if (nonBookedSlots.length === 0) {
+        alert('Seçilen kriterlere uygun silinebilir slot bulunamadı')
+        return
+      }
+
+      const bookedCount = slotsToDelete.length - nonBookedSlots.length
+      let confirmMessage = `${nonBookedSlots.length} slot silinecek. Emin misiniz?`
+      if (bookedCount > 0) {
+        confirmMessage += `\n\n(Not: ${bookedCount} dolu slot korunacak)`
+      }
+
+      if (!confirm(confirmMessage)) return
+
+      // Delete all matching slots
+      await Promise.all(
+        nonBookedSlots.map(slot => axios.delete(`/api/slots?id=${slot.id}`))
+      )
+
+      alert(`${nonBookedSlots.length} slot başarıyla silindi!`)
+      setShowBulkDeleteModal(false)
+      setBulkDeleteCriteria({
+        deleteAll: false,
+        startDate: '',
+        endDate: '',
+        onlyEmpty: false,
+        onlyInactive: false
+      })
+      fetchSlots()
+    } catch (error: any) {
+      console.error('Toplu silme başarısız', error)
+      alert('Toplu silme sırasında bir hata oluştu')
     }
   }
 
@@ -217,6 +291,13 @@ export default function AdminSlots() {
             <h1 className="text-4xl font-bold text-white">Uygun Saatler Yönetimi</h1>
           </div>
           <div className="flex gap-3">
+            <button
+              onClick={() => setShowBulkDeleteModal(true)}
+              className="flex items-center gap-2 px-4 py-3 bg-red-600/20 border border-red-500/50 text-red-400 rounded-lg font-semibold hover:bg-red-600/30 transition-all"
+            >
+              <Trash2 className="w-5 h-5" />
+              Toplu Sil
+            </button>
             <button
               onClick={() => setShowModal(true)}
               className="flex items-center gap-2 px-4 py-3 bg-white/10 border border-gold-500/50 text-white rounded-lg font-semibold hover:bg-gold-500/20 transition-all"
@@ -505,6 +586,152 @@ export default function AdminSlots() {
                     </button>
                     <button
                       onClick={() => setShowRecurringModal(false)}
+                      className="flex-1 bg-gray-600 text-white py-3 rounded-lg hover:bg-gray-700"
+                    >
+                      İptal
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Bulk Delete Modal */}
+        <AnimatePresence>
+          {showBulkDeleteModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+              onClick={() => setShowBulkDeleteModal(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.9 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0.9 }}
+                className="bg-gradient-to-br from-navy-800 to-navy-900 rounded-xl p-8 max-w-lg w-full border border-red-500/30"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center gap-3 mb-6">
+                  <Trash2 className="w-8 h-8 text-red-400" />
+                  <h2 className="text-2xl font-bold text-white">Toplu Slot Sil</h2>
+                </div>
+
+                <div className="space-y-4">
+                  {/* Delete All Option */}
+                  <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={bulkDeleteCriteria.deleteAll}
+                        onChange={(e) => setBulkDeleteCriteria({
+                          ...bulkDeleteCriteria,
+                          deleteAll: e.target.checked,
+                          startDate: '',
+                          endDate: '',
+                          onlyEmpty: false,
+                          onlyInactive: false
+                        })}
+                        className="w-5 h-5 rounded border-white/20 text-red-500 focus:ring-red-500"
+                      />
+                      <div>
+                        <span className="text-white font-semibold">Tüm Boş Slotları Sil</span>
+                        <p className="text-white/60 text-sm">Dolu olmayan tüm slotlar silinecek</p>
+                      </div>
+                    </label>
+                  </div>
+
+                  {!bulkDeleteCriteria.deleteAll && (
+                    <>
+                      {/* Date Range */}
+                      <div>
+                        <label className="block text-white mb-2">Tarih Aralığı</label>
+                        <div className="grid grid-cols-2 gap-3">
+                          <input
+                            type="date"
+                            value={bulkDeleteCriteria.startDate}
+                            onChange={(e) => setBulkDeleteCriteria({
+                              ...bulkDeleteCriteria,
+                              startDate: e.target.value
+                            })}
+                            className="px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white"
+                            placeholder="Başlangıç"
+                          />
+                          <input
+                            type="date"
+                            value={bulkDeleteCriteria.endDate}
+                            onChange={(e) => setBulkDeleteCriteria({
+                              ...bulkDeleteCriteria,
+                              endDate: e.target.value
+                            })}
+                            className="px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white"
+                            placeholder="Bitiş"
+                          />
+                        </div>
+                        <p className="text-white/40 text-sm mt-2">
+                          Boş bırakırsanız tüm tarihler dahil edilir
+                        </p>
+                      </div>
+
+                      {/* Additional Filters */}
+                      <div className="space-y-3">
+                        <label className="flex items-center gap-3 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={bulkDeleteCriteria.onlyEmpty}
+                            onChange={(e) => setBulkDeleteCriteria({
+                              ...bulkDeleteCriteria,
+                              onlyEmpty: e.target.checked
+                            })}
+                            className="w-5 h-5 rounded border-white/20 text-gold-500 focus:ring-gold-500"
+                          />
+                          <span className="text-white">Sadece Boş Slotlar</span>
+                        </label>
+
+                        <label className="flex items-center gap-3 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={bulkDeleteCriteria.onlyInactive}
+                            onChange={(e) => setBulkDeleteCriteria({
+                              ...bulkDeleteCriteria,
+                              onlyInactive: e.target.checked
+                            })}
+                            className="w-5 h-5 rounded border-white/20 text-gold-500 focus:ring-gold-500"
+                          />
+                          <span className="text-white">Sadece Pasif Slotlar</span>
+                        </label>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Warning */}
+                  <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
+                    <p className="text-yellow-400 text-sm">
+                      <strong>Uyarı:</strong> Bu işlem geri alınamaz. Dolu slotlar otomatik olarak korunacaktır.
+                    </p>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      onClick={bulkDeleteSlots}
+                      className="flex-1 bg-gradient-to-r from-red-600 to-red-500 text-white py-3 rounded-lg hover:from-red-700 hover:to-red-600 font-semibold"
+                    >
+                      Sil
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowBulkDeleteModal(false)
+                        setBulkDeleteCriteria({
+                          deleteAll: false,
+                          startDate: '',
+                          endDate: '',
+                          onlyEmpty: false,
+                          onlyInactive: false
+                        })
+                      }}
                       className="flex-1 bg-gray-600 text-white py-3 rounded-lg hover:bg-gray-700"
                     >
                       İptal

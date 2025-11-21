@@ -9,7 +9,7 @@ import Link from 'next/link'
 import axios from 'axios'
 
 export default function ProfilePage() {
-  const { data: session, status } = useSession()
+  const { data: session, status, update } = useSession()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
@@ -62,6 +62,15 @@ export default function ProfilePage() {
         name: formData.name,
         currentPassword: formData.currentPassword || undefined,
         newPassword: formData.newPassword || undefined
+      })
+
+      // Update session with new name
+      await update({
+        ...session,
+        user: {
+          ...session?.user,
+          name: formData.name
+        }
       })
 
       setMessage('Profil başarıyla güncellendi!')

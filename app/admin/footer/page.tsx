@@ -113,7 +113,7 @@ export default function FooterSettingsPage() {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             <Link
-              href="/admin"
+              href="/admin/dashboard"
               className="flex items-center gap-2 text-white/60 hover:text-white transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
