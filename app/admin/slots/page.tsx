@@ -43,7 +43,8 @@ export default function AdminSlots() {
     startDate: '',
     endDate: '',
     onlyEmpty: false,
-    onlyInactive: false
+    onlyInactive: false,
+    forceDeleteBooked: false
   })
 
   // Recurring pattern state
@@ -220,35 +221,44 @@ export default function AdminSlots() {
         }
       }
 
-      // Prevent deleting booked slots
-      const nonBookedSlots = slotsToDelete.filter(slot => !slot.isBooked)
+      // Prevent deleting booked slots unless forceDeleteBooked is checked
+      let finalSlots = slotsToDelete
+      if (!bulkDeleteCriteria.forceDeleteBooked) {
+        finalSlots = slotsToDelete.filter(slot => !slot.isBooked)
+      }
 
-      if (nonBookedSlots.length === 0) {
+      if (finalSlots.length === 0) {
         alert('Seçilen kriterlere uygun silinebilir slot bulunamadı')
         return
       }
 
-      const bookedCount = slotsToDelete.length - nonBookedSlots.length
-      let confirmMessage = `${nonBookedSlots.length} slot silinecek. Emin misiniz?`
+      const bookedCount = finalSlots.filter(slot => slot.isBooked).length
+      const skippedBookedCount = slotsToDelete.length - finalSlots.length
+
+      let confirmMessage = `${finalSlots.length} slot silinecek. Emin misiniz?`
       if (bookedCount > 0) {
-        confirmMessage += `\n\n(Not: ${bookedCount} dolu slot korunacak)`
+        confirmMessage += `\n\n⚠️ UYARI: ${bookedCount} DOLU SLOT SİLİNECEK!`
+      }
+      if (skippedBookedCount > 0) {
+        confirmMessage += `\n\n(Not: ${skippedBookedCount} dolu slot korunacak)`
       }
 
       if (!confirm(confirmMessage)) return
 
       // Delete all matching slots
       await Promise.all(
-        nonBookedSlots.map(slot => axios.delete(`/api/slots?id=${slot.id}`))
+        finalSlots.map(slot => axios.delete(`/api/slots?id=${slot.id}`))
       )
 
-      alert(`${nonBookedSlots.length} slot başarıyla silindi!`)
+      alert(`${finalSlots.length} slot başarıyla silindi!`)
       setShowBulkDeleteModal(false)
       setBulkDeleteCriteria({
         deleteAll: false,
         startDate: '',
         endDate: '',
         onlyEmpty: false,
-        onlyInactive: false
+        onlyInactive: false,
+        forceDeleteBooked: false
       })
       fetchSlots()
     } catch (error: any) {
@@ -632,7 +642,8 @@ export default function AdminSlots() {
                           startDate: '',
                           endDate: '',
                           onlyEmpty: false,
-                          onlyInactive: false
+                          onlyInactive: false,
+                          forceDeleteBooked: false
                         })}
                         className="w-5 h-5 rounded border-white/20 text-red-500 focus:ring-red-500"
                       />
@@ -706,10 +717,31 @@ export default function AdminSlots() {
                     </>
                   )}
 
+                  {/* Force Delete Booked Slots */}
+                  <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+                    <label className="flex items-start gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={bulkDeleteCriteria.forceDeleteBooked}
+                        onChange={(e) => setBulkDeleteCriteria({
+                          ...bulkDeleteCriteria,
+                          forceDeleteBooked: e.target.checked
+                        })}
+                        className="w-5 h-5 rounded border-white/20 text-red-500 focus:ring-red-500 mt-0.5"
+                      />
+                      <div>
+                        <span className="text-red-400 font-semibold">Dolu Slotları da Sil (Zorla)</span>
+                        <p className="text-red-300/60 text-sm mt-1">
+                          ⚠️ Dikkat: Bu seçenek randevusu olmayan ama "dolu" işaretli slotları (orphaned slots) silmenizi sağlar. Sadece gerçekten randevusu olmayan slotları temizlemek için kullanın.
+                        </p>
+                      </div>
+                    </label>
+                  </div>
+
                   {/* Warning */}
                   <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
                     <p className="text-yellow-400 text-sm">
-                      <strong>Uyarı:</strong> Bu işlem geri alınamaz. Dolu slotlar otomatik olarak korunacaktır.
+                      <strong>Uyarı:</strong> Bu işlem geri alınamaz. {!bulkDeleteCriteria.forceDeleteBooked && 'Dolu slotlar otomatik olarak korunacaktır.'}
                     </p>
                   </div>
 
@@ -729,7 +761,8 @@ export default function AdminSlots() {
                           startDate: '',
                           endDate: '',
                           onlyEmpty: false,
-                          onlyInactive: false
+                          onlyInactive: false,
+                          forceDeleteBooked: false
                         })
                       }}
                       className="flex-1 bg-gray-600 text-white py-3 rounded-lg hover:bg-gray-700"
