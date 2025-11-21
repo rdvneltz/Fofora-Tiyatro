@@ -63,11 +63,11 @@ export default function DashboardPage() {
   const menuItems = [
     { title: 'Hero Bölümü', href: '/admin/hero', icon: <Image className="w-6 h-6" />, color: 'from-blue-500 to-blue-600' },
     { title: 'Hero Videoları', href: '/admin/videos', icon: <Video className="w-6 h-6" />, color: 'from-cyan-500 to-cyan-600' },
-    { title: 'Hizmetler', href: '/admin/services', icon: <FileText className="w-6 h-6" />, color: 'from-green-500 to-green-600' },
+    { title: 'Programlar', href: '/admin/services', icon: <FileText className="w-6 h-6" />, color: 'from-green-500 to-green-600' },
     { title: 'Ekip', href: '/admin/team', icon: <Users className="w-6 h-6" />, color: 'from-purple-500 to-purple-600' },
     { title: 'Hakkımızda', href: '/admin/about', icon: <LayoutDashboard className="w-6 h-6" />, color: 'from-yellow-500 to-yellow-600' },
     { title: 'İletişim', href: '/admin/contact', icon: <Phone className="w-6 h-6" />, color: 'from-red-500 to-red-600' },
-    { title: 'Randevular', href: '/admin/appointments', icon: <Calendar className="w-6 h-6" />, color: 'from-orange-500 to-orange-600' },
+    { title: 'Kayıtlar', href: '/admin/appointments', icon: <Calendar className="w-6 h-6" />, color: 'from-orange-500 to-orange-600' },
     { title: 'Uygun Saatler', href: '/admin/slots', icon: <Clock className="w-6 h-6" />, color: 'from-teal-500 to-teal-600' },
     { title: 'Yorumlar', href: '/admin/testimonials', icon: <Star className="w-6 h-6" />, color: 'from-pink-500 to-pink-600' },
     { title: 'Blog', href: '/admin/blog', icon: <BookOpen className="w-6 h-6" />, color: 'from-indigo-500 to-indigo-600' },
@@ -111,7 +111,7 @@ export default function DashboardPage() {
           <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
             <div className="glass rounded-xl p-6">
               <div className="text-gold-500 text-4xl font-bold mb-2">{stats.services}</div>
-              <div className="text-white/70">Toplam Hizmet</div>
+              <div className="text-white/70">Toplam Program</div>
             </div>
             <div className="glass rounded-xl p-6">
               <div className="text-gold-500 text-4xl font-bold mb-2">{stats.team}</div>
@@ -123,11 +123,11 @@ export default function DashboardPage() {
             </div>
             <div className="glass rounded-xl p-6">
               <div className="text-orange-500 text-4xl font-bold mb-2">{stats.pendingAppointments}</div>
-              <div className="text-white/70">Bekleyen Randevu</div>
+              <div className="text-white/70">Bekleyen Kayıt</div>
             </div>
             <div className="glass rounded-xl p-6">
               <div className="text-pink-500 text-4xl font-bold mb-2">{stats.testimonials}</div>
-              <div className="text-white/70">Müvekkil Yorumu</div>
+              <div className="text-white/70">Öğrenci Yorumu</div>
             </div>
           </div>
         </div>

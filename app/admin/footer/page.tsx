@@ -18,7 +18,7 @@ interface LegalLink {
 export default function FooterSettingsPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [copyrightText, setCopyrightText] = useState('© 2024 Mürekkep Hukuk Bürosu. Tüm hakları saklıdır.')
+  const [copyrightText, setCopyrightText] = useState('© 2024 Fofora Tiyatro. Tüm hakları saklıdır.')
   const [legalLinks, setLegalLinks] = useState<LegalLink[]>([
     {
       title: 'Gizlilik Politikası',
@@ -157,7 +157,7 @@ export default function FooterSettingsPage() {
               type="text"
               value={copyrightText}
               onChange={(e) => setCopyrightText(e.target.value)}
-              placeholder="© 2024 Mürekkep Hukuk Bürosu. Tüm hakları saklıdır."
+              placeholder="© 2024 Fofora Tiyatro. Tüm hakları saklıdır."
               className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-gold-500"
             />
             <p className="text-white/50 text-sm mt-2">

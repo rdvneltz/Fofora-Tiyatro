@@ -36,9 +36,9 @@ export default function AppointmentModal({ isOpen, onClose }: AppointmentModalPr
   const [slots, setSlots] = useState<AvailableSlot[]>([])
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
   const [formSettings, setFormSettings] = useState<FormSettings>({
-    consultationTypes: ['Ticaret Hukuku', 'Ceza Hukuku', 'Aile Hukuku', 'İş Hukuku', 'Gayrimenkul Hukuku', 'Miras Hukuku', 'Diğer'],
+    consultationTypes: ['Drama', 'İmprovizasyon', 'Müzikal Tiyatro', 'Metin Yazarlığı', 'Yönetmenlik', 'Sahne Sanatları', 'Diğer'],
     showLawyerSelection: true,
-    descriptionLabel: 'Görüşmek istediğiniz konu hakkında detaylı bilgi veriniz'
+    descriptionLabel: 'Katılmak istediğiniz program hakkında detaylı bilgi veriniz'
   })
   const [selectedDate, setSelectedDate] = useState('')
   const [formData, setFormData] = useState({
@@ -113,7 +113,7 @@ export default function AppointmentModal({ isOpen, onClose }: AppointmentModalPr
 
     try {
       await axios.post('/api/appointments', formData)
-      alert('Randevu talebiniz alındı! En kısa sürede sizinle iletişime geçeceğiz.')
+      alert('Kayıt talebiniz alındı! En kısa sürede sizinle iletişime geçeceğiz.')
       onClose()
       setFormData({
         name: '',
@@ -158,7 +158,7 @@ export default function AppointmentModal({ isOpen, onClose }: AppointmentModalPr
           >
             {/* Header */}
             <div className="sticky top-0 bg-navy-900/95 backdrop-blur-lg border-b border-white/10 p-6 flex items-center justify-between">
-              <h2 className="text-3xl font-bold text-white">Online Randevu & Danışma</h2>
+              <h2 className="text-3xl font-bold text-white">Online Kayıt & Bilgi</h2>
               <button
                 onClick={onClose}
                 className="text-white/60 hover:text-white transition-colors"
@@ -322,12 +322,12 @@ export default function AppointmentModal({ isOpen, onClose }: AppointmentModalPr
                 </select>
               </div>
 
-              {/* Preferred Lawyer */}
+              {/* Preferred Instructor */}
               {formSettings.showLawyerSelection && teamMembers.length > 0 && (
                 <div>
                   <label className="block text-white mb-2 flex items-center gap-2">
                     <Users className="w-4 h-4 text-gold-500" />
-                    Tercih Ettiğiniz Avukat (Opsiyonel)
+                    Tercih Ettiğiniz Eğitmen (Opsiyonel)
                   </label>
                   <select
                     value={formData.preferredLawyer}
@@ -381,7 +381,7 @@ export default function AppointmentModal({ isOpen, onClose }: AppointmentModalPr
                 disabled={loading || !formData.name || !formData.phone || !formData.date || !formData.time || !formData.consultationType || !formData.description}
                 className="w-full bg-gradient-to-r from-gold-600 to-gold-500 text-white py-4 rounded-lg font-semibold hover:from-gold-700 hover:to-gold-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-[1.02]"
               >
-                {loading ? 'Gönderiliyor...' : 'Randevu Talebi Oluştur'}
+                {loading ? 'Gönderiliyor...' : 'Kayıt Talebi Oluştur'}
               </button>
             </form>
           </motion.div>

@@ -35,12 +35,12 @@ export default function AdminSettings() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [settings, setSettings] = useState<SiteSettings>({
-    siteName: 'Mürekkep Hukuk',
-    siteTitle: 'Mürekkep Hukuk - Adaletin Kalemi',
-    description: 'Hukuki haklarınız için güvenilir, profesyonel ve etkili çözümler sunuyoruz',
+    siteName: 'Fofora Tiyatro',
+    siteTitle: 'Fofora Tiyatro - Sahnenin Gücü',
+    description: 'Tiyatro eğitimi için profesyonel, yaratıcı ve ilham verici programlar sunuyoruz',
     primaryColor: '#c19a6b',
     secondaryColor: '#243b53',
-    footerText: '© 2024 Mürekkep Hukuk. Tüm hakları saklıdır.',
+    footerText: '© 2024 Fofora Tiyatro. Tüm hakları saklıdır.',
     socialMedia: [
       { platform: 'instagram', url: '', active: false },
       { platform: 'youtube', url: '', active: false }
@@ -222,7 +222,7 @@ export default function AdminSettings() {
                   value={settings.siteName}
                   onChange={(e) => setSettings({ ...settings, siteName: e.target.value })}
                   className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-gold-500"
-                  placeholder="Mürekkep Hukuk"
+                  placeholder="Fofora Tiyatro"
                 />
               </div>
 
@@ -234,7 +234,7 @@ export default function AdminSettings() {
                   value={settings.siteTitle}
                   onChange={(e) => setSettings({ ...settings, siteTitle: e.target.value })}
                   className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-gold-500"
-                  placeholder="Mürekkep Hukuk - Adaletin Kalemi"
+                  placeholder="Fofora Tiyatro - Sahnenin Gücü"
                 />
               </div>
 
@@ -257,7 +257,7 @@ export default function AdminSettings() {
                   value={settings.footerText || ''}
                   onChange={(e) => setSettings({ ...settings, footerText: e.target.value })}
                   className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-gold-500"
-                  placeholder="© 2024 Mürekkep Hukuk. Tüm hakları saklıdır."
+                  placeholder="© 2024 Fofora Tiyatro. Tüm hakları saklıdır."
                 />
               </div>
             </div>
@@ -340,7 +340,7 @@ export default function AdminSettings() {
               </label>
 
               <label className="flex items-center justify-between p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-all cursor-pointer">
-                <span className="text-white font-medium">Hizmetler Bölümü</span>
+                <span className="text-white font-medium">Programlar Bölümü</span>
                 <input
                   type="checkbox"
                   checked={settings.sectionVisibility?.services ?? true}
@@ -388,7 +388,7 @@ export default function AdminSettings() {
               </label>
 
               <label className="flex items-center justify-between p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-all cursor-pointer">
-                <span className="text-white font-medium">Müvekkil Görüşleri Bölümü</span>
+                <span className="text-white font-medium">Öğrenci Görüşleri Bölümü</span>
                 <input
                   type="checkbox"
                   checked={settings.sectionVisibility?.testimonials ?? true}
@@ -546,10 +546,10 @@ export default function AdminSettings() {
           </p>
           <ul className="text-white/60 text-sm space-y-1 list-disc list-inside">
             <li><strong>Hero:</strong> Admin Hero panelinden hero başlık, açıklama ve buton metnini düzenleyebilirsiniz</li>
-            <li><strong>Hizmetler:</strong> Admin Hizmetler panelinden hizmet ekleyip düzenleyebilirsiniz</li>
-            <li><strong>Hakkımızda:</strong> Admin Hakkımızda panelinden şirket bilgilerini güncelleyebilirsiniz</li>
+            <li><strong>Programlar:</strong> Admin Programlar panelinden eğitim programlarını ekleyip düzenleyebilirsiniz</li>
+            <li><strong>Hakkımızda:</strong> Admin Hakkımızda panelinden kurum bilgilerini güncelleyebilirsiniz</li>
             <li><strong>Ekip:</strong> Admin Ekip panelinden ekip üyelerini yönetebilirsiniz</li>
-            <li><strong>Randevular:</strong> Admin Randevular ve Uygun Saatler panellerinden randevu sistemini yönetebilirsiniz</li>
+            <li><strong>Kayıtlar:</strong> Admin Kayıtlar ve Uygun Saatler panellerinden kayıt sistemini yönetebilirsiniz</li>
             <li><strong>Hero Videoları:</strong> Admin Videolar panelinden arka plan videolarını ve sıralarını ayarlayabilirsiniz</li>
           </ul>
         </div>

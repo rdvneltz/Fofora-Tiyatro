@@ -97,7 +97,7 @@ export default function Navbar() {
   }
 
   const navItems = [
-    { id: 'services', label: 'Hizmetler', visible: sectionVisibility.services },
+    { id: 'services', label: 'Programlar', visible: sectionVisibility.services },
     { id: 'about', label: 'Hakkımızda', visible: sectionVisibility.about },
     { id: 'team', label: 'Ekip', visible: sectionVisibility.team },
     { id: 'testimonials', label: 'Yorumlar', visible: sectionVisibility.testimonials },
@@ -130,7 +130,7 @@ export default function Navbar() {
               >
                 <Image
                   src="/assets/murekkep-logo-saydam.png"
-                  alt="Mürekkep Hukuk"
+                  alt="Fofora Tiyatro"
                   width={80}
                   height={80}
                   className="drop-shadow-2xl"

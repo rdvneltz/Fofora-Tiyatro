@@ -26,7 +26,7 @@ export async function POST(
 
     if (!appointment) {
       return NextResponse.json(
-        { error: 'Randevu bulunamadı' },
+        { error: 'Kayıt bulunamadı' },
         { status: 404 }
       )
     }
@@ -64,7 +64,7 @@ export async function POST(
       case 'reschedule':
         if (!appointment.previousDate || !appointment.previousTime) {
           return NextResponse.json(
-            { error: 'Önceki randevu bilgisi bulunamadı' },
+            { error: 'Önceki kayıt bilgisi bulunamadı' },
             { status: 400 }
           )
         }

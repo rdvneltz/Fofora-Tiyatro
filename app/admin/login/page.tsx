@@ -47,14 +47,14 @@ export default function LoginPage() {
             <div className="flex justify-center mb-6">
               <Image
                 src="/assets/murekkep-logo-saydam.png"
-                alt="Mürekkep Hukuk"
+                alt="Fofora Tiyatro"
                 width={120}
                 height={120}
                 className="drop-shadow-2xl"
               />
             </div>
             <h1 className="text-3xl font-bold text-white mb-2">Admin Panel</h1>
-            <p className="text-gold-300">Mürekkep Hukuk Bürosu</p>
+            <p className="text-gold-300">Fofora Tiyatro Okulu</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -105,7 +105,7 @@ export default function LoginPage() {
         </div>
 
         <p className="text-center text-white/60 text-sm mt-6">
-          © 2024 Mürekkep Hukuk. Tüm hakları saklıdır.
+          © 2024 Fofora Tiyatro. Tüm hakları saklıdır.
         </p>
       </div>
     </div>

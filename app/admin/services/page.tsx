@@ -48,7 +48,7 @@ export default function ServicesPage() {
       const { data } = await axios.get('/api/services')
       setServices(data)
     } catch (error) {
-      console.error('Hizmetler yüklenemedi', error)
+      console.error('Programlar yüklenemedi', error)
     } finally {
       setLoading(false)
     }
@@ -85,7 +85,7 @@ export default function ServicesPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Bu hizmeti silmek istediğinize emin misiniz?')) return
+    if (!confirm('Bu programı silmek istediğinize emin misiniz?')) return
     try {
       await axios.delete(`/api/services?id=${id}`)
       fetchServices()
@@ -110,7 +110,7 @@ export default function ServicesPage() {
             <Link href="/admin/dashboard" className="text-gold-500 hover:text-gold-400">
               <ArrowLeft className="w-6 h-6" />
             </Link>
-            <h1 className="text-4xl font-bold text-white">Hizmetler Yönetimi</h1>
+            <h1 className="text-4xl font-bold text-white">Eğitim Programları Yönetimi</h1>
           </div>
           <button
             onClick={() => {
@@ -121,14 +121,14 @@ export default function ServicesPage() {
             className="bg-gradient-to-r from-gold-600 to-gold-500 text-white px-6 py-3 rounded-lg flex items-center gap-2 hover:from-gold-700 hover:to-gold-600"
           >
             <Plus className="w-5 h-5" />
-            Yeni Hizmet
+            Yeni Program
           </button>
         </div>
 
         {showForm && (
           <div className="glass rounded-xl p-8 mb-8">
             <h2 className="text-2xl font-bold text-white mb-6">
-              {editingService ? 'Hizmet Düzenle' : 'Yeni Hizmet Ekle'}
+              {editingService ? 'Program Düzenle' : 'Yeni Program Ekle'}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

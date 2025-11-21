@@ -19,7 +19,7 @@ interface FooterProps {
 }
 
 export default function Footer() {
-  const [copyrightText, setCopyrightText] = useState('© 2024 Mürekkep Hukuk Bürosu. Tüm hakları saklıdır.')
+  const [copyrightText, setCopyrightText] = useState('© 2024 Fofora Tiyatro. Tüm hakları saklıdır.')
   const [legalLinks, setLegalLinks] = useState<LegalLink[]>([])
   const [selectedLegalContent, setSelectedLegalContent] = useState<{
     title: string
@@ -77,7 +77,7 @@ export default function Footer() {
         <div className="max-w-7xl mx-auto text-center">
           <Image
             src="/assets/murekkep-logo-saydam.png"
-            alt="Mürekkep Hukuk"
+            alt="Fofora Tiyatro"
             width={100}
             height={100}
             className="mx-auto mb-6"

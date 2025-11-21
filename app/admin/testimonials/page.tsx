@@ -155,7 +155,7 @@ export default function TestimonialsPage() {
             <Link href="/admin/dashboard" className="text-gold-500 hover:text-gold-400">
               <ArrowLeft className="w-6 h-6" />
             </Link>
-            <h1 className="text-4xl font-bold text-white">Müvekkil Yorumları Yönetimi</h1>
+            <h1 className="text-4xl font-bold text-white">Öğrenci Yorumları Yönetimi</h1>
           </div>
           <button
             onClick={() => {
@@ -189,7 +189,7 @@ export default function TestimonialsPage() {
               <div className="bg-white/5 rounded-xl p-6 border border-white/10">
                 <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                   <Upload className="w-5 h-5 text-gold-500" />
-                  Müvekkil Fotoğrafı (İsteğe Bağlı)
+                  Öğrenci Fotoğrafı (İsteğe Bağlı)
                 </h3>
 
                 <div className="flex items-start gap-6">
@@ -197,7 +197,7 @@ export default function TestimonialsPage() {
                     <div className="relative w-32 h-32 bg-white/10 rounded-full overflow-hidden border border-white/20">
                       <Image
                         src={imagePreview || formData.image}
-                        alt="Müvekkil"
+                        alt="Öğrenci"
                         fill
                         className="object-cover"
                       />
@@ -375,7 +375,7 @@ export default function TestimonialsPage() {
             <div className="text-6xl mb-4">💬</div>
             <h2 className="text-2xl font-bold text-white mb-4">Henüz yorum yok</h2>
             <p className="text-white/70">
-              İlk müvekkil yorumunu eklemek için yukarıdaki "Yeni Yorum Ekle" butonuna tıklayın.
+              İlk öğrenci yorumunu eklemek için yukarıdaki "Yeni Yorum Ekle" butonuna tıklayın.
             </p>
           </div>
         )}

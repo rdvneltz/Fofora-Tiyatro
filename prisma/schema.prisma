@@ -25,7 +25,7 @@ model HeroSection {
   buttonLink  String
   backgroundImage String?
   videoUrl    String?
-  logo        String?  @default("/assets/murekkep-logo-saydam.png")
+  logo        String?  @default("/assets/fofora-logo.png")
   logoWidth   Int      @default(200)
   logoHeight  Int      @default(200)
   showButton  Boolean  @default(true)
@@ -40,6 +40,8 @@ model Service {
   description String
   icon        String
   details     String
+  ageGroup    String?  // Yaş grubu: "4-6", "7-9", "10-12", "13-17", "18+" vb.
+  duration    String?  // Süre bilgisi: "3 ay", "6 ay" vb.
   order       Int      @default(0)
   active      Boolean  @default(true)
   createdAt   DateTime @default(now())
@@ -141,9 +143,9 @@ model Appointment {
   time            String
   meetingPlatform String   // whatsapp, telegram, zoom, site
   meetingLink     String?  // Generated Zoom/Telegram/Site meeting link
-  consultationType String  // What is the consultation about (required)
-  preferredLawyer String?  // Which team member they want to meet with (optional)
-  description     String   // Detailed description (required)
+  consultationType String  // Hangi kurs/program için (required)
+  preferredLawyer String?  // Hangi eğitmenle görüşmek istiyor (optional)
+  description     String   // Detaylı açıklama (required)
   status          String   @default("pending") // pending, approved, cancelled, completed
   notes           String?
   notificationSent Boolean @default(false) // Status change notification sent

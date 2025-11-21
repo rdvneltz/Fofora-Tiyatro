@@ -121,13 +121,13 @@ export default function AdminAppointments() {
   }
 
   const deleteAppointment = async (id: string) => {
-    if (!confirm('Bu randevuyu silmek istediğinizden emin misiniz?')) return
+    if (!confirm('Bu kaydı silmek istediğinizden emin misiniz?')) return
 
     try {
       await axios.delete(`/api/appointments?id=${id}`)
       fetchAppointments()
     } catch (error) {
-      alert('Randevu silinemedi')
+      alert('Kayıt silinemedi')
     }
   }
 
@@ -182,7 +182,7 @@ export default function AdminAppointments() {
             <Link href="/admin/dashboard" className="text-gold-500 hover:text-gold-400">
               <ArrowLeft className="w-6 h-6" />
             </Link>
-            <h1 className="text-4xl font-bold text-white">Randevu Yönetimi</h1>
+            <h1 className="text-4xl font-bold text-white">Kayıt Yönetimi</h1>
           </div>
           <div className="flex gap-2">
             {['all', 'pending', 'approved', 'cancelled', 'completed'].map(status => (
@@ -205,7 +205,7 @@ export default function AdminAppointments() {
         <div className="grid grid-cols-1 gap-6">
           {filteredAppointments.length === 0 ? (
             <div className="bg-white/5 rounded-xl p-12 text-center">
-              <p className="text-white/60 text-lg">Randevu bulunamadı</p>
+              <p className="text-white/60 text-lg">Kayıt bulunamadı</p>
             </div>
           ) : (
             filteredAppointments.map((appointment) => (
@@ -269,10 +269,10 @@ export default function AdminAppointments() {
                       <p className="text-white font-medium text-sm">{appointment.consultationType}</p>
                     </div>
 
-                    {/* Preferred Lawyer */}
+                    {/* Preferred Instructor */}
                     {appointment.preferredLawyer && (
                       <div>
-                        <p className="text-white/40 text-xs mb-1">Tercih Edilen Avukat:</p>
+                        <p className="text-white/40 text-xs mb-1">Tercih Edilen Eğitmen:</p>
                         <p className="text-white/70 text-sm">{appointment.preferredLawyer}</p>
                       </div>
                     )}

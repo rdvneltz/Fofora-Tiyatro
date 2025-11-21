@@ -31,8 +31,8 @@ const gotham = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Mürekkep Hukuk Bürosu | Profesyonel Hukuki Danışmanlık",
-  description: "Mürekkep Hukuk Bürosu - İstanbul merkezli profesyonel hukuki danışmanlık ve avukatlık hizmetleri",
+  title: "Fofora Tiyatro | Sahnenin Büyüsüyle Kendini Yeniden Keşfet",
+  description: "Fofora Tiyatro - İstanbul Üsküdar merkezli tiyatro eğitimi, drama atölyeleri ve oyunculuk kursları. 4 yaşından yetişkinlere kadar tiyatro eğitimi.",
 };
 
 export default function RootLayout({

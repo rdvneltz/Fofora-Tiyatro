@@ -260,8 +260,8 @@ export default function Home() {
             className="mb-12"
           >
             <Image
-              src={hero.logo || "/assets/murekkep-logo-saydam.png"}
-              alt="Mürekkep Hukuk"
+              src={hero.logo || "/assets/fofora-logo.png"}
+              alt="Fofora Tiyatro"
               width={hero.logoWidth || 200}
               height={hero.logoHeight || 200}
               className="mx-auto drop-shadow-2xl"
@@ -345,10 +345,10 @@ export default function Home() {
             className="text-center mb-16"
             style={{ transformStyle: "preserve-3d" }}
           >
-            <h2 className="text-5xl font-bold text-white mb-4">Hukuki Hizmetlerimiz</h2>
+            <h2 className="text-5xl font-bold text-white mb-4">Eğitim Programlarımız</h2>
             <div className="w-24 h-1 bg-gradient-to-r from-gold-600 to-gold-400 mx-auto mb-6"></div>
             <p className="text-xl text-white/70 max-w-3xl mx-auto">
-              Her türlü hukuki ihtiyacınız için kapsamlı ve profesyonel çözümler
+              Her yaş grubuna özel profesyonel tiyatro ve drama eğitimleri
             </p>
           </motion.div>
 
@@ -396,7 +396,7 @@ export default function Home() {
               </motion.div>
             )) : (
               <div className="col-span-3 text-center text-white/70">
-                Henüz hizmet eklenmemiş. Admin panelden hizmet ekleyebilirsiniz.
+                Henüz eğitim programı eklenmemiş. Admin panelden program ekleyebilirsiniz.
               </div>
             )}
           </div>
@@ -617,7 +617,7 @@ export default function Home() {
             transition={{ duration: 0.8, ease: "easeOut" }}
             className="text-center mb-16"
           >
-            <h2 className="text-5xl font-bold text-white mb-4">Müvekkil Görüşleri</h2>
+            <h2 className="text-5xl font-bold text-white mb-4">Öğrenci Yorumları</h2>
             <div className="w-24 h-1 bg-gradient-to-r from-gold-600 to-gold-400 mx-auto"></div>
           </motion.div>
 
@@ -676,10 +676,10 @@ export default function Home() {
             transition={{ duration: 0.8 }}
             className="text-center mb-16"
           >
-            <h2 className="text-5xl font-bold text-white mb-4">Hukuk Blogu</h2>
+            <h2 className="text-5xl font-bold text-white mb-4">Tiyatro Blogu</h2>
             <div className="w-24 h-1 bg-gradient-to-r from-gold-600 to-gold-400 mx-auto mb-6"></div>
             <p className="text-white/70 text-lg max-w-2xl mx-auto">
-              Hukuk alanındaki güncel gelişmeler, analizler ve öneriler
+              Tiyatro dünyasından haberler, etkinliklerimiz ve oyunlarımız
             </p>
           </motion.div>
 
@@ -763,7 +763,7 @@ export default function Home() {
             <h2 className="text-5xl font-bold text-white mb-4">İletişim</h2>
             <div className="w-24 h-1 bg-gradient-to-r from-gold-600 to-gold-400 mx-auto mb-6"></div>
             <p className="text-xl text-white/70">
-              Hukuki danışmanlık için bizimle iletişime geçin
+              Kurslarımız hakkında bilgi almak için bizimle iletişime geçin
             </p>
           </motion.div>
 
