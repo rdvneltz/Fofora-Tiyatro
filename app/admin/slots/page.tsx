@@ -70,6 +70,19 @@ export default function AdminSlots() {
     fetchSlots()
   }, [])
 
+  // Prevent body scroll when modals are open
+  useEffect(() => {
+    if (showModal || showRecurringModal || showBulkDeleteModal) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [showModal, showRecurringModal, showBulkDeleteModal])
+
   const fetchSlots = async () => {
     try {
       const { data } = await axios.get('/api/slots?admin=true')
