@@ -40,6 +40,7 @@ model Service {
   description String
   icon        String
   details     String
+  image       String?  // Program fotoğrafı
   ageGroup    String?  // Yaş grubu: "4-6", "7-9", "10-12", "13-17", "18+" vb.
   duration    String?  // Süre bilgisi: "3 ay", "6 ay" vb.
   order       Int      @default(0)

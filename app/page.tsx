@@ -27,6 +27,10 @@ interface Service {
   title: string
   description: string
   icon: string
+  details: string
+  image?: string
+  ageGroup?: string
+  duration?: string
 }
 
 interface TeamMember {
@@ -381,18 +385,59 @@ export default function Home() {
                   boxShadow: "0 25px 70px rgba(193, 154, 107, 0.4)",
                   borderColor: "rgba(193, 154, 107, 0.6)",
                 }}
-                className="glass rounded-2xl p-8 transition-all group cursor-pointer border-2 border-transparent perspective-1000"
+                className="glass rounded-2xl overflow-hidden transition-all group cursor-pointer border-2 border-transparent perspective-1000"
                 style={{ transformStyle: "preserve-3d" }}
               >
-                <motion.div
-                  className="text-gold-500 mb-6"
-                  whileHover={{ rotate: 360, scale: 1.2 }}
-                  transition={{ duration: 0.6 }}
-                >
-                  {getIcon(service.icon)}
-                </motion.div>
-                <h3 className="text-2xl font-bold text-white mb-4 group-hover:text-gold-400 transition-colors">{service.title}</h3>
-                <p className="text-white/70 leading-relaxed group-hover:text-white/90 transition-colors">{service.description}</p>
+                {service.image && (
+                  <div className="relative h-48 w-full overflow-hidden">
+                    <Image
+                      src={service.image}
+                      alt={service.title}
+                      fill
+                      className="object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-navy-900 via-navy-900/50 to-transparent opacity-60"></div>
+                  </div>
+                )}
+
+                <div className="p-8">
+                  <motion.div
+                    className="text-gold-500 mb-6"
+                    whileHover={{ rotate: 360, scale: 1.2 }}
+                    transition={{ duration: 0.6 }}
+                  >
+                    {getIcon(service.icon)}
+                  </motion.div>
+
+                  <h3 className="text-2xl font-bold text-white mb-4 group-hover:text-gold-400 transition-colors">
+                    {service.title}
+                  </h3>
+
+                  {(service.ageGroup || service.duration) && (
+                    <div className="flex gap-3 mb-4">
+                      {service.ageGroup && (
+                        <span className="text-xs px-3 py-1 bg-gold-500/20 text-gold-400 rounded-full">
+                          {service.ageGroup}
+                        </span>
+                      )}
+                      {service.duration && (
+                        <span className="text-xs px-3 py-1 bg-white/10 text-white/60 rounded-full">
+                          {service.duration}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  <p className="text-white/70 leading-relaxed mb-4 group-hover:text-white/90 transition-colors">
+                    {service.description}
+                  </p>
+
+                  {service.details && (
+                    <p className="text-white/60 text-sm leading-relaxed line-clamp-3">
+                      {service.details}
+                    </p>
+                  )}
+                </div>
               </motion.div>
             )) : (
               <div className="col-span-3 text-center text-white/70">

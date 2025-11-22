@@ -13,6 +13,9 @@ interface Service {
   description: string
   icon: string
   details: string
+  image?: string
+  ageGroup?: string
+  duration?: string
   order: number
   active: boolean
 }
@@ -29,6 +32,9 @@ export default function ServicesPage() {
     description: '',
     icon: 'Scale',
     details: '',
+    image: '',
+    ageGroup: '',
+    duration: '',
     order: 0,
     active: true,
   })
@@ -64,7 +70,7 @@ export default function ServicesPage() {
       }
       setShowForm(false)
       setEditingService(null)
-      setFormData({ title: '', description: '', icon: 'Scale', details: '', order: 0, active: true })
+      setFormData({ title: '', description: '', icon: 'Scale', details: '', image: '', ageGroup: '', duration: '', order: 0, active: true })
       fetchServices()
     } catch (error) {
       console.error('İşlem başarısız', error)
@@ -78,6 +84,9 @@ export default function ServicesPage() {
       description: service.description,
       icon: service.icon,
       details: service.details,
+      image: service.image || '',
+      ageGroup: service.ageGroup || '',
+      duration: service.duration || '',
       order: service.order,
       active: service.active,
     })
@@ -116,7 +125,7 @@ export default function ServicesPage() {
             onClick={() => {
               setShowForm(true)
               setEditingService(null)
-              setFormData({ title: '', description: '', icon: 'Scale', details: '', order: 0, active: true })
+              setFormData({ title: '', description: '', icon: 'Scale', details: '', image: '', ageGroup: '', duration: '', order: 0, active: true })
             }}
             className="bg-gradient-to-r from-gold-600 to-gold-500 text-white px-6 py-3 rounded-lg flex items-center gap-2 hover:from-gold-700 hover:to-gold-600"
           >
@@ -171,6 +180,39 @@ export default function ServicesPage() {
                   rows={5}
                   required
                 />
+              </div>
+              <div>
+                <label className="block text-white mb-2">Program Fotoğrafı URL</label>
+                <input
+                  type="text"
+                  value={formData.image}
+                  onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                  className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white"
+                  placeholder="https://example.com/image.jpg"
+                />
+                <p className="text-white/50 text-sm mt-1">Örnek: /assets/programs/cocuk-drama.jpg</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-white mb-2">Yaş Grubu</label>
+                  <input
+                    type="text"
+                    value={formData.ageGroup}
+                    onChange={(e) => setFormData({ ...formData, ageGroup: e.target.value })}
+                    className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white"
+                    placeholder="örn: 4-6 yaş"
+                  />
+                </div>
+                <div>
+                  <label className="block text-white mb-2">Süre</label>
+                  <input
+                    type="text"
+                    value={formData.duration}
+                    onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+                    className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white"
+                    placeholder="örn: 3 ay"
+                  />
+                </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
