@@ -101,18 +101,34 @@ export default function AdminVideos() {
 
     setUploading(true)
     try {
-      const formData = new FormData()
-      formData.append('file', videoFile)
-      formData.append('type', 'video')
-
-      const uploadRes = await axios.post('/api/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+      // Step 1: Get presigned URL from API
+      console.log('Getting presigned URL for:', videoFile.name)
+      const presignedRes = await axios.post('/api/upload/presigned-url', {
+        fileName: videoFile.name,
+        contentType: videoFile.type || 'video/mp4'
       })
 
-      return uploadRes.data.filename
+      const { presignedUrl, publicUrl } = presignedRes.data
+      console.log('Presigned URL received, uploading to R2...')
+
+      // Step 2: Upload directly to R2 using presigned URL
+      await axios.put(presignedUrl, videoFile, {
+        headers: {
+          'Content-Type': videoFile.type || 'video/mp4'
+        },
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = progressEvent.total
+            ? Math.round((progressEvent.loaded * 100) / progressEvent.total)
+            : 0
+          console.log(`Upload progress: ${percentCompleted}%`)
+        }
+      })
+
+      console.log('✅ Video uploaded successfully to R2')
+      return publicUrl // Return full R2 URL
     } catch (error) {
       console.error('Video yükleme hatası:', error)
-      alert('Video yüklenemedi. Dosya boyutu çok büyük olabilir.')
+      alert('Video yüklenemedi. Lütfen tekrar deneyin.')
       return null
     } finally {
       setUploading(false)
