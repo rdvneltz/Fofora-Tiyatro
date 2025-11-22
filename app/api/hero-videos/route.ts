@@ -72,11 +72,29 @@ export async function DELETE(request: NextRequest) {
 
     console.log('Deleting video:', existingVideo)
 
+    // Delete from R2 if it's an R2 URL
+    const { deleteFromR2, extractFileNameFromR2Url, isR2Url } = await import('@/lib/r2')
+
+    if (isR2Url(existingVideo.fileName)) {
+      const r2Key = extractFileNameFromR2Url(existingVideo.fileName)
+      if (r2Key) {
+        console.log('Deleting file from R2:', r2Key)
+        try {
+          await deleteFromR2(r2Key)
+          console.log('✅ File deleted from R2')
+        } catch (r2Error) {
+          console.error('⚠️ Failed to delete from R2 (continuing anyway):', r2Error)
+          // Continue with database deletion even if R2 deletion fails
+        }
+      }
+    }
+
+    // Delete from database
     await prisma.heroVideo.delete({
       where: { id }
     })
 
-    console.log('Video deleted successfully')
+    console.log('Video deleted successfully from database')
     return NextResponse.json({ success: true, message: 'Video deleted successfully' })
   } catch (error) {
     console.error('Delete error details:', error)
