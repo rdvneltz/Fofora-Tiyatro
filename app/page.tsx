@@ -112,6 +112,7 @@ export default function Home() {
   const [selectedTeamMember, setSelectedTeamMember] = useState<TeamMember | null>(null)
   const [heroVideos, setHeroVideos] = useState<string[]>([])
   const [randomPlay, setRandomPlay] = useState(false)
+  const [instagramPosts, setInstagramPosts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [sectionVisibility, setSectionVisibility] = useState({
     hero: true,
@@ -183,7 +184,7 @@ export default function Home() {
     const fetchAllData = async () => {
       try {
         // Tüm verileri paralel olarak çek
-        const [heroRes, servicesRes, teamRes, contactRes, aboutRes, videosRes, settingsRes, testimonialsRes, blogRes] = await Promise.all([
+        const [heroRes, servicesRes, teamRes, contactRes, aboutRes, videosRes, settingsRes, testimonialsRes, blogRes, instagramRes] = await Promise.all([
           axios.get('/api/hero', { headers: { 'Cache-Control': 'no-cache' } }),
           axios.get('/api/services', { headers: { 'Cache-Control': 'no-cache' } }),
           axios.get('/api/team', { headers: { 'Cache-Control': 'no-cache' } }),
@@ -192,7 +193,8 @@ export default function Home() {
           axios.get('/api/hero-videos', { headers: { 'Cache-Control': 'no-cache' } }),
           axios.get('/api/settings', { headers: { 'Cache-Control': 'no-cache' } }),
           axios.get('/api/testimonials', { headers: { 'Cache-Control': 'no-cache' } }),
-          axios.get('/api/blog', { headers: { 'Cache-Control': 'no-cache' } })
+          axios.get('/api/blog', { headers: { 'Cache-Control': 'no-cache' } }),
+          axios.get('/api/instagram-posts', { headers: { 'Cache-Control': 'no-cache' } })
         ])
 
         // Hero verilerini set et
@@ -252,6 +254,12 @@ export default function Home() {
         // Random play ayarını set et
         if (settingsRes.data && settingsRes.data.heroVideoRandomPlay !== undefined) {
           setRandomPlay(settingsRes.data.heroVideoRandomPlay)
+        }
+
+        // Instagram postlarını set et
+        if (instagramRes.data && instagramRes.data.length > 0) {
+          const activePosts = instagramRes.data.filter((p: any) => p.active)
+          setInstagramPosts(activePosts)
         }
       } catch (error) {
         console.error('Data fetch error:', error)
@@ -761,6 +769,7 @@ export default function Home() {
       )}
 
       {/* Instagram Section */}
+      {sectionVisibility.instagram && (
       <section id="instagram" className="py-24 px-4 bg-gradient-to-b from-navy-800 to-navy-900 relative overflow-hidden" style={{ order: getSectionOrder('instagram') }}>
         <motion.div
           className="absolute top-20 left-10 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl"
@@ -796,28 +805,57 @@ export default function Home() {
               @foforatiyatro
             </motion.a>
 
-            <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[1, 2, 3, 4].map((index) => (
-                <motion.a
-                  key={index}
-                  href="https://www.instagram.com/foforatiyatro/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
-                  whileHover={{ scale: 1.05 }}
-                  className="aspect-square bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-xl border border-white/10 flex items-center justify-center group overflow-hidden relative"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-br from-purple-600/0 to-pink-600/0 group-hover:from-purple-600/30 group-hover:to-pink-600/30 transition-all duration-300"></div>
-                  <Instagram className="w-12 h-12 text-white/40 group-hover:text-white/80 transition-all relative z-10" />
-                </motion.a>
-              ))}
-            </div>
+            {instagramPosts.length > 0 ? (
+              <div className="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {instagramPosts.slice(0, 4).map((post, index) => {
+                  // Extract post ID from URL
+                  const postId = post.postUrl.match(/\/p\/([^\/]+)/)?.[1] || post.postUrl.match(/\/reel\/([^\/]+)/)?.[1]
+
+                  return (
+                    <motion.div
+                      key={post.id}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: index * 0.1 }}
+                      className="aspect-square rounded-xl overflow-hidden border border-white/10 bg-white/5"
+                    >
+                      <iframe
+                        src={`${post.postUrl}embed/`}
+                        className="w-full h-full"
+                        frameBorder="0"
+                        scrolling="no"
+                        allowTransparency={true}
+                      />
+                    </motion.div>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[1, 2, 3, 4].map((index) => (
+                  <motion.a
+                    key={index}
+                    href="https://www.instagram.com/foforatiyatro/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.1 }}
+                    whileHover={{ scale: 1.05 }}
+                    className="aspect-square bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-xl border border-white/10 flex items-center justify-center group overflow-hidden relative"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-purple-600/0 to-pink-600/0 group-hover:from-purple-600/30 group-hover:to-pink-600/30 transition-all duration-300"></div>
+                    <Instagram className="w-12 h-12 text-white/40 group-hover:text-white/80 transition-all relative z-10" />
+                  </motion.a>
+                ))}
+              </div>
+            )}
           </motion.div>
         </div>
       </section>
+      )}
 
       {/* Blog Section */}
       {sectionVisibility.blog && blogPosts.length > 0 && (
