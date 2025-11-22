@@ -53,6 +53,7 @@ export default function AdminSettings() {
       about: true,
       team: true,
       testimonials: true,
+      instagram: true,
       blog: true,
       contact: true
     },
@@ -94,6 +95,7 @@ export default function AdminSettings() {
             about: true,
             team: true,
             testimonials: true,
+            instagram: true,
             blog: true,
             contact: true
           },

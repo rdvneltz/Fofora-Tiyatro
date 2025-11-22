@@ -118,6 +118,7 @@ export default function Home() {
     about: true,
     team: true,
     testimonials: true,
+    instagram: true,
     blog: true,
     contact: true
   })

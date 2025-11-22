@@ -12,6 +12,7 @@ interface SectionVisibility {
   about: boolean
   team: boolean
   testimonials: boolean
+  instagram: boolean
   blog: boolean
   contact: boolean
 }
@@ -32,6 +33,7 @@ export default function Navbar() {
     about: true,
     team: true,
     testimonials: true,
+    instagram: true,
     blog: true,
     contact: true
   })
