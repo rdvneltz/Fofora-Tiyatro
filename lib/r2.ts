@@ -114,5 +114,5 @@ export function extractFileNameFromR2Url(url: string): string | null {
  */
 export function isR2Url(url: string): boolean {
   const publicURL = process.env.R2_PUBLIC_URL || ''
-  return url.includes('.r2.dev') || url.includes('r2.cloudflarestorage.com') || (publicURL && url.includes(publicURL))
+  return url.includes('.r2.dev') || url.includes('r2.cloudflarestorage.com') || (publicURL !== '' && url.includes(publicURL))
 }
