@@ -7,12 +7,14 @@ interface VideoCarouselProps {
   videos?: string[]
   videoPath?: string
   fadeDuration?: number
+  randomPlay?: boolean
 }
 
 export default function VideoCarousel({
   videos = [],
   videoPath = '/videos',
-  fadeDuration = 1200
+  fadeDuration = 1200,
+  randomPlay = false
 }: VideoCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [nextIndex, setNextIndex] = useState(1)
@@ -22,18 +24,35 @@ export default function VideoCarousel({
   const video2Ref = useRef<HTMLVideoElement>(null)
   const isTransitioningRef = useRef(false)
 
-  const videoCount = videos.length
+  // Shuffle videos if randomPlay is enabled
+  const shuffledVideosRef = useRef<string[]>([])
+  useEffect(() => {
+    if (randomPlay && videos.length > 0) {
+      // Fisher-Yates shuffle algorithm
+      const shuffled = [...videos]
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+      }
+      shuffledVideosRef.current = shuffled
+    } else {
+      shuffledVideosRef.current = videos
+    }
+  }, [videos, randomPlay])
+
+  const activeVideos = shuffledVideosRef.current.length > 0 ? shuffledVideosRef.current : videos
+  const videoCount = activeVideos.length
 
   // Video path generator
   const getVideoPath = useCallback((index: number) => {
-    if (!videos[index]) return ''
+    if (!activeVideos[index]) return ''
     // If video is already a full URL (R2), use it directly
-    if (videos[index].startsWith('http://') || videos[index].startsWith('https://')) {
-      return videos[index]
+    if (activeVideos[index].startsWith('http://') || activeVideos[index].startsWith('https://')) {
+      return activeVideos[index]
     }
     // Otherwise, use the local path
-    return `${videoPath}/${videos[index]}`
-  }, [videoPath, videos])
+    return `${videoPath}/${activeVideos[index]}`
+  }, [videoPath, activeVideos])
 
   // Initialize videos
   useEffect(() => {

@@ -111,6 +111,7 @@ export default function Home() {
   const [selectedService, setSelectedService] = useState<Service | null>(null)
   const [selectedTeamMember, setSelectedTeamMember] = useState<TeamMember | null>(null)
   const [heroVideos, setHeroVideos] = useState<string[]>([])
+  const [randomPlay, setRandomPlay] = useState(false)
   const [loading, setLoading] = useState(true)
   const [sectionVisibility, setSectionVisibility] = useState({
     hero: true,
@@ -247,6 +248,11 @@ export default function Home() {
         if (settingsRes.data && settingsRes.data.sectionOrder) {
           setSectionOrder(settingsRes.data.sectionOrder)
         }
+
+        // Random play ayarını set et
+        if (settingsRes.data && settingsRes.data.heroVideoRandomPlay !== undefined) {
+          setRandomPlay(settingsRes.data.heroVideoRandomPlay)
+        }
       } catch (error) {
         console.error('Data fetch error:', error)
       } finally {
@@ -293,7 +299,7 @@ export default function Home() {
       {sectionVisibility.hero && (
         <section id="hero" className="relative h-screen flex items-center justify-center overflow-hidden" style={{ order: getSectionOrder('hero') }}>
         {/* Full Screen Video Carousel Background */}
-        <VideoCarousel videos={heroVideos} videoPath="/videos/optimized" fadeDuration={1500} />
+        <VideoCarousel videos={heroVideos} videoPath="/videos/optimized" fadeDuration={1500} randomPlay={randomPlay} />
 
         <motion.div
           style={{ opacity, scale }}

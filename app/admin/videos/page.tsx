@@ -21,13 +21,18 @@ export default function AdminVideos() {
   const [videos, setVideos] = useState<HeroVideo[]>([])
   const [loading, setLoading] = useState(true)
   const [newVideoName, setNewVideoName] = useState('')
-  const [videoFile, setVideoFile] = useState<File | null>(null)
+  const [videoFiles, setVideoFiles] = useState<File[]>([])
   const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [showProgress, setShowProgress] = useState(false)
+  const [currentUploadIndex, setCurrentUploadIndex] = useState(0)
+  const [totalFiles, setTotalFiles] = useState(0)
   const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; videoId: string | null; videoName: string }>({
     show: false,
     videoId: null,
     videoName: ''
   })
+  const [randomPlay, setRandomPlay] = useState(false)
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -37,6 +42,7 @@ export default function AdminVideos() {
 
   useEffect(() => {
     fetchVideos()
+    fetchSettings()
   }, [])
 
   const fetchVideos = async () => {
@@ -50,49 +56,107 @@ export default function AdminVideos() {
     }
   }
 
-  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      setVideoFile(file)
-      // Auto-fill filename from uploaded file
-      setNewVideoName(file.name)
+  const fetchSettings = async () => {
+    try {
+      const { data } = await axios.get('/api/settings')
+      setRandomPlay(data?.heroVideoRandomPlay || false)
+    } catch (error) {
+      console.error('Failed to fetch settings', error)
     }
   }
 
-  const uploadVideo = async () => {
-    if (!videoFile) return null
+  const toggleRandomPlay = async () => {
+    try {
+      const newValue = !randomPlay
+      await axios.patch('/api/settings', {
+        heroVideoRandomPlay: newValue
+      })
+      setRandomPlay(newValue)
+    } catch (error) {
+      console.error('Failed to update random play setting', error)
+      alert('Ayar güncellenemedi')
+    }
+  }
 
-    setUploading(true)
+  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (files && files.length > 0) {
+      const fileArray = Array.from(files)
+      setVideoFiles(fileArray)
+      setTotalFiles(fileArray.length)
+      // Auto-fill filename from first file
+      setNewVideoName(fileArray[0].name)
+    }
+  }
+
+  const uploadSingleVideo = async (file: File, index: number, total: number) => {
     try {
       // Step 1: Get presigned URL from API
-      console.log('Getting presigned URL for:', videoFile.name)
+      console.log(`[${index + 1}/${total}] Getting presigned URL for:`, file.name)
+
       const presignedRes = await axios.post('/api/upload/presigned-url', {
-        fileName: videoFile.name,
-        contentType: videoFile.type || 'video/mp4'
+        fileName: file.name,
+        contentType: file.type || 'video/mp4'
       })
 
       const { presignedUrl, publicUrl } = presignedRes.data
-      console.log('Presigned URL received, uploading to R2...')
+      console.log(`[${index + 1}/${total}] Presigned URL received, uploading to R2...`)
 
       // Step 2: Upload directly to R2 using presigned URL
-      await axios.put(presignedUrl, videoFile, {
+      await axios.put(presignedUrl, file, {
         headers: {
-          'Content-Type': videoFile.type || 'video/mp4'
+          'Content-Type': file.type || 'video/mp4'
         },
         onUploadProgress: (progressEvent) => {
-          const percentCompleted = progressEvent.total
-            ? Math.round((progressEvent.loaded * 100) / progressEvent.total)
-            : 0
-          console.log(`Upload progress: ${percentCompleted}%`)
+          if (progressEvent.total) {
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+            setUploadProgress(percentCompleted)
+          }
         }
       })
 
-      console.log('✅ Video uploaded successfully to R2')
+      console.log(`✅ [${index + 1}/${total}] Video uploaded successfully to R2`)
       return publicUrl // Return full R2 URL
     } catch (error) {
-      console.error('Video yükleme hatası:', error)
-      alert('Video yüklenemedi. Lütfen tekrar deneyin.')
+      console.error(`❌ [${index + 1}/${total}] Video yükleme hatası:`, error)
       return null
+    }
+  }
+
+  const uploadVideos = async () => {
+    if (videoFiles.length === 0) return []
+
+    setUploading(true)
+    setShowProgress(true)
+    setUploadProgress(0)
+    setCurrentUploadIndex(0)
+
+    const uploadedUrls: string[] = []
+
+    try {
+      for (let i = 0; i < videoFiles.length; i++) {
+        setCurrentUploadIndex(i + 1)
+        const publicUrl = await uploadSingleVideo(videoFiles[i], i, videoFiles.length)
+        if (publicUrl) {
+          uploadedUrls.push(publicUrl)
+        }
+      }
+
+      // Hide progress bar after 2 seconds
+      setTimeout(() => {
+        setShowProgress(false)
+        setUploadProgress(0)
+        setCurrentUploadIndex(0)
+      }, 2000)
+
+      return uploadedUrls
+    } catch (error) {
+      console.error('Toplu video yükleme hatası:', error)
+      alert('Bazı videolar yüklenemedi. Lütfen kontrol edin.')
+      setShowProgress(false)
+      setUploadProgress(0)
+      setCurrentUploadIndex(0)
+      return uploadedUrls
     } finally {
       setUploading(false)
     }
@@ -101,32 +165,52 @@ export default function AdminVideos() {
   const addVideo = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    let fileName = newVideoName.trim()
+    // If user uploaded video files, upload them
+    if (videoFiles.length > 0) {
+      const uploadedFileNames = await uploadVideos()
+      if (uploadedFileNames.length === 0) {
+        alert('Hiçbir video yüklenemedi. Lütfen tekrar deneyin.')
+        return
+      }
 
-    // If user uploaded a video file, upload it first
-    if (videoFile) {
-      const uploadedFileName = await uploadVideo()
-      if (!uploadedFileName) return // Upload failed
-      fileName = uploadedFileName
-    }
+      try {
+        let maxOrder = videos.length > 0 ? Math.max(...videos.map(v => v.order)) : -1
 
-    if (!fileName) {
+        // Add all uploaded videos to database
+        for (const fileName of uploadedFileNames) {
+          await axios.post('/api/hero-videos', {
+            fileName,
+            order: maxOrder + 1,
+            active: true
+          })
+          maxOrder++
+        }
+
+        setNewVideoName('')
+        setVideoFiles([])
+        fetchVideos()
+        alert(`${uploadedFileNames.length} video başarıyla eklendi!`)
+      } catch (error) {
+        alert('Videolar yüklendi ancak veritabanına eklenemedi')
+      }
+    } else if (newVideoName.trim()) {
+      // Manual filename entry
+      const fileName = newVideoName.trim()
+
+      try {
+        const maxOrder = videos.length > 0 ? Math.max(...videos.map(v => v.order)) : -1
+        await axios.post('/api/hero-videos', {
+          fileName,
+          order: maxOrder + 1,
+          active: true
+        })
+        setNewVideoName('')
+        fetchVideos()
+      } catch (error) {
+        alert('Video eklenemedi')
+      }
+    } else {
       alert('Lütfen bir video dosyası yükleyin veya dosya adı girin')
-      return
-    }
-
-    try {
-      const maxOrder = videos.length > 0 ? Math.max(...videos.map(v => v.order)) : -1
-      await axios.post('/api/hero-videos', {
-        fileName,
-        order: maxOrder + 1,
-        active: true
-      })
-      setNewVideoName('')
-      setVideoFile(null)
-      fetchVideos()
-    } catch (error) {
-      alert('Video eklenemedi')
     }
   }
 
@@ -221,9 +305,26 @@ export default function AdminVideos() {
             </Link>
             <h1 className="text-4xl font-bold text-white">Hero Video Yönetimi</h1>
           </div>
-          <p className="text-white/60">
+          <p className="text-white/60 mb-4">
             {videos.length} video yönetiliyor. Yeni video yükleyebilir veya mevcut videoları düzenleyebilirsiniz.
           </p>
+
+          {/* Random Play Toggle */}
+          <div className="flex items-center gap-3 bg-white/5 backdrop-blur-lg rounded-lg p-4 border border-white/10">
+            <input
+              type="checkbox"
+              id="randomPlay"
+              checked={randomPlay}
+              onChange={toggleRandomPlay}
+              className="w-5 h-5 rounded border-2 border-white/30 bg-white/10 checked:bg-gold-500 checked:border-gold-500 cursor-pointer transition-all"
+            />
+            <label htmlFor="randomPlay" className="text-white font-medium cursor-pointer select-none">
+              Videoları karışık sırada oynat
+            </label>
+            <span className="ml-auto text-white/40 text-sm">
+              {randomPlay ? '🔀 Rastgele' : '📋 Sıralı'}
+            </span>
+          </div>
         </div>
 
         {/* Add Video Form */}
@@ -231,14 +332,34 @@ export default function AdminVideos() {
           <div className="space-y-4">
             {/* Video Upload */}
             <div>
-              <label className="block text-white mb-2 text-sm font-medium">Video Dosyası Yükle</label>
-              <input
-                type="file"
-                accept="video/mp4,video/webm"
-                onChange={handleVideoChange}
-                className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-gold-500 file:text-white hover:file:bg-gold-600"
-              />
-              <p className="text-white/40 text-xs mt-1">MP4 veya WebM formatında. Maksimum 50MB önerilir.</p>
+              <label className="block text-white mb-2 text-sm font-medium">Video Dosyaları Yükle</label>
+              <div className="flex gap-2">
+                <input
+                  type="file"
+                  accept="video/mp4,video/webm"
+                  multiple
+                  onChange={handleVideoChange}
+                  className="flex-1 px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-gold-500 file:text-white hover:file:bg-gold-600"
+                />
+                {videoFiles.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setVideoFiles([])
+                      setNewVideoName('')
+                      setTotalFiles(0)
+                    }}
+                    className="px-4 py-3 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg font-medium transition-all"
+                  >
+                    Temizle
+                  </button>
+                )}
+              </div>
+              <p className="text-white/40 text-xs mt-1">
+                {videoFiles.length > 0
+                  ? `${videoFiles.length} video seçildi`
+                  : 'MP4 veya WebM formatında. Birden fazla video seçebilirsiniz.'}
+              </p>
             </div>
 
             {/* OR Divider */}
@@ -255,7 +376,8 @@ export default function AdminVideos() {
                 value={newVideoName}
                 onChange={(e) => setNewVideoName(e.target.value)}
                 placeholder="Manuel dosya adı girin (örn: 1.mp4)"
-                className="flex-1 px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-gold-500"
+                disabled={videoFiles.length > 0}
+                className="flex-1 px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-gold-500 disabled:opacity-50"
               />
               <button
                 type="submit"
@@ -270,13 +392,52 @@ export default function AdminVideos() {
                 ) : (
                   <>
                     <Plus className="w-5 h-5" />
-                    Ekle
+                    {videoFiles.length > 0 ? `${videoFiles.length} Video Ekle` : 'Ekle'}
                   </>
                 )}
               </button>
             </div>
           </div>
         </form>
+
+        {/* Upload Progress Bar */}
+        {showProgress && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="bg-gradient-to-r from-gold-500/20 to-gold-600/20 backdrop-blur-lg rounded-xl p-6 border border-gold-500/30 mb-6"
+          >
+            <div className="flex items-center gap-4 mb-3">
+              <div className="w-10 h-10 rounded-full bg-gold-500/30 flex items-center justify-center">
+                <VideoIcon className="w-5 h-5 text-gold-400 animate-pulse" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-white font-semibold text-lg">
+                  {totalFiles > 1
+                    ? `Video Yükleniyor... (${currentUploadIndex}/${totalFiles})`
+                    : 'Video Yükleniyor...'}
+                </h3>
+                <p className="text-white/60 text-sm">
+                  {totalFiles > 1
+                    ? `${currentUploadIndex}. video R2 sunucusuna yükleniyor. Lütfen bekleyin.`
+                    : 'Lütfen bekleyin, video R2 sunucusuna yükleniyor.'}
+                </p>
+              </div>
+              <div className="text-2xl font-bold text-gold-400">{uploadProgress}%</div>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="w-full bg-white/10 rounded-full h-3 overflow-hidden">
+              <motion.div
+                className="h-full bg-gradient-to-r from-gold-500 to-gold-400 rounded-full"
+                initial={{ width: '0%' }}
+                animate={{ width: `${uploadProgress}%` }}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
+              />
+            </div>
+          </motion.div>
+        )}
 
         {/* Video List */}
         <div className="space-y-4">
