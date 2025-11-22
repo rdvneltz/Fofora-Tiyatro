@@ -27,6 +27,11 @@ export default function VideoCarousel({
   // Video path generator
   const getVideoPath = useCallback((index: number) => {
     if (!videos[index]) return ''
+    // If video is already a full URL (R2), use it directly
+    if (videos[index].startsWith('http://') || videos[index].startsWith('https://')) {
+      return videos[index]
+    }
+    // Otherwise, use the local path
     return `${videoPath}/${videos[index]}`
   }, [videoPath, videos])
 
