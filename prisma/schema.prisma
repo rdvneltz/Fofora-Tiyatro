@@ -95,6 +95,7 @@ model Testimonial {
   content     String
   rating      Int      @default(5)
   image       String?
+  videoUrl    String?  // YouTube URL or uploaded video path
   active      Boolean  @default(true)
   order       Int      @default(0)
   createdAt   DateTime @default(now())
@@ -128,6 +129,7 @@ model SiteSettings {
   footerText  String?
   socialMedia Json?
   sectionVisibility Json? // {hero: true, services: true, about: true, team: true, contact: true}
+  sectionOrder Json? // ["hero", "services", "about", "team", "testimonials", "instagram", "blog", "contact"]
   copyrightText String? // Customizable copyright text
   legalLinks  Json?   // [{title: string, content: string, active: boolean, order: number}]
   appointmentFormSettings Json? // {consultationTypes: string[], showLawyerSelection: boolean, descriptionLabel: string}

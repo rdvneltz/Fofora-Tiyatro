@@ -15,6 +15,7 @@ interface Testimonial {
   content: string
   rating: number
   image?: string
+  videoUrl?: string
   active: boolean
   order: number
   createdAt: string
@@ -36,6 +37,7 @@ export default function TestimonialsPage() {
     content: '',
     rating: 5,
     image: '',
+    videoUrl: '',
     active: true,
     order: 0,
   })
@@ -104,6 +106,7 @@ export default function TestimonialsPage() {
         content: '',
         rating: 5,
         image: '',
+        videoUrl: '',
         active: true,
         order: 0,
       })
@@ -122,6 +125,7 @@ export default function TestimonialsPage() {
       content: testimonial.content,
       rating: testimonial.rating,
       image: testimonial.image || '',
+      videoUrl: testimonial.videoUrl || '',
       active: testimonial.active,
       order: testimonial.order,
     })
@@ -167,6 +171,7 @@ export default function TestimonialsPage() {
                 content: '',
                 rating: 5,
                 image: '',
+                videoUrl: '',
                 active: true,
                 order: 0,
               })
@@ -250,6 +255,20 @@ export default function TestimonialsPage() {
                   rows={4}
                   required
                 />
+              </div>
+
+              <div>
+                <label className="block text-white mb-2">Video URL (İsteğe Bağlı)</label>
+                <input
+                  type="text"
+                  value={formData.videoUrl}
+                  onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
+                  className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white"
+                  placeholder="YouTube URL veya yerel video yolu: /videos/testimonial1.mp4"
+                />
+                <p className="text-white/40 text-sm mt-1">
+                  YouTube URL (örn: https://youtube.com/watch?v=...) veya yerel video yolu girebilirsiniz.
+                </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

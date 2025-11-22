@@ -36,6 +36,7 @@ export default function Navbar() {
     contact: true
   })
   const [socialMediaLinks, setSocialMediaLinks] = useState<SocialMediaLink[]>([])
+  const [logo, setLogo] = useState<string>('/assets/fofora-logo.png')
 
   useEffect(() => {
     const handleScroll = () => {
@@ -64,6 +65,9 @@ export default function Navbar() {
             ? res.data.socialMedia
             : []
           setSocialMediaLinks(socialMedia)
+        }
+        if (res.data && res.data.logo) {
+          setLogo(res.data.logo)
         }
       } catch (error) {
         console.error('Failed to fetch navbar settings:', error)
@@ -129,7 +133,7 @@ export default function Navbar() {
                 onClick={() => scrollToSection('hero')}
               >
                 <Image
-                  src="/assets/murekkep-logo-saydam.png"
+                  src={logo}
                   alt="Fofora Tiyatro"
                   width={80}
                   height={80}

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Save, Upload, Palette, Globe, ArrowLeft, Instagram, Youtube } from 'lucide-react'
+import { Save, Upload, Palette, Globe, ArrowLeft, Instagram, Youtube, ArrowUp, ArrowDown, GripVertical } from 'lucide-react'
 import axios from 'axios'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -26,9 +26,11 @@ interface SiteSettings {
     about: boolean
     team: boolean
     testimonials: boolean
+    instagram: boolean
     blog: boolean
     contact: boolean
   }
+  sectionOrder?: string[]
 }
 
 export default function AdminSettings() {
@@ -53,7 +55,8 @@ export default function AdminSettings() {
       testimonials: true,
       blog: true,
       contact: true
-    }
+    },
+    sectionOrder: ['hero', 'services', 'about', 'team', 'testimonials', 'instagram', 'blog', 'contact']
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -93,7 +96,8 @@ export default function AdminSettings() {
             testimonials: true,
             blog: true,
             contact: true
-          }
+          },
+          sectionOrder: data.sectionOrder || ['hero', 'services', 'about', 'team', 'testimonials', 'instagram', 'blog', 'contact']
         })
         if (data.logo) setLogoPreview(data.logo)
       }
@@ -114,6 +118,38 @@ export default function AdminSettings() {
       }
       reader.readAsDataURL(file)
     }
+  }
+
+  const moveSectionUp = (index: number) => {
+    if (index === 0 || !settings.sectionOrder) return
+    const newOrder = [...settings.sectionOrder]
+    const temp = newOrder[index]
+    newOrder[index] = newOrder[index - 1]
+    newOrder[index - 1] = temp
+    setSettings({ ...settings, sectionOrder: newOrder })
+  }
+
+  const moveSectionDown = (index: number) => {
+    if (!settings.sectionOrder || index === settings.sectionOrder.length - 1) return
+    const newOrder = [...settings.sectionOrder]
+    const temp = newOrder[index]
+    newOrder[index] = newOrder[index + 1]
+    newOrder[index + 1] = temp
+    setSettings({ ...settings, sectionOrder: newOrder })
+  }
+
+  const getSectionLabel = (sectionId: string) => {
+    const labels: Record<string, string> = {
+      hero: 'Hero Bölümü',
+      services: 'Programlar',
+      about: 'Hakkımızda',
+      team: 'Ekip',
+      testimonials: 'Öğrenci Görüşleri',
+      instagram: 'Instagram',
+      blog: 'Blog',
+      contact: 'İletişim'
+    }
+    return labels[sectionId] || sectionId
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -438,6 +474,59 @@ export default function AdminSettings() {
 
             <p className="text-white/40 text-sm mt-4">
               Not: İşaretlenmemiş bölümler ana sayfada gizlenecektir.
+            </p>
+          </div>
+
+          {/* Section Order */}
+          <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
+            <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+              <GripVertical className="w-6 h-6 text-gold-500" />
+              Bölüm Sıralaması
+            </h2>
+
+            <div className="space-y-2">
+              {settings.sectionOrder?.map((sectionId, index) => (
+                <div
+                  key={sectionId}
+                  className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-white/40 text-sm font-mono">#{index + 1}</span>
+                    <span className="text-white font-medium">{getSectionLabel(sectionId)}</span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => moveSectionUp(index)}
+                      disabled={index === 0}
+                      className={`p-2 rounded-lg transition-all ${
+                        index === 0
+                          ? 'text-white/20 cursor-not-allowed'
+                          : 'text-white/60 hover:text-white hover:bg-white/10'
+                      }`}
+                    >
+                      <ArrowUp className="w-5 h-5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => moveSectionDown(index)}
+                      disabled={index === (settings.sectionOrder?.length || 0) - 1}
+                      className={`p-2 rounded-lg transition-all ${
+                        index === (settings.sectionOrder?.length || 0) - 1
+                          ? 'text-white/20 cursor-not-allowed'
+                          : 'text-white/60 hover:text-white hover:bg-white/10'
+                      }`}
+                    >
+                      <ArrowDown className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <p className="text-white/40 text-sm mt-4">
+              Not: Bölümlerin sıralamasını yukarı/aşağı butonları ile değiştirebilirsiniz. Değişiklikler ana sayfada görünecektir.
             </p>
           </div>
 

@@ -21,20 +21,23 @@ async function main() {
     },
   })
 
-  // Hero section
-  await prisma.heroSection.create({
-    data: {
-      title: 'FOFORA TİYATRO',
-      subtitle: 'Sahnenin Büyüsüyle Kendini Yeniden Keşfet',
-      description: 'Boşluk sanatın sahnesidir - Her yaştan bireylere tiyatro eğitimi ile yaratıcılığını keşfet',
-      buttonText: 'Hemen Kayıt Ol',
-      buttonLink: '#contact',
-      logo: '/assets/fofora-logo.png',
-      logoWidth: 250,
-      logoHeight: 250,
-      active: true,
-    },
-  })
+  // Hero section - sadece yoksa ekle
+  const heroCount = await prisma.heroSection.count()
+  if (heroCount === 0) {
+    await prisma.heroSection.create({
+      data: {
+        title: 'FOFORA TİYATRO',
+        subtitle: 'Sahnenin Büyüsüyle Kendini Yeniden Keşfet',
+        description: 'Boşluk sanatın sahnesidir - Her yaştan bireylere tiyatro eğitimi ile yaratıcılığını keşfet',
+        buttonText: 'Hemen Kayıt Ol',
+        buttonLink: '#contact',
+        logo: '/assets/fofora-logo.png',
+        logoWidth: 250,
+        logoHeight: 250,
+        active: true,
+      },
+    })
+  }
 
   // Eğitim Programları
   const programs = [
@@ -91,14 +94,22 @@ async function main() {
     },
   ]
 
+  // Programları ekle - sadece title yoksa
   for (const program of programs) {
-    await prisma.service.create({
-      data: program,
+    const exists = await prisma.service.findFirst({
+      where: { title: program.title }
     })
+    if (!exists) {
+      await prisma.service.create({
+        data: program,
+      })
+    }
   }
 
-  // Hakkımızda
-  await prisma.aboutSection.create({
+  // Hakkımızda - sadece yoksa ekle
+  const aboutCount = await prisma.aboutSection.count()
+  if (aboutCount === 0) {
+    await prisma.aboutSection.create({
     data: {
       title: 'Fofora Tiyatro Hakkında',
       content: 'Fofora Tiyatro olarak, 4 yaşından yetişkinlere kadar her yaş grubuna özel tiyatro eğitimi sunuyoruz. Sanatın dönüştürücü gücüne inanarak, her bireyin içindeki yaratıcılığı ve özgüveni ortaya çıkarmayı hedefliyoruz. İcadiye, Üsküdar\'daki modern atölye mekanımızda profesyonel eğitmenlerimiz eşliğinde tiyatro yolculuğunuza başlayın.',
@@ -115,9 +126,12 @@ async function main() {
       active: true,
     },
   })
+  }
 
-  // İletişim bilgileri
-  await prisma.contactInfo.create({
+  // İletişim bilgileri - sadece yoksa ekle
+  const contactCount = await prisma.contactInfo.count()
+  if (contactCount === 0) {
+    await prisma.contactInfo.create({
     data: {
       address: 'İcadiye mh. Haşacıraf sk. şirin apt. no:26 kapı:2, Üsküdar/İstanbul',
       phone: '+90 538 496 26 24',
@@ -125,9 +139,12 @@ async function main() {
       workingHours: 'Pazartesi - Cumartesi: 10:00 - 20:00',
     },
   })
+  }
 
-  // Site ayarları
-  await prisma.siteSettings.create({
+  // Site ayarları - sadece yoksa ekle
+  const settingsCount = await prisma.siteSettings.count()
+  if (settingsCount === 0) {
+    await prisma.siteSettings.create({
     data: {
       siteName: 'Fofora Tiyatro',
       siteTitle: 'Fofora Tiyatro | Sahnenin Büyüsüyle Kendini Yeniden Keşfet',
@@ -166,10 +183,13 @@ async function main() {
       }
     },
   })
+  }
 
-  // Örnek blog yazısı
-  await prisma.blogPost.create({
-    data: {
+  // Örnek blog yazıları - slug'a göre upsert
+  await prisma.blogPost.upsert({
+    where: { slug: 'tiyatro-egitimi-neden-onemli' },
+    update: {},
+    create: {
       title: 'Tiyatro Eğitimi Neden Önemli?',
       slug: 'tiyatro-egitimi-neden-onemli',
       excerpt: 'Tiyatro eğitiminin çocukların ve yetişkinlerin gelişimine katkıları hakkında bilmeniz gerekenler.',
@@ -188,16 +208,17 @@ Tiyatro eğitiminin faydaları:
 5. Empati: Farklı karakterleri canlandırmak, başkalarının duygularını anlamayı kolaylaştırır.
 
 Fofora Tiyatro olarak, her yaş grubuna özel programlarımızla bu becerileri kazandırıyoruz.`,
-      image: '/assets/blog/tiyatro-egitimi.jpg',
+      image: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&auto=format&fit=crop',
       category: 'Eğitim',
       tags: ['Tiyatro', 'Eğitim', 'Çocuk Gelişimi', 'Sanat'],
       published: true,
-    },
+    }
   })
 
-  // Örnek oyunlar/etkinlikler blog yazısı
-  await prisma.blogPost.create({
-    data: {
+  await prisma.blogPost.upsert({
+    where: { slug: 'sen-kimsin-cocuk-oyunu' },
+    update: {},
+    create: {
       title: 'Sen Kimsin? - Çocuk Oyunumuz Sahnede',
       slug: 'sen-kimsin-cocuk-oyunu',
       excerpt: 'Çocuk Drama Atölyesi öğrencilerimizin hazırladığı "Sen Kimsin?" oyunumuz seyirciyle buluştu.',
@@ -212,10 +233,11 @@ Prova sürecinde öğrencilerimiz:
 - Takım çalışması deneyimi yaşadılar
 
 Velilerimiz ve seyircilerimizin yoğun ilgisiyle karşılanan oyun, tüm ekibimiz için unutulmaz bir deneyim oldu.`,
+      image: 'https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?w=800&auto=format&fit=crop',
       category: 'Etkinlikler',
       tags: ['Oyun', 'Çocuk Tiyatrosu', 'Performans'],
       published: true,
-    },
+    }
   })
 
   console.log('Seed tamamlandı! Fofora Tiyatro veritabanı hazır.')

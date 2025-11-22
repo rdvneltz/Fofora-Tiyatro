@@ -1,7 +1,7 @@
 'use client'
 
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
-import { Scale, Users, FileText, Phone, Mail, MapPin, Award, Shield, Clock, ChevronRight, Star, BookOpen, Settings, X } from 'lucide-react'
+import { Scale, Users, FileText, Phone, Mail, MapPin, Award, Shield, Clock, ChevronRight, Star, BookOpen, Settings, X, Instagram } from 'lucide-react'
 import Image from 'next/image'
 import { useRef, useEffect, useState } from 'react'
 import axios from 'axios'
@@ -108,6 +108,8 @@ export default function Home() {
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([])
   const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false)
   const [selectedBlogPost, setSelectedBlogPost] = useState<BlogPost | null>(null)
+  const [selectedService, setSelectedService] = useState<Service | null>(null)
+  const [selectedTeamMember, setSelectedTeamMember] = useState<TeamMember | null>(null)
   const [heroVideos, setHeroVideos] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [sectionVisibility, setSectionVisibility] = useState({
@@ -119,6 +121,9 @@ export default function Home() {
     blog: true,
     contact: true
   })
+  const [sectionOrder, setSectionOrder] = useState<string[]>([
+    'hero', 'services', 'about', 'team', 'testimonials', 'instagram', 'blog', 'contact'
+  ])
 
   // Prevent body scroll when blog modal is open
   useEffect(() => {
@@ -132,6 +137,32 @@ export default function Home() {
       document.body.style.overflow = ''
     }
   }, [selectedBlogPost])
+
+  // Prevent body scroll when service modal is open
+  useEffect(() => {
+    if (selectedService) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [selectedService])
+
+  // Prevent body scroll when team member modal is open
+  useEffect(() => {
+    if (selectedTeamMember) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [selectedTeamMember])
 
   // Prevent body scroll when appointment modal is open
   useEffect(() => {
@@ -210,6 +241,11 @@ export default function Home() {
         if (settingsRes.data && settingsRes.data.sectionVisibility) {
           setSectionVisibility(settingsRes.data.sectionVisibility)
         }
+
+        // Section order ayarlarını set et
+        if (settingsRes.data && settingsRes.data.sectionOrder) {
+          setSectionOrder(settingsRes.data.sectionOrder)
+        }
       } catch (error) {
         console.error('Data fetch error:', error)
       } finally {
@@ -232,6 +268,11 @@ export default function Home() {
     return icons[iconName] || <Scale className="w-8 h-8" />
   }
 
+  const getSectionOrder = (sectionId: string) => {
+    const index = sectionOrder.indexOf(sectionId)
+    return index >= 0 ? index : 999
+  }
+
   if (loading || !hero) {
     return (
       <div className="min-h-screen bg-navy-900 flex items-center justify-center">
@@ -244,12 +285,12 @@ export default function Home() {
   }
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-navy-900 scroll-smooth">
+    <div ref={containerRef} className="min-h-screen bg-navy-900 scroll-smooth flex flex-col">
       <Navbar />
 
       {/* Hero Section */}
       {sectionVisibility.hero && (
-        <section id="hero" className="relative h-screen flex items-center justify-center overflow-hidden">
+        <section id="hero" className="relative h-screen flex items-center justify-center overflow-hidden" style={{ order: getSectionOrder('hero') }}>
         {/* Full Screen Video Carousel Background */}
         <VideoCarousel videos={heroVideos} videoPath="/videos/optimized" fadeDuration={1500} />
 
@@ -329,7 +370,7 @@ export default function Home() {
 
       {/* Services Section */}
       {sectionVisibility.services && services.length > 0 && (
-      <section id="services" className="py-24 px-4 bg-gradient-to-b from-navy-900 to-navy-800 relative overflow-hidden">
+      <section id="services" className="py-24 px-4 bg-gradient-to-b from-navy-900 to-navy-800 relative overflow-hidden" style={{ order: getSectionOrder('services') }}>
         {/* Background decoration */}
         <motion.div
           className="absolute top-0 right-0 w-96 h-96 bg-gold-500/5 rounded-full blur-3xl"
@@ -385,6 +426,7 @@ export default function Home() {
                   boxShadow: "0 25px 70px rgba(193, 154, 107, 0.4)",
                   borderColor: "rgba(193, 154, 107, 0.6)",
                 }}
+                onClick={() => setSelectedService(service)}
                 className="glass rounded-2xl overflow-hidden transition-all group cursor-pointer border-2 border-transparent perspective-1000"
                 style={{ transformStyle: "preserve-3d" }}
               >
@@ -451,7 +493,7 @@ export default function Home() {
 
       {/* About Section */}
       {sectionVisibility.about && about && (
-        <section id="about" className="py-24 px-4 bg-gradient-to-b from-navy-800 to-navy-900 relative overflow-hidden">
+        <section id="about" className="py-24 px-4 bg-gradient-to-b from-navy-800 to-navy-900 relative overflow-hidden" style={{ order: getSectionOrder('about') }}>
           {/* Animated background */}
           <motion.div
             className="absolute -top-40 -left-40 w-80 h-80 bg-gold-500/10 rounded-full blur-3xl"
@@ -562,7 +604,7 @@ export default function Home() {
 
       {/* Team Section */}
       {sectionVisibility.team && team.length > 0 && (
-        <section id="team" className="py-24 px-4 bg-gradient-to-b from-navy-800 to-navy-900 relative overflow-hidden">
+        <section id="team" className="py-24 px-4 bg-gradient-to-b from-navy-800 to-navy-900 relative overflow-hidden" style={{ order: getSectionOrder('team') }}>
           {/* Floating particles */}
           {[...Array(5)].map((_, i) => (
             <motion.div
@@ -610,7 +652,8 @@ export default function Home() {
                   whileInView={{ opacity: 1, y: 0, scale: 1 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.6, delay: index * 0.1, ease: "easeOut" }}
-                  className="glass rounded-2xl overflow-hidden group hover:shadow-2xl hover:shadow-gold-500/20 transition-all"
+                  onClick={() => setSelectedTeamMember(member)}
+                  className="glass rounded-2xl overflow-hidden group hover:shadow-2xl hover:shadow-gold-500/20 transition-all cursor-pointer"
                 >
                   <div className="relative overflow-hidden aspect-[3/4]">
                     <Image
@@ -653,7 +696,7 @@ export default function Home() {
 
       {/* Testimonials Section */}
       {sectionVisibility.testimonials && testimonials.length > 0 && (
-      <section id="testimonials" className="py-24 px-4 bg-gradient-to-b from-navy-900 to-navy-800">
+      <section id="testimonials" className="py-24 px-4 bg-gradient-to-b from-navy-900 to-navy-800" style={{ order: getSectionOrder('testimonials') }}>
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 50, scale: 0.9 }}
@@ -710,9 +753,68 @@ export default function Home() {
       </section>
       )}
 
+      {/* Instagram Section */}
+      <section id="instagram" className="py-24 px-4 bg-gradient-to-b from-navy-800 to-navy-900 relative overflow-hidden" style={{ order: getSectionOrder('instagram') }}>
+        <motion.div
+          className="absolute top-20 left-10 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl"
+          animate={{
+            x: [0, 50, 0],
+            y: [0, 30, 0],
+          }}
+          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+        />
+
+        <div className="max-w-7xl mx-auto text-center relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+          >
+            <h2 className="text-5xl font-bold text-white mb-4">Instagram'da Bizi Takip Edin</h2>
+            <div className="w-24 h-1 bg-gradient-to-r from-gold-600 to-gold-400 mx-auto mb-6"></div>
+            <p className="text-white/70 text-lg max-w-2xl mx-auto mb-12">
+              Atölyelerimizden kareler, öğrencilerimizin başarıları ve tiyatro dünyasından haberler için Instagram sayfamızı ziyaret edin!
+            </p>
+
+            <motion.a
+              href="https://www.instagram.com/foforatiyatro/"
+              target="_blank"
+              rel="noopener noreferrer"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="inline-flex items-center gap-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-full font-semibold text-lg shadow-xl hover:from-purple-700 hover:to-pink-700 transition-all"
+            >
+              <Instagram className="w-6 h-6" />
+              @foforatiyatro
+            </motion.a>
+
+            <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[1, 2, 3, 4].map((index) => (
+                <motion.a
+                  key={index}
+                  href="https://www.instagram.com/foforatiyatro/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                  whileHover={{ scale: 1.05 }}
+                  className="aspect-square bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-xl border border-white/10 flex items-center justify-center group overflow-hidden relative"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-600/0 to-pink-600/0 group-hover:from-purple-600/30 group-hover:to-pink-600/30 transition-all duration-300"></div>
+                  <Instagram className="w-12 h-12 text-white/40 group-hover:text-white/80 transition-all relative z-10" />
+                </motion.a>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* Blog Section */}
       {sectionVisibility.blog && blogPosts.length > 0 && (
-      <section id="blog" className="py-24 px-4 bg-gradient-to-b from-navy-800 to-navy-900">
+      <section id="blog" className="py-24 px-4 bg-gradient-to-b from-navy-800 to-navy-900" style={{ order: getSectionOrder('blog') }}>
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
@@ -782,7 +884,7 @@ export default function Home() {
 
       {/* Contact Section */}
       {sectionVisibility.contact && contact && (
-      <section id="contact" className="py-24 px-4 bg-gradient-to-b from-navy-800 to-navy-900 relative overflow-hidden">
+      <section id="contact" className="py-24 px-4 bg-gradient-to-b from-navy-800 to-navy-900 relative overflow-hidden" style={{ order: getSectionOrder('contact') }}>
         {/* Gradient orbs */}
         <motion.div
           className="absolute top-1/4 left-1/4 w-72 h-72 bg-gradient-to-br from-gold-500/20 to-transparent rounded-full blur-3xl"
@@ -903,6 +1005,211 @@ export default function Home() {
         onClose={() => setIsAppointmentModalOpen(false)}
       />
 
+      {/* Team Member Modal */}
+      <AnimatePresence>
+        {selectedTeamMember && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 overflow-y-auto"
+            onClick={() => setSelectedTeamMember(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 50 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 50 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-navy-800 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden border border-white/10 my-8"
+            >
+              {/* Modal Header with Image */}
+              <div className="relative h-96 w-full">
+                <Image
+                  src={selectedTeamMember.image}
+                  alt={selectedTeamMember.name}
+                  fill
+                  className="object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-navy-800 via-navy-800/50 to-transparent" />
+                <button
+                  onClick={() => setSelectedTeamMember(null)}
+                  className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/70 rounded-full transition-colors text-white"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              {/* Modal Content */}
+              <div className="px-8 py-6 overflow-y-auto max-h-[calc(90vh-400px)]">
+                {/* Title and Role */}
+                <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">
+                  {selectedTeamMember.name}
+                </h2>
+                <p className="text-xl text-gold-400 mb-6 pb-6 border-b border-white/10">
+                  {selectedTeamMember.title}
+                </p>
+
+                {/* Bio */}
+                <div className="mb-6">
+                  <h3 className="text-xl font-semibold text-white mb-3">Hakkında</h3>
+                  <p className="text-white/80 leading-relaxed text-lg whitespace-pre-wrap">
+                    {selectedTeamMember.bio}
+                  </p>
+                </div>
+
+                {/* Contact Information */}
+                {(selectedTeamMember.email || selectedTeamMember.phone) && (
+                  <div className="bg-white/5 rounded-xl p-6 border border-white/10">
+                    <h3 className="text-xl font-semibold text-white mb-4">İletişim Bilgileri</h3>
+                    <div className="space-y-3">
+                      {selectedTeamMember.email && (
+                        <div className="flex items-center gap-3 text-white/70">
+                          <Mail className="w-5 h-5 text-gold-400" />
+                          <a href={`mailto:${selectedTeamMember.email}`} className="hover:text-gold-400 transition-colors">
+                            {selectedTeamMember.email}
+                          </a>
+                        </div>
+                      )}
+                      {selectedTeamMember.phone && (
+                        <div className="flex items-center gap-3 text-white/70">
+                          <Phone className="w-5 h-5 text-gold-400" />
+                          <a href={`tel:${selectedTeamMember.phone}`} className="hover:text-gold-400 transition-colors">
+                            {selectedTeamMember.phone}
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Modal Footer */}
+              <div className="bg-navy-900/50 border-t border-white/10 px-8 py-4 flex justify-end items-center">
+                <button
+                  onClick={() => setSelectedTeamMember(null)}
+                  className="bg-gold-500 hover:bg-gold-600 text-navy-900 px-6 py-2 rounded-lg font-semibold transition-colors"
+                >
+                  Kapat
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Service Modal */}
+      <AnimatePresence>
+        {selectedService && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 overflow-y-auto"
+            onClick={() => setSelectedService(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 50 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 50 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-navy-800 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden border border-white/10 my-8"
+            >
+              {/* Modal Header with Image */}
+              {selectedService.image ? (
+                <div className="relative h-64 md:h-96 w-full">
+                  <Image
+                    src={selectedService.image}
+                    alt={selectedService.title}
+                    fill
+                    className="object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-navy-800 via-navy-800/50 to-transparent" />
+                  <button
+                    onClick={() => setSelectedService(null)}
+                    className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/70 rounded-full transition-colors text-white"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+              ) : (
+                <div className="bg-navy-900/50 border-b border-white/10 px-8 py-4 flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-gold-500">
+                    {getIcon(selectedService.icon)}
+                  </div>
+                  <button
+                    onClick={() => setSelectedService(null)}
+                    className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white/60 hover:text-white"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+              )}
+
+              {/* Modal Content */}
+              <div className="px-8 py-6 overflow-y-auto max-h-[calc(90vh-400px)]">
+                {/* Icon and Badges */}
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="text-gold-500">
+                    {getIcon(selectedService.icon)}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedService.ageGroup && (
+                      <span className="text-sm px-4 py-1.5 bg-gold-500/20 text-gold-400 rounded-full font-semibold">
+                        {selectedService.ageGroup}
+                      </span>
+                    )}
+                    {selectedService.duration && (
+                      <span className="text-sm px-4 py-1.5 bg-white/10 text-white/60 rounded-full">
+                        {selectedService.duration}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Title */}
+                <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                  {selectedService.title}
+                </h2>
+
+                {/* Description */}
+                <p className="text-xl text-white/80 mb-6 pb-6 border-b border-white/10">
+                  {selectedService.description}
+                </p>
+
+                {/* Detailed Content */}
+                {selectedService.details && (
+                  <div className="prose prose-invert prose-gold max-w-none">
+                    <div
+                      className="text-white/80 leading-relaxed text-lg whitespace-pre-wrap"
+                      dangerouslySetInnerHTML={{
+                        __html: selectedService.details.replace(/\n\n/g, '</p><p class="mb-4">').replace(/\n/g, '<br/>')
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Modal Footer */}
+              <div className="bg-navy-900/50 border-t border-white/10 px-8 py-4 flex justify-between items-center">
+                <div className="text-sm text-white/60">
+                  {selectedService.ageGroup && selectedService.duration && (
+                    <span>{selectedService.ageGroup} · {selectedService.duration}</span>
+                  )}
+                </div>
+                <button
+                  onClick={() => setSelectedService(null)}
+                  className="bg-gold-500 hover:bg-gold-600 text-navy-900 px-6 py-2 rounded-lg font-semibold transition-colors"
+                >
+                  Kapat
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Blog Post Modal */}
       <AnimatePresence>
         {selectedBlogPost && (
@@ -910,7 +1217,7 @@ export default function Home() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto"
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 overflow-y-auto"
             onClick={() => setSelectedBlogPost(null)}
           >
             <motion.div

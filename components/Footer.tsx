@@ -21,6 +21,7 @@ interface FooterProps {
 export default function Footer() {
   const [copyrightText, setCopyrightText] = useState('© 2024 Fofora Tiyatro. Tüm hakları saklıdır.')
   const [legalLinks, setLegalLinks] = useState<LegalLink[]>([])
+  const [logo, setLogo] = useState<string>('/assets/fofora-logo.png')
   const [selectedLegalContent, setSelectedLegalContent] = useState<{
     title: string
     content: string
@@ -55,6 +56,9 @@ export default function Footer() {
           .sort((a: LegalLink, b: LegalLink) => a.order - b.order)
         setLegalLinks(activeLinks)
       }
+      if (data.logo) {
+        setLogo(data.logo)
+      }
     } catch (error) {
       console.error('Failed to fetch footer settings:', error)
     }
@@ -76,7 +80,7 @@ export default function Footer() {
       <footer className="bg-navy-900 border-t border-white/10 py-12 px-4">
         <div className="max-w-7xl mx-auto text-center">
           <Image
-            src="/assets/murekkep-logo-saydam.png"
+            src={logo}
             alt="Fofora Tiyatro"
             width={100}
             height={100}
