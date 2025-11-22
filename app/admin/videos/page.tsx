@@ -37,44 +37,7 @@ export default function AdminVideos() {
 
   useEffect(() => {
     fetchVideos()
-    // Auto-import existing videos if database is empty
-    checkAndImportVideos()
   }, [])
-
-  const checkAndImportVideos = async () => {
-    try {
-      const { data } = await axios.get('/api/hero-videos')
-      if (data.length === 0) {
-        // Database is empty, show import option
-        if (confirm('Veritabanında video bulunamadı. Mevcut 21 videoyu içe aktarmak ister misiniz?')) {
-          await importExistingVideos()
-        }
-      }
-    } catch (error) {
-      console.error('Video kontrolü başarısız', error)
-    }
-  }
-
-  const importExistingVideos = async () => {
-    try {
-      setLoading(true)
-      // Import videos 1-21
-      for (let i = 1; i <= 21; i++) {
-        await axios.post('/api/hero-videos', {
-          fileName: `${i}.mp4`,
-          order: i - 1,
-          active: true
-        })
-      }
-      alert('21 video başarıyla içe aktarıldı!')
-      fetchVideos()
-    } catch (error) {
-      console.error('İçe aktarma başarısız', error)
-      alert('Bazı videolar içe aktarılamadı')
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const fetchVideos = async () => {
     try {
@@ -252,20 +215,11 @@ export default function AdminVideos() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-4">
-              <Link href="/admin/dashboard" className="text-gold-500 hover:text-gold-400">
-                <ArrowLeft className="w-6 h-6" />
-              </Link>
-              <h1 className="text-4xl font-bold text-white">Hero Video Yönetimi</h1>
-            </div>
-            <button
-              onClick={importExistingVideos}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              Mevcut Videoları İçe Aktar (1-21)
-            </button>
+          <div className="flex items-center gap-4 mb-4">
+            <Link href="/admin/dashboard" className="text-gold-500 hover:text-gold-400">
+              <ArrowLeft className="w-6 h-6" />
+            </Link>
+            <h1 className="text-4xl font-bold text-white">Hero Video Yönetimi</h1>
           </div>
           <p className="text-white/60">
             {videos.length} video yönetiliyor. Yeni video yükleyebilir veya mevcut videoları düzenleyebilirsiniz.
