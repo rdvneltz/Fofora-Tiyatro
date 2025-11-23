@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { Plus, Edit, Trash2, ArrowLeft, Upload, Star } from 'lucide-react'
+import { Plus, Edit, Trash2, ArrowLeft, Star } from 'lucide-react'
 import Link from 'next/link'
 import axios from 'axios'
 import Image from 'next/image'
+import ImageUploader from '@/components/ImageUploader'
 
 interface Testimonial {
   id: string
@@ -29,8 +30,6 @@ export default function TestimonialsPage() {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingTestimonial, setEditingTestimonial] = useState<Testimonial | null>(null)
-  const [imageFile, setImageFile] = useState<File | null>(null)
-  const [imagePreview, setImagePreview] = useState<string>('')
   const [formData, setFormData] = useState({
     name: '',
     title: '',
@@ -63,43 +62,16 @@ export default function TestimonialsPage() {
     }
   }
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      setImageFile(file)
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string)
-      }
-      reader.readAsDataURL(file)
-    }
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      let imageUrl = formData.image
-
-      // Upload image if changed
-      if (imageFile) {
-        const formDataUpload = new FormData()
-        formDataUpload.append('file', imageFile)
-
-        const uploadRes = await axios.post('/api/upload', formDataUpload)
-        imageUrl = uploadRes.data.url
-      }
-
-      const updatedData = { ...formData, image: imageUrl }
-
       if (editingTestimonial) {
-        await axios.put('/api/testimonials', { id: editingTestimonial.id, ...updatedData })
+        await axios.put('/api/testimonials', { id: editingTestimonial.id, ...formData })
       } else {
-        await axios.post('/api/testimonials', updatedData)
+        await axios.post('/api/testimonials', formData)
       }
       setShowForm(false)
       setEditingTestimonial(null)
-      setImageFile(null)
-      setImagePreview('')
       setFormData({
         name: '',
         title: '',
@@ -129,7 +101,6 @@ export default function TestimonialsPage() {
       active: testimonial.active,
       order: testimonial.order,
     })
-    setImagePreview(testimonial.image || '')
     setShowForm(true)
   }
 
@@ -175,7 +146,6 @@ export default function TestimonialsPage() {
                 active: true,
                 order: 0,
               })
-              setImagePreview('')
             }}
             className="bg-gradient-to-r from-gold-600 to-gold-500 text-white px-6 py-3 rounded-lg flex items-center gap-2 hover:from-gold-700 hover:to-gold-600"
           >
@@ -191,36 +161,12 @@ export default function TestimonialsPage() {
             </h2>
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Photo Upload */}
-              <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                  <Upload className="w-5 h-5 text-gold-500" />
-                  Öğrenci Fotoğrafı (İsteğe Bağlı)
-                </h3>
-
-                <div className="flex items-start gap-6">
-                  {(imagePreview || formData.image) && (
-                    <div className="relative w-32 h-32 bg-white/10 rounded-full overflow-hidden border border-white/20">
-                      <Image
-                        src={imagePreview || formData.image}
-                        alt="Öğrenci"
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                  )}
-
-                  <div className="flex-1">
-                    <label className="block text-white mb-2">Fotoğraf Yükle</label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-gold-500 file:text-white hover:file:bg-gold-600"
-                    />
-                    <p className="text-white/40 text-sm mt-2">JPG, PNG veya WebP. Maksimum 5MB.</p>
-                  </div>
-                </div>
-              </div>
+              <ImageUploader
+                currentUrl={formData.image}
+                onUrlChange={(url) => setFormData({ ...formData, image: url })}
+                label="Öğrenci Fotoğrafı (İsteğe Bağlı)"
+                folder="images/testimonials"
+              />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>

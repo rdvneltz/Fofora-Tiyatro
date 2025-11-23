@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Plus, Edit, Trash2, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import axios from 'axios'
+import ImageUploader from '@/components/ImageUploader'
 
 interface Service {
   id: string
@@ -182,15 +183,12 @@ export default function ServicesPage() {
                 />
               </div>
               <div>
-                <label className="block text-white mb-2">Program Fotoğrafı URL</label>
-                <input
-                  type="text"
-                  value={formData.image}
-                  onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                  className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white"
-                  placeholder="https://example.com/image.jpg"
+                <ImageUploader
+                  currentUrl={formData.image}
+                  onUrlChange={(url) => setFormData({ ...formData, image: url })}
+                  label="Program Fotoğrafı"
+                  folder="images/services"
                 />
-                <p className="text-white/50 text-sm mt-1">Örnek: /assets/programs/cocuk-drama.jpg</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>

@@ -24,7 +24,7 @@ function getR2Client() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { fileName, contentType } = await request.json()
+    const { fileName, contentType, folder } = await request.json()
 
     if (!fileName || !contentType) {
       return NextResponse.json(
@@ -41,10 +41,20 @@ export async function POST(request: NextRequest) {
       throw new Error('R2 bucket configuration missing')
     }
 
+    // Determine folder based on content type or explicit folder parameter
+    let folderName = folder || 'uploads'
+    if (!folder) {
+      if (contentType.startsWith('video/')) {
+        folderName = 'videos'
+      } else if (contentType.startsWith('image/')) {
+        folderName = 'images'
+      }
+    }
+
     // Generate unique key
     const timestamp = Date.now()
     const sanitizedFileName = fileName.replace(/\s/g, '-')
-    const key = `videos/${timestamp}-${sanitizedFileName}`
+    const key = `${folderName}/${timestamp}-${sanitizedFileName}`
 
     // Create presigned URL for upload
     const command = new PutObjectCommand({

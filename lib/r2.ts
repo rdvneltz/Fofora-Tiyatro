@@ -116,3 +116,39 @@ export function isR2Url(url: string): boolean {
   const publicURL = process.env.R2_PUBLIC_URL || ''
   return url.includes('.r2.dev') || url.includes('r2.cloudflarestorage.com') || (publicURL !== '' && url.includes(publicURL))
 }
+
+/**
+ * Upload an image to Cloudflare R2
+ * @param file - Image buffer
+ * @param fileName - Name of the file (e.g., "images/team/john.jpg")
+ * @param contentType - MIME type (e.g., "image/jpeg")
+ * @returns Public URL of the uploaded image
+ */
+export async function uploadImageToR2(
+  file: Buffer,
+  fileName: string,
+  contentType: string
+): Promise<string> {
+  try {
+    const r2Client = getR2Client()
+    const bucketName = getBucketName()
+    const publicURL = getPublicURL()
+
+    const command = new PutObjectCommand({
+      Bucket: bucketName,
+      Key: fileName,
+      Body: file,
+      ContentType: contentType,
+    })
+
+    await r2Client.send(command)
+
+    // Return public URL
+    const publicUrl = `${publicURL}/${fileName}`
+    console.log('✅ Image uploaded to R2:', publicUrl)
+    return publicUrl
+  } catch (error) {
+    console.error('❌ R2 image upload error:', error)
+    throw new Error('Failed to upload image to R2')
+  }
+}
