@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Upload } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import axios from 'axios'
-import Image from 'next/image'
+import ImageUploader from '@/components/ImageUploader'
 
 interface Hero {
   id: string
@@ -28,8 +28,6 @@ export default function HeroPage() {
   const [hero, setHero] = useState<Hero | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [logoFile, setLogoFile] = useState<File | null>(null)
-  const [logoPreview, setLogoPreview] = useState<string>('')
   const [formData, setFormData] = useState({
     title: '',
     subtitle: '',
@@ -70,7 +68,6 @@ export default function HeroPage() {
           showButton: data.showButton !== undefined ? data.showButton : true,
           active: data.active,
         })
-        if (data.logo) setLogoPreview(data.logo)
       }
     } catch (error) {
       console.error('Hero yüklenemedi', error)
@@ -79,34 +76,11 @@ export default function HeroPage() {
     }
   }
 
-  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      setLogoFile(file)
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setLogoPreview(reader.result as string)
-      }
-      reader.readAsDataURL(file)
-    }
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
     try {
-      let logoUrl = formData.logo
-
-      // Upload logo if changed
-      if (logoFile) {
-        const formDataUpload = new FormData()
-        formDataUpload.append('file', logoFile)
-
-        const uploadRes = await axios.post('/api/upload', formDataUpload)
-        logoUrl = uploadRes.data.url
-      }
-
-      const updatedData = { ...formData, logo: logoUrl }
+      const updatedData = { ...formData }
 
       if (hero) {
         await axios.put('/api/hero', { id: hero.id, ...updatedData })
@@ -145,59 +119,35 @@ export default function HeroPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Logo Upload */}
             <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-              <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <Upload className="w-5 h-5 text-gold-500" />
-                Hero Logo
-              </h3>
-
-              <div className="flex items-start gap-6">
-                {(logoPreview || formData.logo) && (
-                  <div className="relative w-48 h-48 bg-white/10 rounded-lg overflow-hidden border border-white/20">
-                    <Image
-                      src={logoPreview || formData.logo}
-                      alt="Hero Logo"
-                      fill
-                      className="object-contain p-4"
-                    />
-                  </div>
-                )}
-
-                <div className="flex-1 space-y-4">
-                  <div>
-                    <label className="block text-white mb-2">Logo Yükle</label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleLogoChange}
-                      className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-gold-500 file:text-white hover:file:bg-gold-600"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-white mb-2">Logo Genişliği (px)</label>
-                      <input
-                        type="number"
-                        value={formData.logoWidth}
-                        onChange={(e) => setFormData({ ...formData, logoWidth: parseInt(e.target.value) || 200 })}
-                        className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white"
-                        min="50"
-                        max="500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-white mb-2">Logo Yüksekliği (px)</label>
-                      <input
-                        type="number"
-                        value={formData.logoHeight}
-                        onChange={(e) => setFormData({ ...formData, logoHeight: parseInt(e.target.value) || 200 })}
-                        className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white"
-                        min="50"
-                        max="500"
-                      />
-                    </div>
-                  </div>
+              <h3 className="text-xl font-bold text-white mb-4">Hero Logo</h3>
+              <ImageUploader
+                currentUrl={formData.logo}
+                onUrlChange={(url) => setFormData({ ...formData, logo: url })}
+                label="Logo"
+                folder="images/logos"
+              />
+              <div className="grid grid-cols-2 gap-4 mt-6">
+                <div>
+                  <label className="block text-white mb-2">Logo Genişliği (px)</label>
+                  <input
+                    type="number"
+                    value={formData.logoWidth}
+                    onChange={(e) => setFormData({ ...formData, logoWidth: parseInt(e.target.value) || 200 })}
+                    className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white"
+                    min="50"
+                    max="500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-white mb-2">Logo Yüksekliği (px)</label>
+                  <input
+                    type="number"
+                    value={formData.logoHeight}
+                    onChange={(e) => setFormData({ ...formData, logoHeight: parseInt(e.target.value) || 200 })}
+                    className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white"
+                    min="50"
+                    max="500"
+                  />
                 </div>
               </div>
             </div>

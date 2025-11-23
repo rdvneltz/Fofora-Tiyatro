@@ -4,10 +4,10 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Save, Upload, Palette, Globe, ArrowLeft, Instagram, Youtube, ArrowUp, ArrowDown, GripVertical } from 'lucide-react'
+import { Save, Palette, Globe, ArrowLeft, Instagram, Youtube, ArrowUp, ArrowDown, GripVertical } from 'lucide-react'
 import axios from 'axios'
-import Image from 'next/image'
 import Link from 'next/link'
+import ImageUploader from '@/components/ImageUploader'
 
 interface SiteSettings {
   id?: string
@@ -61,8 +61,6 @@ export default function AdminSettings() {
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [logoFile, setLogoFile] = useState<File | null>(null)
-  const [logoPreview, setLogoPreview] = useState<string>('')
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -101,24 +99,11 @@ export default function AdminSettings() {
           },
           sectionOrder: data.sectionOrder || ['hero', 'services', 'about', 'team', 'testimonials', 'instagram', 'blog', 'contact']
         })
-        if (data.logo) setLogoPreview(data.logo)
       }
     } catch (error) {
       console.error('Failed to fetch settings', error)
     } finally {
       setLoading(false)
-    }
-  }
-
-  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      setLogoFile(file)
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setLogoPreview(reader.result as string)
-      }
-      reader.readAsDataURL(file)
     }
   }
 
@@ -159,18 +144,7 @@ export default function AdminSettings() {
     setSaving(true)
 
     try {
-      let logoUrl = settings.logo
-
-      // Upload logo if changed
-      if (logoFile) {
-        const formData = new FormData()
-        formData.append('file', logoFile)
-
-        const uploadRes = await axios.post('/api/upload', formData)
-        logoUrl = uploadRes.data.url
-      }
-
-      const updatedSettings = { ...settings, logo: logoUrl }
+      const updatedSettings = { ...settings }
 
       if (settings.id) {
         await axios.put('/api/settings', updatedSettings)
@@ -214,34 +188,14 @@ export default function AdminSettings() {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Logo Section */}
           <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
-            <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
-              <Upload className="w-6 h-6 text-gold-500" />
-              Logo
-            </h2>
-
-            <div className="flex items-start gap-6">
-              {logoPreview && (
-                <div className="relative w-32 h-32 bg-white/10 rounded-lg overflow-hidden border border-white/20">
-                  <Image
-                    src={logoPreview}
-                    alt="Logo"
-                    fill
-                    className="object-contain p-2"
-                  />
-                </div>
-              )}
-
-              <div className="flex-1">
-                <label className="block text-white mb-2">Yeni Logo Yükle</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleLogoChange}
-                  className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-gold-500 file:text-white hover:file:bg-gold-600"
-                />
-                <p className="text-white/40 text-sm mt-2">PNG, JPG veya SVG. Maksimum 2MB.</p>
-              </div>
-            </div>
+            <h2 className="text-2xl font-bold text-white mb-4">Logo</h2>
+            <ImageUploader
+              currentUrl={settings.logo}
+              onUrlChange={(url) => setSettings({ ...settings, logo: url })}
+              label="Site Logosu"
+              folder="images/logos"
+            />
+            <p className="text-white/40 text-sm mt-4">PNG, JPG veya SVG. Maksimum 2MB.</p>
           </div>
 
           {/* Basic Info */}
