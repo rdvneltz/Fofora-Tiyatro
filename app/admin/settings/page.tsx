@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Save, Palette, Globe, ArrowLeft, Instagram, Youtube, ArrowUp, ArrowDown, GripVertical } from 'lucide-react'
+import { Save, Palette, Globe, ArrowLeft, Instagram, Youtube, ChevronUp, ChevronDown } from 'lucide-react'
 import axios from 'axios'
 import Link from 'next/link'
 import ImageUploader from '@/components/ImageUploader'
@@ -125,18 +125,28 @@ export default function AdminSettings() {
     setSettings({ ...settings, sectionOrder: newOrder })
   }
 
-  const getSectionLabel = (sectionId: string) => {
+  const getSectionName = (sectionId: string) => {
     const labels: Record<string, string> = {
       hero: 'Hero Bölümü',
       services: 'Programlar',
       about: 'Hakkımızda',
       team: 'Ekip',
-      testimonials: 'Öğrenci Görüşleri',
+      testimonials: 'Yorumlar',
       instagram: 'Instagram',
       blog: 'Blog',
       contact: 'İletişim'
     }
     return labels[sectionId] || sectionId
+  }
+
+  const toggleSectionVisibility = (sectionKey: string) => {
+    setSettings({
+      ...settings,
+      sectionVisibility: {
+        ...settings.sectionVisibility!,
+        [sectionKey]: !settings.sectionVisibility?.[sectionKey as keyof typeof settings.sectionVisibility]
+      }
+    })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -307,183 +317,68 @@ export default function AdminSettings() {
             </p>
           </div>
 
-          {/* Section Visibility */}
+          {/* Sayfa Bölümleri Yönetimi - Merged Section */}
           <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
-            <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
-              <Globe className="w-6 h-6 text-gold-500" />
-              Sayfa Bölümleri Görünürlüğü
-            </h2>
+            <h3 className="text-2xl font-bold text-white mb-4">Sayfa Bölümleri Yönetimi</h3>
+            <p className="text-white/60 text-sm mb-6">
+              Bölümlerin görünürlüğünü ve sırasını buradan yönetebilirsiniz.
+              Yukarı/aşağı ok tuşları ile sıralamayı, toggle ile görünürlüğü ayarlayın.
+            </p>
 
             <div className="space-y-3">
-              <label className="flex items-center justify-between p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-all cursor-pointer">
-                <span className="text-white font-medium">Hero Bölümü</span>
-                <input
-                  type="checkbox"
-                  checked={settings.sectionVisibility?.hero ?? true}
-                  onChange={(e) => setSettings({
-                    ...settings,
-                    sectionVisibility: {
-                      ...settings.sectionVisibility!,
-                      hero: e.target.checked
-                    }
-                  })}
-                  className="w-5 h-5 rounded border-white/20 text-gold-500 focus:ring-gold-500"
-                />
-              </label>
-
-              <label className="flex items-center justify-between p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-all cursor-pointer">
-                <span className="text-white font-medium">Programlar Bölümü</span>
-                <input
-                  type="checkbox"
-                  checked={settings.sectionVisibility?.services ?? true}
-                  onChange={(e) => setSettings({
-                    ...settings,
-                    sectionVisibility: {
-                      ...settings.sectionVisibility!,
-                      services: e.target.checked
-                    }
-                  })}
-                  className="w-5 h-5 rounded border-white/20 text-gold-500 focus:ring-gold-500"
-                />
-              </label>
-
-              <label className="flex items-center justify-between p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-all cursor-pointer">
-                <span className="text-white font-medium">Hakkımızda Bölümü</span>
-                <input
-                  type="checkbox"
-                  checked={settings.sectionVisibility?.about ?? true}
-                  onChange={(e) => setSettings({
-                    ...settings,
-                    sectionVisibility: {
-                      ...settings.sectionVisibility!,
-                      about: e.target.checked
-                    }
-                  })}
-                  className="w-5 h-5 rounded border-white/20 text-gold-500 focus:ring-gold-500"
-                />
-              </label>
-
-              <label className="flex items-center justify-between p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-all cursor-pointer">
-                <span className="text-white font-medium">Ekip Bölümü</span>
-                <input
-                  type="checkbox"
-                  checked={settings.sectionVisibility?.team ?? true}
-                  onChange={(e) => setSettings({
-                    ...settings,
-                    sectionVisibility: {
-                      ...settings.sectionVisibility!,
-                      team: e.target.checked
-                    }
-                  })}
-                  className="w-5 h-5 rounded border-white/20 text-gold-500 focus:ring-gold-500"
-                />
-              </label>
-
-              <label className="flex items-center justify-between p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-all cursor-pointer">
-                <span className="text-white font-medium">Öğrenci Görüşleri Bölümü</span>
-                <input
-                  type="checkbox"
-                  checked={settings.sectionVisibility?.testimonials ?? true}
-                  onChange={(e) => setSettings({
-                    ...settings,
-                    sectionVisibility: {
-                      ...settings.sectionVisibility!,
-                      testimonials: e.target.checked
-                    }
-                  })}
-                  className="w-5 h-5 rounded border-white/20 text-gold-500 focus:ring-gold-500"
-                />
-              </label>
-
-              <label className="flex items-center justify-between p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-all cursor-pointer">
-                <span className="text-white font-medium">Blog Bölümü</span>
-                <input
-                  type="checkbox"
-                  checked={settings.sectionVisibility?.blog ?? true}
-                  onChange={(e) => setSettings({
-                    ...settings,
-                    sectionVisibility: {
-                      ...settings.sectionVisibility!,
-                      blog: e.target.checked
-                    }
-                  })}
-                  className="w-5 h-5 rounded border-white/20 text-gold-500 focus:ring-gold-500"
-                />
-              </label>
-
-              <label className="flex items-center justify-between p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-all cursor-pointer">
-                <span className="text-white font-medium">İletişim Bölümü</span>
-                <input
-                  type="checkbox"
-                  checked={settings.sectionVisibility?.contact ?? true}
-                  onChange={(e) => setSettings({
-                    ...settings,
-                    sectionVisibility: {
-                      ...settings.sectionVisibility!,
-                      contact: e.target.checked
-                    }
-                  })}
-                  className="w-5 h-5 rounded border-white/20 text-gold-500 focus:ring-gold-500"
-                />
-              </label>
-            </div>
-
-            <p className="text-white/40 text-sm mt-4">
-              Not: İşaretlenmemiş bölümler ana sayfada gizlenecektir.
-            </p>
-          </div>
-
-          {/* Section Order */}
-          <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
-            <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
-              <GripVertical className="w-6 h-6 text-gold-500" />
-              Bölüm Sıralaması
-            </h2>
-
-            <div className="space-y-2">
-              {settings.sectionOrder?.map((sectionId, index) => (
-                <div
-                  key={sectionId}
-                  className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10"
+              {settings.sectionOrder?.map((sectionKey, index) => (
+                <motion.div
+                  key={sectionKey}
+                  className="bg-white/5 rounded-lg p-4 border border-white/10 flex items-center gap-4"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.05 }}
                 >
-                  <div className="flex items-center gap-3">
-                    <span className="text-white/40 text-sm font-mono">#{index + 1}</span>
-                    <span className="text-white font-medium">{getSectionLabel(sectionId)}</span>
+                  {/* Order number */}
+                  <div className="text-white/40 font-bold text-lg min-w-[30px]">
+                    {index + 1}
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  {/* Section name */}
+                  <div className="flex-1 text-white font-medium">
+                    {getSectionName(sectionKey)}
+                  </div>
+
+                  {/* Visibility toggle */}
+                  <button
+                    type="button"
+                    onClick={() => toggleSectionVisibility(sectionKey)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium border-2 transition-all ${
+                      settings.sectionVisibility?.[sectionKey as keyof typeof settings.sectionVisibility]
+                        ? 'bg-green-500/20 text-green-400 border-green-500/50'
+                        : 'bg-gray-500/20 text-gray-400 border-gray-500/50'
+                    }`}
+                  >
+                    {settings.sectionVisibility?.[sectionKey as keyof typeof settings.sectionVisibility] ? 'Aktif' : 'Pasif'}
+                  </button>
+
+                  {/* Order controls */}
+                  <div className="flex gap-1">
                     <button
                       type="button"
                       onClick={() => moveSectionUp(index)}
                       disabled={index === 0}
-                      className={`p-2 rounded-lg transition-all ${
-                        index === 0
-                          ? 'text-white/20 cursor-not-allowed'
-                          : 'text-white/60 hover:text-white hover:bg-white/10'
-                      }`}
+                      className="p-2 rounded-lg bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                     >
-                      <ArrowUp className="w-5 h-5" />
+                      <ChevronUp className="w-5 h-5 text-white" />
                     </button>
                     <button
                       type="button"
                       onClick={() => moveSectionDown(index)}
-                      disabled={index === (settings.sectionOrder?.length || 0) - 1}
-                      className={`p-2 rounded-lg transition-all ${
-                        index === (settings.sectionOrder?.length || 0) - 1
-                          ? 'text-white/20 cursor-not-allowed'
-                          : 'text-white/60 hover:text-white hover:bg-white/10'
-                      }`}
+                      disabled={index === settings.sectionOrder!.length - 1}
+                      className="p-2 rounded-lg bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                     >
-                      <ArrowDown className="w-5 h-5" />
+                      <ChevronDown className="w-5 h-5 text-white" />
                     </button>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
-
-            <p className="text-white/40 text-sm mt-4">
-              Not: Bölümlerin sıralamasını yukarı/aşağı butonları ile değiştirebilirsiniz. Değişiklikler ana sayfada görünecektir.
-            </p>
           </div>
 
           {/* Social Media Links */}

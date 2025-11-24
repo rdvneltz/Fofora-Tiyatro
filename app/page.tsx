@@ -1042,7 +1042,9 @@ export default function Home() {
       )}
 
       {/* Footer */}
-      <Footer />
+      <div style={{ order: 9999 }}>
+        <Footer />
+      </div>
 
       {/* Appointment Modal */}
       <AppointmentModal
