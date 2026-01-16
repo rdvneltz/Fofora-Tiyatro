@@ -197,12 +197,11 @@ export default function VideoCarousel({
     }
   }, [playlist, getVideoPath, notifyContentChange, isInitialized])
 
-  // Video ended veya duration timeout
+  // Video ended event handler
   useEffect(() => {
     const activeVideo = showingFirst ? video1Ref.current : video2Ref.current
-    const currentVideo = playlist[currentIndex]
 
-    if (!activeVideo || !currentVideo) return
+    if (!activeVideo) return
 
     const handleEnded = () => {
       if (timerRef.current) {
@@ -212,29 +211,39 @@ export default function VideoCarousel({
       goToNextVideo()
     }
 
-    const setupDurationTimer = () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current)
-      }
-
-      if (currentVideo.playDuration && currentVideo.playDuration > 0) {
-        timerRef.current = setTimeout(() => {
-          goToNextVideo()
-        }, currentVideo.playDuration * 1000)
-      }
-    }
-
     activeVideo.addEventListener('ended', handleEnded)
-    activeVideo.addEventListener('play', setupDurationTimer)
 
     return () => {
       activeVideo.removeEventListener('ended', handleEnded)
-      activeVideo.removeEventListener('play', setupDurationTimer)
+    }
+  }, [showingFirst, goToNextVideo])
+
+  // Duration timer - video değiştiğinde veya başladığında çalışır
+  useEffect(() => {
+    const currentVideo = playlist[currentIndex]
+
+    // Önceki timer'ı temizle
+    if (timerRef.current) {
+      clearTimeout(timerRef.current)
+      timerRef.current = null
+    }
+
+    // Eğer playDuration varsa timer kur
+    if (currentVideo && currentVideo.playDuration && currentVideo.playDuration > 0) {
+      console.log(`Timer kuruldu: ${currentVideo.playDuration} saniye için video: ${currentVideo.fileName}`)
+      timerRef.current = setTimeout(() => {
+        console.log('Timer doldu, sonraki videoya geçiliyor')
+        goToNextVideo()
+      }, currentVideo.playDuration * 1000)
+    }
+
+    return () => {
       if (timerRef.current) {
         clearTimeout(timerRef.current)
+        timerRef.current = null
       }
     }
-  }, [showingFirst, currentIndex, goToNextVideo, playlist])
+  }, [currentIndex, playlist, goToNextVideo])
 
   if (playlist.length === 0) {
     return (
