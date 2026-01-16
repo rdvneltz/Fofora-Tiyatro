@@ -199,3 +199,17 @@ model InstagramPost {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+// Gelen Kutusu - İletişim/Kayıt Talepleri
+model Inquiry {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  name            String   // Ad Soyad
+  phone           String   // Telefon
+  email           String?  // E-posta (opsiyonel)
+  subject         String   // Konu (hangi program için)
+  status          String   @default("new") // new, read, replied, archived
+  adminNotes      String?  // Admin notları
+  repliedAt       DateTime? // Ne zaman yanıtlandı
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
