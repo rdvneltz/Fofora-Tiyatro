@@ -15,10 +15,34 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { fileName, order = 0, active = true } = body
+    const {
+      fileName,
+      order = 0,
+      active = true,
+      title,
+      subtitle,
+      description,
+      useCustomContent = false,
+      playDuration,
+      playCount = 1,
+      featured = false,
+      featuredWeight = 3
+    } = body
 
     const video = await prisma.heroVideo.create({
-      data: { fileName, order, active }
+      data: {
+        fileName,
+        order,
+        active,
+        title,
+        subtitle,
+        description,
+        useCustomContent,
+        playDuration,
+        playCount,
+        featured,
+        featuredWeight
+      }
     })
 
     return NextResponse.json(video, { status: 201 })
@@ -30,12 +54,33 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json()
-    const { id, fileName, order, active } = body
+    const {
+      id,
+      fileName,
+      order,
+      active,
+      title,
+      subtitle,
+      description,
+      useCustomContent,
+      playDuration,
+      playCount,
+      featured,
+      featuredWeight
+    } = body
 
     const updateData: any = {}
-    if (fileName) updateData.fileName = fileName
+    if (fileName !== undefined) updateData.fileName = fileName
     if (order !== undefined) updateData.order = order
     if (active !== undefined) updateData.active = active
+    if (title !== undefined) updateData.title = title
+    if (subtitle !== undefined) updateData.subtitle = subtitle
+    if (description !== undefined) updateData.description = description
+    if (useCustomContent !== undefined) updateData.useCustomContent = useCustomContent
+    if (playDuration !== undefined) updateData.playDuration = playDuration
+    if (playCount !== undefined) updateData.playCount = playCount
+    if (featured !== undefined) updateData.featured = featured
+    if (featuredWeight !== undefined) updateData.featuredWeight = featuredWeight
 
     const video = await prisma.heroVideo.update({
       where: { id },
