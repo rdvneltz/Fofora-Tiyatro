@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { useRef, useEffect, useState } from 'react'
 import axios from 'axios'
 import Navbar from '@/components/Navbar'
-import VideoCarousel from '@/components/VideoCarousel'
+import VideoCarousel, { HeroVideoData, VideoContent } from '@/components/VideoCarousel'
 import AppointmentModal from '@/components/AppointmentModal'
 import Footer from '@/components/Footer'
 
@@ -110,8 +110,9 @@ export default function Home() {
   const [selectedBlogPost, setSelectedBlogPost] = useState<BlogPost | null>(null)
   const [selectedService, setSelectedService] = useState<Service | null>(null)
   const [selectedTeamMember, setSelectedTeamMember] = useState<TeamMember | null>(null)
-  const [heroVideos, setHeroVideos] = useState<string[]>([])
+  const [heroVideos, setHeroVideos] = useState<HeroVideoData[]>([])
   const [randomPlay, setRandomPlay] = useState(false)
+  const [dynamicContent, setDynamicContent] = useState<VideoContent | null>(null)
   const [instagramPosts, setInstagramPosts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [sectionVisibility, setSectionVisibility] = useState({
@@ -216,15 +217,13 @@ export default function Home() {
         // Hakkımızda bilgilerini set et
         if (aboutRes.data) setAbout(aboutRes.data)
 
-        // Hero videoları set et
+        // Hero videoları set et (tam obje olarak)
         console.log('Video data from API:', videosRes.data)
         if (videosRes.data && videosRes.data.length > 0) {
-          const activeVideos = videosRes.data
-            .filter((v: any) => v.active)
+          const sortedVideos = videosRes.data
             .sort((a: any, b: any) => a.order - b.order)
-            .map((v: any) => v.fileName)
-          console.log('Active videos:', activeVideos)
-          setHeroVideos(activeVideos)
+          console.log('All videos:', sortedVideos)
+          setHeroVideos(sortedVideos)
         } else {
           console.log('No videos found or empty array')
         }
@@ -307,7 +306,13 @@ export default function Home() {
       {sectionVisibility.hero && (
         <section id="hero" className="relative h-screen flex items-center justify-center overflow-hidden" style={{ order: getSectionOrder('hero') }}>
         {/* Full Screen Video Carousel Background */}
-        <VideoCarousel videos={heroVideos} videoPath="/videos/optimized" fadeDuration={1500} randomPlay={randomPlay} />
+        <VideoCarousel
+          videos={heroVideos}
+          videoPath="/videos/optimized"
+          fadeDuration={1500}
+          randomPlay={randomPlay}
+          onContentChange={(content) => setDynamicContent(content)}
+        />
 
         <motion.div
           style={{ opacity, scale }}
@@ -328,32 +333,40 @@ export default function Home() {
             />
           </motion.div>
 
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.4 }}
-            className="text-6xl md:text-8xl font-bold mb-6 gradient-text"
-          >
-            {hero.title}
-          </motion.h1>
+          {/* Dinamik İçerik - Video bazlı başlık/açıklama */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={dynamicContent?.useCustomContent ? 'custom' : 'default'}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.6 }}
+            >
+              <motion.h1
+                className="text-6xl md:text-8xl font-bold mb-6 gradient-text"
+              >
+                {dynamicContent?.useCustomContent && dynamicContent.title
+                  ? dynamicContent.title
+                  : hero.title}
+              </motion.h1>
 
-          <motion.p
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.6 }}
-            className="text-2xl md:text-3xl text-white/90 mb-4"
-          >
-            {hero.subtitle}
-          </motion.p>
+              <motion.p
+                className="text-2xl md:text-3xl text-white/90 mb-4"
+              >
+                {dynamicContent?.useCustomContent && dynamicContent.subtitle
+                  ? dynamicContent.subtitle
+                  : hero.subtitle}
+              </motion.p>
 
-          <motion.p
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.8 }}
-            className="text-lg md:text-xl text-gold-300 mb-12 max-w-3xl mx-auto"
-          >
-            {hero.description}
-          </motion.p>
+              <motion.p
+                className="text-lg md:text-xl text-gold-300 mb-12 max-w-3xl mx-auto"
+              >
+                {dynamicContent?.useCustomContent && dynamicContent.description
+                  ? dynamicContent.description
+                  : hero.description}
+              </motion.p>
+            </motion.div>
+          </AnimatePresence>
 
           {hero.showButton !== false && (
             <motion.button

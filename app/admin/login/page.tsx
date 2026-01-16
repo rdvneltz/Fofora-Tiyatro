@@ -46,7 +46,7 @@ export default function LoginPage() {
           <div className="text-center mb-8">
             <div className="flex justify-center mb-6">
               <Image
-                src="/assets/murekkep-logo-saydam.png"
+                src="/assets/fofora-logo.png"
                 alt="Fofora Tiyatro"
                 width={120}
                 height={120}
@@ -68,7 +68,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition"
-                placeholder="admin@murekkephukuk.com"
+                placeholder="admin@foforatiyatro.com"
                 required
               />
             </div>

@@ -172,12 +172,23 @@ model AvailableSlot {
 }
 
 model HeroVideo {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  fileName    String
-  order       Int      @default(0)
-  active      Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  fileName        String
+  order           Int      @default(0)
+  active          Boolean  @default(true)
+  // Özel içerik alanları
+  title           String?  // Video başlığı
+  subtitle        String?  // Alt başlık
+  description     String?  // Açıklama
+  useCustomContent Boolean @default(false) // Özel içerik kullan
+  // Oynatma ayarları
+  playDuration    Int?     // Oynatma süresi (saniye) - null ise video bitene kadar
+  playCount       Int      @default(1) // Kaç kez oynatılacak
+  // Öne çıkarma özelliği
+  featured        Boolean  @default(false) // Öne çıkar
+  featuredWeight  Int      @default(3) // Öne çıkarma ağırlığı (her X videoda 1 kez)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
 model InstagramPost {

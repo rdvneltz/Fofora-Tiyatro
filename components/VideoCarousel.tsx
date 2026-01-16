@@ -1,130 +1,248 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { motion } from 'framer-motion'
 
+export interface HeroVideoData {
+  id: string
+  fileName: string
+  order: number
+  active: boolean
+  title?: string | null
+  subtitle?: string | null
+  description?: string | null
+  useCustomContent?: boolean
+  playDuration?: number | null
+  playCount?: number
+  featured?: boolean
+  featuredWeight?: number
+}
+
+export interface VideoContent {
+  title?: string | null
+  subtitle?: string | null
+  description?: string | null
+  useCustomContent?: boolean
+}
+
 interface VideoCarouselProps {
-  videos?: string[]
+  videos?: HeroVideoData[]
   videoPath?: string
   fadeDuration?: number
   randomPlay?: boolean
+  onContentChange?: (content: VideoContent | null) => void
+}
+
+// Fisher-Yates shuffle - component dışında tanımla
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array]
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+  }
+  return shuffled
 }
 
 export default function VideoCarousel({
   videos = [],
   videoPath = '/videos',
   fadeDuration = 1200,
-  randomPlay = false
+  randomPlay = false,
+  onContentChange
 }: VideoCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [nextIndex, setNextIndex] = useState(1)
   const [showingFirst, setShowingFirst] = useState(true)
+  const [playCounters, setPlayCounters] = useState<Map<string, number>>(new Map())
+  const [isInitialized, setIsInitialized] = useState(false)
 
   const video1Ref = useRef<HTMLVideoElement>(null)
   const video2Ref = useRef<HTMLVideoElement>(null)
   const isTransitioningRef = useRef(false)
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Shuffle videos if randomPlay is enabled
-  const shuffledVideosRef = useRef<string[]>([])
-  useEffect(() => {
-    if (randomPlay && videos.length > 0) {
-      // Fisher-Yates shuffle algorithm
-      const shuffled = [...videos]
-      for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
-      }
-      shuffledVideosRef.current = shuffled
-    } else {
-      shuffledVideosRef.current = videos
+  // Aktif videoları filtrele
+  const activeVideos = useMemo(() => videos.filter(v => v.active), [videos])
+
+  // Öne çıkan ve normal videoları ayır
+  const featuredVideos = useMemo(() => activeVideos.filter(v => v.featured), [activeVideos])
+  const normalVideos = useMemo(() => activeVideos.filter(v => !v.featured), [activeVideos])
+
+  // Playlist'i oluştur
+  const playlist = useMemo(() => {
+    if (activeVideos.length === 0) return []
+
+    if (featuredVideos.length === 0) {
+      return randomPlay ? shuffleArray([...activeVideos]) : activeVideos
     }
-  }, [videos, randomPlay])
 
-  const activeVideos = shuffledVideosRef.current.length > 0 ? shuffledVideosRef.current : videos
-  const videoCount = activeVideos.length
+    const result: HeroVideoData[] = []
+    let normalIndex = 0
+    let featuredIndex = 0
+    const minWeight = Math.min(...featuredVideos.map(v => v.featuredWeight || 3))
+
+    for (let i = 0; i < activeVideos.length * 3; i++) {
+      if ((i + 1) % minWeight === 0 && featuredVideos.length > 0) {
+        result.push(featuredVideos[featuredIndex % featuredVideos.length])
+        featuredIndex++
+      } else if (normalVideos.length > 0) {
+        result.push(normalVideos[normalIndex % normalVideos.length])
+        normalIndex++
+      } else {
+        result.push(featuredVideos[featuredIndex % featuredVideos.length])
+        featuredIndex++
+      }
+
+      if (result.length >= Math.max(activeVideos.length * 2, 10)) break
+    }
+
+    return randomPlay ? shuffleArray(result) : result
+  }, [activeVideos, featuredVideos, normalVideos, randomPlay])
 
   // Video path generator
-  const getVideoPath = useCallback((index: number) => {
-    if (!activeVideos[index]) return ''
-    // If video is already a full URL (R2), use it directly
-    if (activeVideos[index].startsWith('http://') || activeVideos[index].startsWith('https://')) {
-      return activeVideos[index]
+  const getVideoPath = useCallback((video: HeroVideoData | undefined) => {
+    if (!video) return ''
+    if (video.fileName.startsWith('http://') || video.fileName.startsWith('https://')) {
+      return video.fileName
     }
-    // Otherwise, use the local path
-    return `${videoPath}/${activeVideos[index]}`
-  }, [videoPath, activeVideos])
+    return `${videoPath}/${video.fileName}`
+  }, [videoPath])
 
-  // Initialize videos
+  // İçerik değişikliğini bildir
+  const notifyContentChange = useCallback((video: HeroVideoData | undefined) => {
+    if (onContentChange) {
+      if (video && video.useCustomContent) {
+        onContentChange({
+          title: video.title,
+          subtitle: video.subtitle,
+          description: video.description,
+          useCustomContent: true
+        })
+      } else {
+        onContentChange(null)
+      }
+    }
+  }, [onContentChange])
+
+  // Sonraki videoya geç
+  const goToNextVideo = useCallback(() => {
+    if (isTransitioningRef.current || playlist.length === 0) return
+
+    const currentVideo = playlist[currentIndex]
+    const currentPlayCount = playCounters.get(currentVideo?.id || '') || 0
+    const maxPlayCount = currentVideo?.playCount || 1
+
+    if (currentPlayCount + 1 < maxPlayCount) {
+      setPlayCounters(prev => {
+        const newMap = new Map(prev)
+        newMap.set(currentVideo?.id || '', currentPlayCount + 1)
+        return newMap
+      })
+      const activeVideo = showingFirst ? video1Ref.current : video2Ref.current
+      if (activeVideo) {
+        activeVideo.currentTime = 0
+        activeVideo.play().catch(err => console.error('Video replay error:', err))
+      }
+      return
+    }
+
+    isTransitioningRef.current = true
+
+    const nextIndex = (currentIndex + 1) % playlist.length
+    const nextVideo = playlist[nextIndex]
+    const hiddenVideo = showingFirst ? video2Ref.current : video1Ref.current
+
+    if (hiddenVideo && nextVideo) {
+      hiddenVideo.src = getVideoPath(nextVideo)
+      hiddenVideo.load()
+    }
+
+    setShowingFirst(!showingFirst)
+    setCurrentIndex(nextIndex)
+
+    setPlayCounters(prev => {
+      const newMap = new Map(prev)
+      newMap.set(nextVideo?.id || '', 0)
+      return newMap
+    })
+
+    notifyContentChange(nextVideo)
+
+    setTimeout(() => {
+      if (hiddenVideo) {
+        hiddenVideo.play().catch(err => console.error('Video play error:', err))
+      }
+      isTransitioningRef.current = false
+    }, fadeDuration)
+
+  }, [currentIndex, playlist, playCounters, showingFirst, fadeDuration, getVideoPath, notifyContentChange])
+
+  // İlk yükleme
   useEffect(() => {
-    if (video1Ref.current && video2Ref.current && videoCount > 0) {
-      // Set initial videos
-      video1Ref.current.src = getVideoPath(0)
-      video2Ref.current.src = getVideoPath(1)
+    if (isInitialized || playlist.length === 0) return
 
-      // Start first video
+    const firstVideo = playlist[0]
+    if (video1Ref.current && firstVideo) {
+      video1Ref.current.src = getVideoPath(firstVideo)
       video1Ref.current.load()
       video1Ref.current.play().catch(err => console.error('Video play error:', err))
 
-      // Preload second video
-      if (videoCount > 1) {
+      notifyContentChange(firstVideo)
+
+      if (video2Ref.current && playlist.length > 1) {
+        video2Ref.current.src = getVideoPath(playlist[1])
         video2Ref.current.load()
       }
+
+      setIsInitialized(true)
     }
-  }, [getVideoPath, videoCount])
+  }, [playlist, getVideoPath, notifyContentChange, isInitialized])
 
-  // Add event listeners
+  // Video ended veya duration timeout
   useEffect(() => {
-    const video1 = video1Ref.current
-    const video2 = video2Ref.current
+    const activeVideo = showingFirst ? video1Ref.current : video2Ref.current
+    const currentVideo = playlist[currentIndex]
 
-    if (!video1 || !video2) return
+    if (!activeVideo || !currentVideo) return
 
-    const handleVideoEnded = (isFirstVideo: boolean) => {
-      // Only handle if this is the currently showing video
-      if (isFirstVideo !== showingFirst) return
-      if (isTransitioningRef.current) return
+    const handleEnded = () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current)
+        timerRef.current = null
+      }
+      goToNextVideo()
+    }
 
-      isTransitioningRef.current = true
-
-      const activeVideo = isFirstVideo ? video1 : video2
-      const nextVideo = isFirstVideo ? video2 : video1
-
-      // Calculate next indices
-      const newCurrentIndex = (currentIndex + 1) % videoCount
-      const newNextIndex = (currentIndex + 2) % videoCount
-
-      // Start fade transition and play next video
-      setShowingFirst(!isFirstVideo)
-
-      // Play the next video
-      const playPromise = nextVideo.play()
-      if (playPromise !== undefined) {
-        playPromise.catch(err => console.error('Video play error:', err))
+    const setupDurationTimer = () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current)
       }
 
-      // After fade completes, prepare the hidden video for next transition
-      setTimeout(() => {
-        setCurrentIndex(newCurrentIndex)
-        setNextIndex(newNextIndex)
-
-        activeVideo.src = getVideoPath(newNextIndex)
-        activeVideo.load()
-
-        isTransitioningRef.current = false
-      }, fadeDuration)
+      if (currentVideo.playDuration && currentVideo.playDuration > 0) {
+        timerRef.current = setTimeout(() => {
+          goToNextVideo()
+        }, currentVideo.playDuration * 1000)
+      }
     }
 
-    const handleVideo1End = () => handleVideoEnded(true)
-    const handleVideo2End = () => handleVideoEnded(false)
-
-    video1.addEventListener('ended', handleVideo1End)
-    video2.addEventListener('ended', handleVideo2End)
+    activeVideo.addEventListener('ended', handleEnded)
+    activeVideo.addEventListener('play', setupDurationTimer)
 
     return () => {
-      video1.removeEventListener('ended', handleVideo1End)
-      video2.removeEventListener('ended', handleVideo2End)
+      activeVideo.removeEventListener('ended', handleEnded)
+      activeVideo.removeEventListener('play', setupDurationTimer)
+      if (timerRef.current) {
+        clearTimeout(timerRef.current)
+      }
     }
-  }, [showingFirst, currentIndex, videoCount, fadeDuration, getVideoPath])
+  }, [showingFirst, currentIndex, goToNextVideo, playlist])
+
+  if (playlist.length === 0) {
+    return (
+      <div className="absolute inset-0 overflow-hidden bg-black">
+        <div className="absolute inset-0 bg-gradient-to-b from-navy-900/70 via-navy-900/60 to-navy-900/80 z-10"></div>
+      </div>
+    )
+  }
 
   return (
     <div className="absolute inset-0 overflow-hidden bg-black">
