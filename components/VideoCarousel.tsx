@@ -220,6 +220,9 @@ export default function VideoCarousel({
 
   // Duration timer - video değiştiğinde veya başladığında çalışır
   useEffect(() => {
+    // İlk yükleme tamamlanmadan timer kurma
+    if (!isInitialized) return
+
     const currentVideo = playlist[currentIndex]
 
     // Önceki timer'ı temizle
@@ -243,7 +246,7 @@ export default function VideoCarousel({
         timerRef.current = null
       }
     }
-  }, [currentIndex, playlist, goToNextVideo])
+  }, [currentIndex, playlist, goToNextVideo, isInitialized])
 
   if (playlist.length === 0) {
     return (
