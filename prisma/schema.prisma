@@ -207,6 +207,7 @@ model Inquiry {
   phone           String   // Telefon
   email           String?  // E-posta (opsiyonel)
   subject         String   // Konu (hangi program için)
+  message         String?  // Mesaj (opsiyonel)
   status          String   @default("new") // new, read, replied, archived
   adminNotes      String?  // Admin notları
   repliedAt       DateTime? // Ne zaman yanıtlandı

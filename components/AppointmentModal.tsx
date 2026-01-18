@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Phone, Mail, User, FileText, CheckCircle, Sparkles } from 'lucide-react'
+import { X, Phone, Mail, User, FileText, CheckCircle, Sparkles, MessageSquare } from 'lucide-react'
 import axios from 'axios'
 
 interface AppointmentModalProps {
@@ -25,7 +25,8 @@ export default function AppointmentModal({ isOpen, onClose }: AppointmentModalPr
     name: '',
     phone: '',
     email: '',
-    subject: ''
+    subject: '',
+    message: ''
   })
 
   useEffect(() => {
@@ -55,7 +56,8 @@ export default function AppointmentModal({ isOpen, onClose }: AppointmentModalPr
         name: '',
         phone: '',
         email: '',
-        subject: ''
+        subject: '',
+        message: ''
       })
 
       // 3 saniye sonra modalı kapat
@@ -77,7 +79,8 @@ export default function AppointmentModal({ isOpen, onClose }: AppointmentModalPr
       name: '',
       phone: '',
       email: '',
-      subject: ''
+      subject: '',
+      message: ''
     })
   }
 
@@ -207,6 +210,22 @@ export default function AppointmentModal({ isOpen, onClose }: AppointmentModalPr
                     ))}
                     <option value="Genel Bilgi" className="bg-navy-800 text-white">Genel Bilgi Almak İstiyorum</option>
                   </select>
+                </div>
+
+                {/* Mesaj */}
+                <div>
+                  <label className="block text-white mb-2 flex items-center gap-2 text-sm font-medium">
+                    <MessageSquare className="w-4 h-4 text-gold-500" />
+                    Mesajınız
+                    <span className="text-white/40 text-xs">(Opsiyonel)</span>
+                  </label>
+                  <textarea
+                    value={formData.message}
+                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                    rows={3}
+                    className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-all resize-none"
+                    placeholder="Sormak istediğiniz sorular veya eklemek istediğiniz bilgiler..."
+                  />
                 </div>
 
                 {/* Submit */}
