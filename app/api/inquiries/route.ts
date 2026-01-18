@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, phone, email, subject } = body
+    const { name, phone, email, subject, message } = body
 
     if (!name || !phone || !subject) {
       return NextResponse.json(
@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
         phone,
         email: email || null,
         subject,
+        message: message || null,
         status: 'new'
       }
     })

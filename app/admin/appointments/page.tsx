@@ -28,6 +28,7 @@ interface Inquiry {
   phone: string
   email?: string
   subject: string
+  message?: string
   status: string
   adminNotes?: string
   repliedAt?: string
@@ -304,6 +305,17 @@ export default function InboxPage() {
                       </div>
                     </div>
                   </div>
+
+                  {/* Mesaj */}
+                  {selectedInquiry.message && (
+                    <div className="bg-gold-500/10 rounded-xl p-5 border border-gold-500/30">
+                      <h3 className="text-gold-400 font-semibold mb-3 flex items-center gap-2">
+                        <MessageSquare className="w-5 h-5" />
+                        Mesaj
+                      </h3>
+                      <p className="text-white/90 whitespace-pre-wrap">{selectedInquiry.message}</p>
+                    </div>
+                  )}
 
                   {/* WhatsApp Aksiyonları */}
                   <div className="bg-green-500/10 rounded-xl p-5 border border-green-500/30">
