@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import Image from 'next/image'
 import { X, Play, ChevronLeft, ChevronRight, ImageIcon, Film, Folder } from 'lucide-react'
 
 interface GalleryItem {
@@ -36,15 +35,26 @@ export default function GallerySection({ albums }: GallerySectionProps) {
   const [lightboxItem, setLightboxItem] = useState<GalleryItem | null>(null)
   const [lightboxIndex, setLightboxIndex] = useState(0)
 
-  // Prevent body scroll when lightbox is open
+  // Prevent body scroll when lightbox is open + keyboard navigation
   useEffect(() => {
     if (lightboxItem) {
       document.body.style.overflow = 'hidden'
+
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') setLightboxItem(null)
+        if (e.key === 'ArrowRight') navigateLightbox(1)
+        if (e.key === 'ArrowLeft') navigateLightbox(-1)
+      }
+
+      window.addEventListener('keydown', handleKeyDown)
+      return () => {
+        document.body.style.overflow = ''
+        window.removeEventListener('keydown', handleKeyDown)
+      }
     } else {
       document.body.style.overflow = ''
     }
-    return () => { document.body.style.overflow = '' }
-  }, [lightboxItem])
+  }, [lightboxItem, lightboxIndex])
 
   const activeAlbums = albums.filter(a => a.active && a.items.some(i => i.active))
 
@@ -166,12 +176,11 @@ export default function GallerySection({ albums }: GallerySectionProps) {
                   className="group relative aspect-square rounded-xl overflow-hidden cursor-pointer border border-white/10 hover:border-gold-500/50 transition-all"
                 >
                   {thumb ? (
-                    <Image
+                    <img
                       src={thumb}
                       alt={item.title || 'Galeri'}
-                      fill
-                      className="object-cover group-hover:scale-110 transition-transform duration-500"
-                      sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      loading="lazy"
                     />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-navy-700 to-navy-800 flex items-center justify-center">
