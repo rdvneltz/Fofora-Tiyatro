@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Play, ChevronLeft, ChevronRight, ImageIcon, Film, Folder } from 'lucide-react'
+import { X, Play, ChevronLeft, ChevronRight, ImageIcon, Film, Folder, AlertTriangle } from 'lucide-react'
 
 interface GalleryItem {
   id: string
@@ -90,6 +90,64 @@ export default function GallerySection({ albums }: GallerySectionProps) {
     return null
   }
 
+  // Sub-component for lightbox image with error handling
+  const LightboxImage = ({ url, title }: { url: string; title: string }) => {
+    const [error, setError] = useState(false)
+
+    if (error) {
+      return (
+        <div className="w-full flex flex-col items-center justify-center gap-3 py-20">
+          <AlertTriangle className="w-16 h-16 text-red-400/40" />
+          <p className="text-red-400/60 text-lg">Görsel yüklenemedi</p>
+          <p className="text-white/30 text-xs break-all max-w-md text-center px-4">{url}</p>
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-white/60 text-sm transition-colors"
+          >
+            URL&apos;yi Yeni Sekmede Aç
+          </a>
+        </div>
+      )
+    }
+
+    return (
+      <div className="relative w-full" style={{ maxHeight: '75vh' }}>
+        <img
+          src={url}
+          alt={title}
+          className="w-full h-full object-contain max-h-[75vh] rounded-lg"
+          onError={() => setError(true)}
+        />
+      </div>
+    )
+  }
+
+  // Sub-component with error handling for grid thumbnails
+  const GridThumb = ({ src, alt }: { src: string | null; alt: string }) => {
+    const [error, setError] = useState(false)
+
+    if (!src || error) {
+      return (
+        <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-navy-700 to-navy-800 flex flex-col items-center justify-center gap-1">
+          <AlertTriangle className="w-8 h-8 text-white/20" />
+          <p className="text-white/20 text-xs">Yüklenemedi</p>
+        </div>
+      )
+    }
+
+    return (
+      <img
+        src={src}
+        alt={alt}
+        className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+        loading="lazy"
+        onError={() => setError(true)}
+      />
+    )
+  }
+
   if (activeAlbums.length === 0) return null
 
   return (
@@ -175,21 +233,7 @@ export default function GallerySection({ albums }: GallerySectionProps) {
                   onClick={() => openLightbox(item, index)}
                   className="group relative aspect-square rounded-xl overflow-hidden cursor-pointer border border-white/10 hover:border-gold-500/50 transition-all"
                 >
-                  {thumb ? (
-                    <img
-                      src={thumb}
-                      alt={item.title || 'Galeri'}
-                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-navy-700 to-navy-800 flex items-center justify-center">
-                      {item.type === 'video' || item.type === 'youtube'
-                        ? <Film className="w-12 h-12 text-white/30" />
-                        : <ImageIcon className="w-12 h-12 text-white/30" />
-                      }
-                    </div>
-                  )}
+                  <GridThumb src={thumb} alt={item.title || 'Galeri'} />
 
                   {/* Hover Overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
@@ -272,13 +316,7 @@ export default function GallerySection({ albums }: GallerySectionProps) {
               {/* Media */}
               <div className="relative flex-1 flex items-center justify-center min-h-0">
                 {lightboxItem.type === 'image' && (
-                  <div className="relative w-full" style={{ maxHeight: '75vh' }}>
-                    <img
-                      src={lightboxItem.url}
-                      alt={lightboxItem.title || 'Galeri'}
-                      className="w-full h-full object-contain max-h-[75vh] rounded-lg"
-                    />
-                  </div>
+                  <LightboxImage url={lightboxItem.url} title={lightboxItem.title || 'Galeri'} />
                 )}
                 {lightboxItem.type === 'video' && (
                   <video

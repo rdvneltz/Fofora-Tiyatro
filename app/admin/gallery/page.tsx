@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowLeft, Plus, Trash2, Edit3, Save, X, Image as ImageIcon, Film, Youtube,
-  ChevronUp, ChevronDown, Eye, EyeOff, Folder, Upload
+  ChevronUp, ChevronDown, Eye, EyeOff, Folder, Upload, AlertTriangle, ExternalLink, Copy
 } from 'lucide-react'
 import Link from 'next/link'
 import axios from 'axios'
@@ -32,6 +32,66 @@ interface GalleryAlbum {
   order: number
   active: boolean
   items: GalleryItem[]
+}
+
+// Thumbnail component with error handling
+function GalleryItemThumb({ item }: { item: GalleryItem }) {
+  const [error, setError] = useState(false)
+
+  const getYtId = (url: string) => {
+    if (url.includes('youtu.be')) return url.split('youtu.be/')[1]?.split('?')[0]
+    return url.split('v=')[1]?.split('&')[0]
+  }
+
+  const imgSrc = item.type === 'image'
+    ? item.url
+    : item.type === 'youtube'
+      ? `https://img.youtube.com/vi/${getYtId(item.url)}/hqdefault.jpg`
+      : item.thumbnail || null
+
+  return (
+    <div className="aspect-square bg-navy-800 relative">
+      {error || !imgSrc ? (
+        <div className="w-full h-full flex flex-col items-center justify-center gap-1 bg-red-500/5">
+          <AlertTriangle className="w-6 h-6 text-red-400/60" />
+          <p className="text-red-400/60 text-[10px]">Yüklenemedi</p>
+          {item.type !== 'youtube' && (
+            <a
+              href={item.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="flex items-center gap-1 text-[10px] text-blue-400/60 hover:text-blue-400 mt-1"
+            >
+              <ExternalLink className="w-3 h-3" /> URL Test
+            </a>
+          )}
+        </div>
+      ) : (
+        <img
+          src={imgSrc}
+          alt={item.title || ''}
+          className="w-full h-full object-cover"
+          onError={() => setError(true)}
+          loading="lazy"
+        />
+      )}
+
+      {/* Type badge */}
+      <div className="absolute top-2 left-2">
+        {item.type === 'video' && (
+          <span className="px-2 py-1 bg-purple-500/80 text-white text-xs rounded-full flex items-center gap-1">
+            <Film className="w-3 h-3" /> Video
+          </span>
+        )}
+        {item.type === 'youtube' && (
+          <span className="px-2 py-1 bg-red-500/80 text-white text-xs rounded-full flex items-center gap-1">
+            <Youtube className="w-3 h-3" /> YouTube
+          </span>
+        )}
+      </div>
+    </div>
+  )
 }
 
 export default function AdminGallery() {
@@ -536,37 +596,7 @@ export default function AdminGallery() {
                         }`}
                       >
                         {/* Thumbnail */}
-                        <div className="aspect-square bg-navy-800">
-                          {item.type === 'image' ? (
-                            <img src={item.url} alt={item.title || ''} className="w-full h-full object-cover" />
-                          ) : item.type === 'youtube' ? (
-                            <img
-                              src={`https://img.youtube.com/vi/${item.url.includes('youtu.be') ? item.url.split('youtu.be/')[1]?.split('?')[0] : item.url.split('v=')[1]?.split('&')[0]}/hqdefault.jpg`}
-                              alt={item.title || ''}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : item.thumbnail ? (
-                            <img src={item.thumbnail} alt={item.title || ''} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <Film className="w-10 h-10 text-white/20" />
-                            </div>
-                          )}
-
-                          {/* Type badge */}
-                          <div className="absolute top-2 left-2">
-                            {item.type === 'video' && (
-                              <span className="px-2 py-1 bg-purple-500/80 text-white text-xs rounded-full flex items-center gap-1">
-                                <Film className="w-3 h-3" /> Video
-                              </span>
-                            )}
-                            {item.type === 'youtube' && (
-                              <span className="px-2 py-1 bg-red-500/80 text-white text-xs rounded-full flex items-center gap-1">
-                                <Youtube className="w-3 h-3" /> YouTube
-                              </span>
-                            )}
-                          </div>
-                        </div>
+                        <GalleryItemThumb item={item} />
 
                         {/* Info */}
                         <div className="p-3 bg-white/5">
@@ -574,6 +604,7 @@ export default function AdminGallery() {
                           {item.description && (
                             <p className="text-white/40 text-xs truncate mt-0.5">{item.description}</p>
                           )}
+                          <p className="text-white/20 text-[10px] truncate mt-1 font-mono">{item.url}</p>
                         </div>
 
                         {/* Hover Controls */}
