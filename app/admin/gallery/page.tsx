@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -67,6 +67,12 @@ export default function AdminGallery() {
     }
   }, [status, router])
 
+  // Keep ref in sync with selectedAlbum state (avoids stale closure)
+  const selectedAlbumIdRef = useRef<string | null>(null)
+  useEffect(() => {
+    selectedAlbumIdRef.current = selectedAlbum?.id || null
+  }, [selectedAlbum])
+
   useEffect(() => {
     fetchAlbums()
   }, [])
@@ -75,9 +81,10 @@ export default function AdminGallery() {
     try {
       const { data } = await axios.get('/api/gallery')
       setAlbums(data)
-      // Refresh selected album if exists
-      if (selectedAlbum) {
-        const updated = data.find((a: GalleryAlbum) => a.id === selectedAlbum.id)
+      // Refresh selected album using ref (avoids stale closure)
+      const currentSelectedId = selectedAlbumIdRef.current
+      if (currentSelectedId) {
+        const updated = data.find((a: GalleryAlbum) => a.id === currentSelectedId)
         if (updated) setSelectedAlbum(updated)
       }
     } catch (error) {
@@ -703,6 +710,7 @@ export default function AdminGallery() {
                 </div>
 
                 <ImageUploader
+                  key={`album-cover-${editingAlbum?.id || 'new'}`}
                   currentUrl={albumForm.coverImage}
                   onUrlChange={(url) => setAlbumForm({ ...albumForm, coverImage: url })}
                   label="Kapak Fotoğrafı"
@@ -797,6 +805,7 @@ export default function AdminGallery() {
                   </div>
                 ) : (
                   <ImageUploader
+                    key={`item-url-${editingItem?.id || 'new'}-${itemForm.itemType}`}
                     currentUrl={itemForm.url}
                     onUrlChange={(url) => setItemForm({ ...itemForm, url })}
                     label={itemForm.itemType === 'video' ? 'Video Dosyası *' : 'Fotoğraf *'}
@@ -808,6 +817,7 @@ export default function AdminGallery() {
                 {/* Thumbnail (for video) */}
                 {itemForm.itemType === 'video' && (
                   <ImageUploader
+                    key={`item-thumb-${editingItem?.id || 'new'}`}
                     currentUrl={itemForm.thumbnail}
                     onUrlChange={(url) => setItemForm({ ...itemForm, thumbnail: url })}
                     label="Küçük Resim (Opsiyonel)"
