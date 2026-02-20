@@ -9,6 +9,7 @@ import Navbar from '@/components/Navbar'
 import VideoCarousel, { HeroVideoData, VideoContent } from '@/components/VideoCarousel'
 import AppointmentModal from '@/components/AppointmentModal'
 import Footer from '@/components/Footer'
+import GallerySection from '@/components/GallerySection'
 
 interface HeroData {
   title: string
@@ -114,6 +115,8 @@ export default function Home() {
   const [randomPlay, setRandomPlay] = useState(false)
   const [dynamicContent, setDynamicContent] = useState<VideoContent | null>(null)
   const [instagramPosts, setInstagramPosts] = useState<any[]>([])
+  const [galleryAlbums, setGalleryAlbums] = useState<any[]>([])
+  const [clickToNext, setClickToNext] = useState(true)
   const [loading, setLoading] = useState(true)
   const [sectionVisibility, setSectionVisibility] = useState({
     hero: true,
@@ -123,10 +126,11 @@ export default function Home() {
     testimonials: true,
     instagram: true,
     blog: true,
-    contact: true
+    contact: true,
+    gallery: true,
   })
   const [sectionOrder, setSectionOrder] = useState<string[]>([
-    'hero', 'services', 'about', 'team', 'testimonials', 'instagram', 'blog', 'contact'
+    'hero', 'services', 'about', 'team', 'testimonials', 'gallery', 'instagram', 'blog', 'contact'
   ])
 
   // Prevent body scroll when blog modal is open
@@ -185,7 +189,7 @@ export default function Home() {
     const fetchAllData = async () => {
       try {
         // Tüm verileri paralel olarak çek
-        const [heroRes, servicesRes, teamRes, contactRes, aboutRes, videosRes, settingsRes, testimonialsRes, blogRes, instagramRes] = await Promise.all([
+        const [heroRes, servicesRes, teamRes, contactRes, aboutRes, videosRes, settingsRes, testimonialsRes, blogRes, instagramRes, galleryRes] = await Promise.all([
           axios.get('/api/hero', { headers: { 'Cache-Control': 'no-cache' } }),
           axios.get('/api/services', { headers: { 'Cache-Control': 'no-cache' } }),
           axios.get('/api/team', { headers: { 'Cache-Control': 'no-cache' } }),
@@ -195,7 +199,8 @@ export default function Home() {
           axios.get('/api/settings', { headers: { 'Cache-Control': 'no-cache' } }),
           axios.get('/api/testimonials', { headers: { 'Cache-Control': 'no-cache' } }),
           axios.get('/api/blog', { headers: { 'Cache-Control': 'no-cache' } }),
-          axios.get('/api/instagram-posts', { headers: { 'Cache-Control': 'no-cache' } })
+          axios.get('/api/instagram-posts', { headers: { 'Cache-Control': 'no-cache' } }),
+          axios.get('/api/gallery', { headers: { 'Cache-Control': 'no-cache' } })
         ])
 
         // Hero verilerini set et
@@ -260,6 +265,16 @@ export default function Home() {
           const activePosts = instagramRes.data.filter((p: any) => p.active)
           setInstagramPosts(activePosts)
         }
+
+        // Gallery albums set et
+        if (galleryRes.data && galleryRes.data.length > 0) {
+          setGalleryAlbums(galleryRes.data)
+        }
+
+        // Click to next video ayarını set et
+        if (settingsRes.data && settingsRes.data.heroVideoClickToNext !== undefined) {
+          setClickToNext(settingsRes.data.heroVideoClickToNext)
+        }
       } catch (error) {
         console.error('Data fetch error:', error)
       } finally {
@@ -311,6 +326,7 @@ export default function Home() {
           videoPath="/videos/optimized"
           fadeDuration={1500}
           randomPlay={randomPlay}
+          clickToNext={clickToNext}
           onContentChange={(content) => setDynamicContent(content)}
         />
 
@@ -867,6 +883,30 @@ export default function Home() {
             )}
           </motion.div>
         </div>
+      </section>
+      )}
+
+      {/* Gallery Section */}
+      {sectionVisibility.gallery && galleryAlbums.length > 0 && (
+      <section id="gallery" className="py-24 px-4 bg-gradient-to-b from-navy-900 to-navy-800 relative overflow-hidden" style={{ order: getSectionOrder('gallery') }}>
+        <motion.div
+          className="absolute top-20 right-10 w-72 h-72 bg-gold-500/5 rounded-full blur-3xl"
+          animate={{
+            x: [0, -40, 0],
+            y: [0, 30, 0],
+            scale: [1, 1.2, 1],
+          }}
+          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute bottom-20 left-10 w-64 h-64 bg-purple-500/5 rounded-full blur-3xl"
+          animate={{
+            x: [0, 30, 0],
+            y: [0, -20, 0],
+          }}
+          transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <GallerySection albums={galleryAlbums} />
       </section>
       )}
 

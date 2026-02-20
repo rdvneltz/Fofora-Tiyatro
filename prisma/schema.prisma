@@ -134,6 +134,7 @@ model SiteSettings {
   legalLinks  Json?   // [{title: string, content: string, active: boolean, order: number}]
   appointmentFormSettings Json? // {consultationTypes: string[], showLawyerSelection: boolean, descriptionLabel: string}
   heroVideoRandomPlay Boolean @default(false) // Random video playback order
+  heroVideoClickToNext Boolean @default(true) // Click on header to go to next video
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -194,6 +195,35 @@ model HeroVideo {
 model InstagramPost {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   postUrl     String   // Instagram post URL (e.g., https://www.instagram.com/p/ABC123/)
+  order       Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Galeri Albümleri
+model GalleryAlbum {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String?
+  coverImage  String?  // Albüm kapak fotoğrafı
+  order       Int      @default(0)
+  active      Boolean  @default(true)
+  items       GalleryItem[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Galeri Öğeleri (Fotoğraf/Video)
+model GalleryItem {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  albumId     String   @db.ObjectId
+  album       GalleryAlbum @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  type        String   @default("image") // image, video, youtube
+  url         String   // Dosya URL'si
+  thumbnail   String?  // Video için küçük resim
+  title       String?
+  description String?
   order       Int      @default(0)
   active      Boolean  @default(true)
   createdAt   DateTime @default(now())
