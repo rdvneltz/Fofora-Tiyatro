@@ -30,6 +30,7 @@ interface VideoCarouselProps {
   videoPath?: string
   fadeDuration?: number
   randomPlay?: boolean
+  clickToNext?: boolean
   onContentChange?: (content: VideoContent | null) => void
 }
 
@@ -43,11 +44,119 @@ function shuffleArray<T>(array: T[]): T[] {
   return shuffled
 }
 
+// Canvas animated gradient background component
+function AnimatedGradientBackground() {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const animationRef = useRef<number>(0)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    let time = 0
+
+    const resize = () => {
+      canvas.width = window.innerWidth
+      canvas.height = window.innerHeight
+    }
+
+    resize()
+    window.addEventListener('resize', resize)
+
+    const colors = [
+      { r: 36, g: 59, b: 83 },    // navy
+      { r: 193, g: 154, b: 107 },  // gold
+      { r: 88, g: 28, b: 135 },    // purple
+      { r: 30, g: 41, b: 59 },     // dark slate
+      { r: 146, g: 107, b: 60 },   // dark gold
+      { r: 15, g: 23, b: 42 },     // deep navy
+    ]
+
+    const blobs = colors.map((color, i) => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      radius: 200 + Math.random() * 300,
+      color,
+      speedX: (Math.random() - 0.5) * 0.5,
+      speedY: (Math.random() - 0.5) * 0.5,
+      phase: (i / colors.length) * Math.PI * 2,
+    }))
+
+    const animate = () => {
+      time += 0.003
+
+      // Dark base
+      ctx.fillStyle = '#0f172a'
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+      // Animate and draw blobs
+      blobs.forEach((blob, i) => {
+        blob.x += Math.sin(time + blob.phase) * blob.speedX * 2
+        blob.y += Math.cos(time * 0.7 + blob.phase) * blob.speedY * 2
+
+        // Wrap around
+        if (blob.x < -blob.radius) blob.x = canvas.width + blob.radius
+        if (blob.x > canvas.width + blob.radius) blob.x = -blob.radius
+        if (blob.y < -blob.radius) blob.y = canvas.height + blob.radius
+        if (blob.y > canvas.height + blob.radius) blob.y = -blob.radius
+
+        const pulseFactor = 1 + Math.sin(time * 2 + blob.phase) * 0.15
+        const currentRadius = blob.radius * pulseFactor
+
+        const gradient = ctx.createRadialGradient(
+          blob.x, blob.y, 0,
+          blob.x, blob.y, currentRadius
+        )
+
+        const alpha = 0.12 + Math.sin(time + i) * 0.05
+        gradient.addColorStop(0, `rgba(${blob.color.r}, ${blob.color.g}, ${blob.color.b}, ${alpha})`)
+        gradient.addColorStop(0.5, `rgba(${blob.color.r}, ${blob.color.g}, ${blob.color.b}, ${alpha * 0.4})`)
+        gradient.addColorStop(1, `rgba(${blob.color.r}, ${blob.color.g}, ${blob.color.b}, 0)`)
+
+        ctx.fillStyle = gradient
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
+      })
+
+      // Soft noise overlay for texture
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+      const data = imageData.data
+      for (let i = 0; i < data.length; i += 16) {
+        const noise = (Math.random() - 0.5) * 6
+        data[i] = Math.max(0, Math.min(255, data[i] + noise))
+        data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + noise))
+        data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + noise))
+      }
+      ctx.putImageData(imageData, 0, 0)
+
+      animationRef.current = requestAnimationFrame(animate)
+    }
+
+    animate()
+
+    return () => {
+      window.removeEventListener('resize', resize)
+      cancelAnimationFrame(animationRef.current)
+    }
+  }, [])
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 w-full h-full"
+      style={{ zIndex: 0 }}
+    />
+  )
+}
+
 export default function VideoCarousel({
   videos = [],
   videoPath = '/videos',
   fadeDuration = 1200,
   randomPlay = false,
+  clickToNext = true,
   onContentChange
 }: VideoCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -176,6 +285,13 @@ export default function VideoCarousel({
 
   }, [currentIndex, playlist, playCounters, showingFirst, fadeDuration, getVideoPath, notifyContentChange])
 
+  // Header'a tıklayınca sonraki videoya geç
+  const handleHeaderClick = useCallback(() => {
+    if (clickToNext && playlist.length > 1) {
+      goToNextVideo()
+    }
+  }, [clickToNext, playlist.length, goToNextVideo])
+
   // İlk yükleme
   useEffect(() => {
     if (isInitialized || playlist.length === 0) return
@@ -233,9 +349,7 @@ export default function VideoCarousel({
 
     // Eğer playDuration varsa timer kur
     if (currentVideo && currentVideo.playDuration && currentVideo.playDuration > 0) {
-      console.log(`Timer kuruldu: ${currentVideo.playDuration} saniye için video: ${currentVideo.fileName}`)
       timerRef.current = setTimeout(() => {
-        console.log('Timer doldu, sonraki videoya geçiliyor')
         goToNextVideo()
       }, currentVideo.playDuration * 1000)
     }
@@ -248,49 +362,52 @@ export default function VideoCarousel({
     }
   }, [currentIndex, playlist, goToNextVideo, isInitialized])
 
-  if (playlist.length === 0) {
-    return (
-      <div className="absolute inset-0 overflow-hidden bg-black">
-        <div className="absolute inset-0 bg-gradient-to-b from-navy-900/70 via-navy-900/60 to-navy-900/80 z-10"></div>
-      </div>
-    )
-  }
-
   return (
-    <div className="absolute inset-0 overflow-hidden bg-black">
+    <div
+      className="absolute inset-0 overflow-hidden bg-black"
+      onClick={handleHeaderClick}
+      style={{ cursor: clickToNext && playlist.length > 1 ? 'pointer' : 'default' }}
+    >
+      {/* Animated gradient background - always visible as fallback */}
+      <AnimatedGradientBackground />
+
       {/* Video 1 */}
-      <motion.video
-        ref={video1Ref}
-        muted
-        playsInline
-        preload="auto"
-        className="absolute top-0 left-0 w-full h-full object-cover"
-        animate={{
-          opacity: showingFirst ? 1 : 0,
-        }}
-        transition={{
-          duration: fadeDuration / 1000,
-          ease: "easeInOut"
-        }}
-        style={{ pointerEvents: 'none' }}
-      />
+      {playlist.length > 0 && (
+        <motion.video
+          ref={video1Ref}
+          muted
+          playsInline
+          preload="auto"
+          className="absolute top-0 left-0 w-full h-full object-cover"
+          animate={{
+            opacity: showingFirst ? 1 : 0,
+          }}
+          transition={{
+            duration: fadeDuration / 1000,
+            ease: "easeInOut"
+          }}
+          style={{ pointerEvents: 'none', zIndex: 1 }}
+        />
+      )}
 
       {/* Video 2 */}
-      <motion.video
-        ref={video2Ref}
-        muted
-        playsInline
-        preload="auto"
-        className="absolute top-0 left-0 w-full h-full object-cover"
-        animate={{
-          opacity: showingFirst ? 0 : 1,
-        }}
-        transition={{
-          duration: fadeDuration / 1000,
-          ease: "easeInOut"
-        }}
-        style={{ pointerEvents: 'none' }}
-      />
+      {playlist.length > 0 && (
+        <motion.video
+          ref={video2Ref}
+          muted
+          playsInline
+          preload="auto"
+          className="absolute top-0 left-0 w-full h-full object-cover"
+          animate={{
+            opacity: showingFirst ? 0 : 1,
+          }}
+          transition={{
+            duration: fadeDuration / 1000,
+            ease: "easeInOut"
+          }}
+          style={{ pointerEvents: 'none', zIndex: 1 }}
+        />
+      )}
 
       {/* Dark overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-navy-900/70 via-navy-900/60 to-navy-900/80 z-10"></div>

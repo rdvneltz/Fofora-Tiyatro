@@ -12,6 +12,7 @@ interface SectionVisibility {
   about: boolean
   team: boolean
   testimonials: boolean
+  gallery: boolean
   instagram: boolean
   blog: boolean
   contact: boolean
@@ -33,6 +34,7 @@ export default function Navbar() {
     about: true,
     team: true,
     testimonials: true,
+    gallery: true,
     instagram: true,
     blog: true,
     contact: true
@@ -107,6 +109,7 @@ export default function Navbar() {
     { id: 'about', label: 'Hakkımızda', visible: sectionVisibility.about },
     { id: 'team', label: 'Ekip', visible: sectionVisibility.team },
     { id: 'testimonials', label: 'Yorumlar', visible: sectionVisibility.testimonials },
+    { id: 'gallery', label: 'Galeri', visible: sectionVisibility.gallery },
     { id: 'blog', label: 'Blog', visible: sectionVisibility.blog },
     { id: 'contact', label: 'İletişim', visible: sectionVisibility.contact },
   ].filter(item => item.visible)

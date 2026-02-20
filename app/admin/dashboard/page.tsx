@@ -3,7 +3,7 @@
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { LayoutDashboard, FileText, Users, Phone, Settings, Image, Star, BookOpen, Calendar, Clock, Video, Layout, UserCog, Instagram } from 'lucide-react'
+import { LayoutDashboard, FileText, Users, Phone, Settings, Image, Star, BookOpen, Calendar, Clock, Video, Layout, UserCog, Instagram, GalleryHorizontalEnd } from 'lucide-react'
 import Link from 'next/link'
 import axios from 'axios'
 
@@ -71,6 +71,7 @@ export default function DashboardPage() {
     { title: 'Uygun Saatler', href: '/admin/slots', icon: <Clock className="w-6 h-6" />, color: 'from-teal-500 to-teal-600' },
     { title: 'Yorumlar', href: '/admin/testimonials', icon: <Star className="w-6 h-6" />, color: 'from-pink-500 to-pink-600' },
     { title: 'Blog', href: '/admin/blog', icon: <BookOpen className="w-6 h-6" />, color: 'from-indigo-500 to-indigo-600' },
+    { title: 'Galeri', href: '/admin/gallery', icon: <GalleryHorizontalEnd className="w-6 h-6" />, color: 'from-amber-500 to-orange-600' },
     { title: 'Instagram Postları', href: '/admin/instagram', icon: <Instagram className="w-6 h-6" />, color: 'from-fuchsia-500 to-purple-600' },
     { title: 'Footer', href: '/admin/footer', icon: <Layout className="w-6 h-6" />, color: 'from-slate-500 to-slate-600' },
     { title: 'Site Ayarları', href: '/admin/settings', icon: <Settings className="w-6 h-6" />, color: 'from-gray-500 to-gray-600' },

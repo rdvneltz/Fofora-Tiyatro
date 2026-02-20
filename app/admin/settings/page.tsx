@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Save, Palette, Globe, ArrowLeft, Instagram, Youtube, ChevronUp, ChevronDown } from 'lucide-react'
+import { Save, Palette, Globe, ArrowLeft, Instagram, Youtube, ChevronUp, ChevronDown, Video } from 'lucide-react'
 import axios from 'axios'
 import Link from 'next/link'
 import ImageUploader from '@/components/ImageUploader'
@@ -29,8 +29,10 @@ interface SiteSettings {
     instagram: boolean
     blog: boolean
     contact: boolean
+    gallery: boolean
   }
   sectionOrder?: string[]
+  heroVideoClickToNext?: boolean
 }
 
 export default function AdminSettings() {
@@ -55,9 +57,11 @@ export default function AdminSettings() {
       testimonials: true,
       instagram: true,
       blog: true,
-      contact: true
+      contact: true,
+      gallery: true,
     },
-    sectionOrder: ['hero', 'services', 'about', 'team', 'testimonials', 'instagram', 'blog', 'contact']
+    sectionOrder: ['hero', 'services', 'about', 'team', 'testimonials', 'gallery', 'instagram', 'blog', 'contact'],
+    heroVideoClickToNext: true
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -84,10 +88,25 @@ export default function AdminSettings() {
               { platform: 'youtube', url: '', active: false }
             ]
 
+        // Ensure gallery is in sectionVisibility and sectionOrder
+        const sectionVisibility = data.sectionVisibility || {}
+        if (sectionVisibility.gallery === undefined) sectionVisibility.gallery = true
+
+        const sectionOrder = data.sectionOrder || ['hero', 'services', 'about', 'team', 'testimonials', 'gallery', 'instagram', 'blog', 'contact']
+        if (!sectionOrder.includes('gallery')) {
+          // Insert gallery before instagram if possible
+          const instagramIndex = sectionOrder.indexOf('instagram')
+          if (instagramIndex >= 0) {
+            sectionOrder.splice(instagramIndex, 0, 'gallery')
+          } else {
+            sectionOrder.push('gallery')
+          }
+        }
+
         setSettings({
           ...data,
           socialMedia,
-          sectionVisibility: data.sectionVisibility || {
+          sectionVisibility: {
             hero: true,
             services: true,
             about: true,
@@ -95,9 +114,12 @@ export default function AdminSettings() {
             testimonials: true,
             instagram: true,
             blog: true,
-            contact: true
+            contact: true,
+            gallery: true,
+            ...sectionVisibility,
           },
-          sectionOrder: data.sectionOrder || ['hero', 'services', 'about', 'team', 'testimonials', 'instagram', 'blog', 'contact']
+          sectionOrder,
+          heroVideoClickToNext: data.heroVideoClickToNext !== undefined ? data.heroVideoClickToNext : true,
         })
       }
     } catch (error) {
@@ -132,6 +154,7 @@ export default function AdminSettings() {
       about: 'Hakkımızda',
       team: 'Ekip',
       testimonials: 'Yorumlar',
+      gallery: 'Galeri',
       instagram: 'Instagram',
       blog: 'Blog',
       contact: 'İletişim'
@@ -467,6 +490,36 @@ export default function AdminSettings() {
             </p>
           </div>
 
+          {/* Hero Video Settings */}
+          <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
+            <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+              <Video className="w-6 h-6 text-gold-500" />
+              Hero Video Ayarları
+            </h2>
+
+            <div className="space-y-4">
+              <div className="bg-white/5 rounded-lg p-4 flex items-center justify-between">
+                <div>
+                  <span className="text-white font-medium">Tıklayarak Sonraki Video</span>
+                  <p className="text-white/50 text-sm mt-1">
+                    Header alanına tıklandığında bir sonraki videoya geçilsin mi?
+                  </p>
+                </div>
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={settings.heroVideoClickToNext ?? true}
+                    onChange={(e) => setSettings({ ...settings, heroVideoClickToNext: e.target.checked })}
+                    className="w-5 h-5 rounded border-white/20 text-gold-500 focus:ring-gold-500"
+                  />
+                  <span className="ml-2 text-white/70 text-sm">
+                    {settings.heroVideoClickToNext ? 'Aktif' : 'Pasif'}
+                  </span>
+                </label>
+              </div>
+            </div>
+          </div>
+
           {/* Save Button */}
           <button
             type="submit"
@@ -491,6 +544,7 @@ export default function AdminSettings() {
             <li><strong>Ekip:</strong> Admin Ekip panelinden ekip üyelerini yönetebilirsiniz</li>
             <li><strong>Kayıtlar:</strong> Admin Kayıtlar ve Uygun Saatler panellerinden kayıt sistemini yönetebilirsiniz</li>
             <li><strong>Hero Videoları:</strong> Admin Videolar panelinden arka plan videolarını ve sıralarını ayarlayabilirsiniz</li>
+            <li><strong>Galeri:</strong> Admin Galeri panelinden albümler oluşturabilir, fotoğraf/video ekleyebilirsiniz</li>
           </ul>
         </div>
       </div>
