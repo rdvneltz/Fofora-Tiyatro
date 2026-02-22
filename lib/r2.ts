@@ -118,6 +118,32 @@ export function isR2Url(url: string): boolean {
 }
 
 /**
+ * Safely delete a file from R2 given its public URL
+ * Logs success/failure but never throws
+ * @returns true if deleted successfully, false otherwise
+ */
+export async function safeDeleteR2Url(url: string): Promise<boolean> {
+  if (!url || !isR2Url(url)) {
+    return false
+  }
+
+  const key = extractFileNameFromR2Url(url)
+  if (!key) {
+    console.error('❌ Could not extract R2 key from URL:', url)
+    return false
+  }
+
+  try {
+    await deleteFromR2(key)
+    console.log('✅ R2 file deleted:', key)
+    return true
+  } catch (error) {
+    console.error('❌ Failed to delete R2 file:', key, error)
+    return false
+  }
+}
+
+/**
  * Upload an image to Cloudflare R2
  * @param file - Image buffer
  * @param fileName - Name of the file (e.g., "images/team/john.jpg")

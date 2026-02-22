@@ -92,6 +92,16 @@ export async function PUT(request: NextRequest) {
     const { type, id, ...data } = body
 
     if (type === 'album') {
+      // Check if cover image changed - delete old one from R2
+      if (data.coverImage !== undefined) {
+        const existingAlbum = await prisma.galleryAlbum.findUnique({ where: { id } })
+        if (existingAlbum?.coverImage && existingAlbum.coverImage !== data.coverImage) {
+          const { safeDeleteR2Url } = await import('@/lib/r2')
+          await safeDeleteR2Url(existingAlbum.coverImage)
+          console.log('🗑️ Old album cover deleted from R2')
+        }
+      }
+
       const album = await prisma.galleryAlbum.update({
         where: { id },
         data,
@@ -107,6 +117,25 @@ export async function PUT(request: NextRequest) {
         updateData.type = updateData.itemType
         delete updateData.itemType
       }
+
+      // Check if url or thumbnail changed - delete old files from R2
+      const existingItem = await prisma.galleryItem.findUnique({ where: { id } })
+      if (existingItem) {
+        const { safeDeleteR2Url } = await import('@/lib/r2')
+
+        // If url changed, delete old file
+        if (updateData.url !== undefined && existingItem.url !== updateData.url) {
+          await safeDeleteR2Url(existingItem.url)
+          console.log('🗑️ Old gallery item file deleted from R2')
+        }
+
+        // If thumbnail changed, delete old thumbnail
+        if (updateData.thumbnail !== undefined && existingItem.thumbnail && existingItem.thumbnail !== updateData.thumbnail) {
+          await safeDeleteR2Url(existingItem.thumbnail)
+          console.log('🗑️ Old gallery item thumbnail deleted from R2')
+        }
+      }
+
       const item = await prisma.galleryItem.update({
         where: { id },
         data: updateData
@@ -133,28 +162,53 @@ export async function DELETE(request: NextRequest) {
     }
 
     if (type === 'album') {
-      // Delete all items in the album first (cascade should handle, but explicit)
+      const { safeDeleteR2Url } = await import('@/lib/r2')
+
+      // Fetch album with all items to get their URLs
+      const album = await prisma.galleryAlbum.findUnique({
+        where: { id },
+        include: { items: true }
+      })
+
+      if (album) {
+        // Delete all item files from R2
+        console.log(`🗑️ Deleting ${album.items.length} item files from R2 for album: ${album.title}`)
+        for (const item of album.items) {
+          await safeDeleteR2Url(item.url)
+          if (item.thumbnail) {
+            await safeDeleteR2Url(item.thumbnail)
+          }
+        }
+
+        // Delete album cover image from R2
+        if (album.coverImage) {
+          await safeDeleteR2Url(album.coverImage)
+          console.log('🗑️ Album cover deleted from R2')
+        }
+      }
+
+      // Delete items from DB, then album
       await prisma.galleryItem.deleteMany({ where: { albumId: id } })
       await prisma.galleryAlbum.delete({ where: { id } })
-      return NextResponse.json({ success: true, message: 'Albüm silindi' })
+
+      console.log('✅ Album and all contents deleted successfully')
+      return NextResponse.json({ success: true, message: 'Albüm ve tüm içeriği silindi' })
     }
 
     if (type === 'item') {
-      // Try to delete from R2 if applicable
       const existingItem = await prisma.galleryItem.findUnique({ where: { id } })
+
       if (existingItem) {
-        const { deleteFromR2, extractFileNameFromR2Url, isR2Url } = await import('@/lib/r2')
-        if (isR2Url(existingItem.url)) {
-          const r2Key = extractFileNameFromR2Url(existingItem.url)
-          if (r2Key) {
-            try { await deleteFromR2(r2Key) } catch (e) { /* continue */ }
-          }
-        }
-        if (existingItem.thumbnail && isR2Url(existingItem.thumbnail)) {
-          const r2Key = extractFileNameFromR2Url(existingItem.thumbnail)
-          if (r2Key) {
-            try { await deleteFromR2(r2Key) } catch (e) { /* continue */ }
-          }
+        const { safeDeleteR2Url } = await import('@/lib/r2')
+
+        // Delete main file from R2
+        const mainDeleted = await safeDeleteR2Url(existingItem.url)
+        console.log(`🗑️ Gallery item R2 delete (url): ${mainDeleted ? 'success' : 'skipped/failed'} - ${existingItem.url}`)
+
+        // Delete thumbnail from R2 if exists
+        if (existingItem.thumbnail) {
+          const thumbDeleted = await safeDeleteR2Url(existingItem.thumbnail)
+          console.log(`🗑️ Gallery item R2 delete (thumbnail): ${thumbDeleted ? 'success' : 'skipped/failed'}`)
         }
       }
 
@@ -165,6 +219,9 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: 'Geçersiz tür' }, { status: 400 })
   } catch (error) {
     console.error('Gallery delete error:', error)
-    return NextResponse.json({ error: 'Silinemedi' }, { status: 500 })
+    return NextResponse.json({
+      error: 'Silinemedi',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
 }

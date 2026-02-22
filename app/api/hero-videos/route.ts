@@ -82,6 +82,16 @@ export async function PUT(request: NextRequest) {
     if (featured !== undefined) updateData.featured = featured
     if (featuredWeight !== undefined) updateData.featuredWeight = featuredWeight
 
+    // If fileName is changing, delete the old file from R2
+    if (fileName !== undefined) {
+      const existingVideo = await prisma.heroVideo.findUnique({ where: { id } })
+      if (existingVideo && existingVideo.fileName !== fileName) {
+        const { safeDeleteR2Url } = await import('@/lib/r2')
+        await safeDeleteR2Url(existingVideo.fileName)
+        console.log('🗑️ Old hero video file deleted from R2')
+      }
+    }
+
     const video = await prisma.heroVideo.update({
       where: { id },
       data: updateData
@@ -115,31 +125,19 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Video not found' }, { status: 404 })
     }
 
-    console.log('Deleting video:', existingVideo)
+    console.log('Deleting video:', existingVideo.fileName)
 
-    // Delete from R2 if it's an R2 URL
-    const { deleteFromR2, extractFileNameFromR2Url, isR2Url } = await import('@/lib/r2')
-
-    if (isR2Url(existingVideo.fileName)) {
-      const r2Key = extractFileNameFromR2Url(existingVideo.fileName)
-      if (r2Key) {
-        console.log('Deleting file from R2:', r2Key)
-        try {
-          await deleteFromR2(r2Key)
-          console.log('✅ File deleted from R2')
-        } catch (r2Error) {
-          console.error('⚠️ Failed to delete from R2 (continuing anyway):', r2Error)
-          // Continue with database deletion even if R2 deletion fails
-        }
-      }
-    }
+    // Delete from R2
+    const { safeDeleteR2Url } = await import('@/lib/r2')
+    const r2Deleted = await safeDeleteR2Url(existingVideo.fileName)
+    console.log(`🗑️ Hero video R2 delete: ${r2Deleted ? 'success' : 'skipped/failed'} - ${existingVideo.fileName}`)
 
     // Delete from database
     await prisma.heroVideo.delete({
       where: { id }
     })
 
-    console.log('Video deleted successfully from database')
+    console.log('✅ Video deleted successfully from database')
     return NextResponse.json({ success: true, message: 'Video deleted successfully' })
   } catch (error) {
     console.error('Delete error details:', error)
