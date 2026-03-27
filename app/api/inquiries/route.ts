@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 
-// GET - Tüm talepleri listele
+// GET - Tüm talepleri listele (admin only)
 export async function GET(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions)
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status')
 
@@ -55,9 +59,11 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PUT - Talep güncelle (status, notes)
+// PUT - Talep güncelle (status, notes) - admin only
 export async function PUT(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions)
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     const body = await request.json()
     const { id, status, adminNotes } = body
 
@@ -86,9 +92,11 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-// DELETE - Talep sil
+// DELETE - Talep sil - admin only
 export async function DELETE(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions)
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
 

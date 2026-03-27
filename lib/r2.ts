@@ -2,7 +2,10 @@ import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } fro
 
 // Get R2 client - lazy initialization to ensure env vars are loaded
 function getR2Client() {
-  const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID || '4ad9a16037171b6689602b13bbbe6be8'
+  const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID
+  if (!R2_ACCOUNT_ID) {
+    throw new Error('R2_ACCOUNT_ID not found in environment variables')
+  }
   const ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID
   const SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY
 
