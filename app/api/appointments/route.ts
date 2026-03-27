@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { prisma } from '@/lib/prisma'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions)
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     const appointments = await prisma.appointment.findMany({
       orderBy: { createdAt: 'desc' }
     })
@@ -53,6 +57,11 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions)
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const body = await request.json()
     const { id, status, notes, meetingLink, date, time, previousDate, previousTime } = body
 
@@ -77,7 +86,7 @@ export async function PUT(request: NextRequest) {
 
     // Auto-generate meeting link for "site" platform when approved
     if (status === 'approved' && currentAppointment.meetingPlatform === 'site' && !meetingLink) {
-      const baseUrl = process.env.NEXTAUTH_URL || 'https://murekkephukuk.vercel.app'
+      const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || ''
       updateData.meetingLink = `${baseUrl}/call/${id}`
     }
 
@@ -94,6 +103,11 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions)
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
 

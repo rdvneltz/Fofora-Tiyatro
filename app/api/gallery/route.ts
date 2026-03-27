@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 
 // GET - Fetch all albums with their items
 export async function GET(request: NextRequest) {
@@ -39,6 +41,8 @@ export async function GET(request: NextRequest) {
 // POST - Create album or item
 export async function POST(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions)
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     const body = await request.json()
     const { type } = body // 'album' or 'item'
 
@@ -88,6 +92,8 @@ export async function POST(request: NextRequest) {
 // PUT - Update album or item
 export async function PUT(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions)
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     const body = await request.json()
     const { type, id, ...data } = body
 
@@ -153,6 +159,8 @@ export async function PUT(request: NextRequest) {
 // DELETE - Delete album or item
 export async function DELETE(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions)
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     const { searchParams } = new URL(request.url)
     const type = searchParams.get('type')
     const id = searchParams.get('id')

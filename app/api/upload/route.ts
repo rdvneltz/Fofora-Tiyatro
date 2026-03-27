@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { uploadToR2 } from '@/lib/r2'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('Upload request received')
+    const session = await getServerSession(authOptions)
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     const formData = await request.formData()
     const file = formData.get('file') as File
     const fileType = formData.get('type') as string // 'image' or 'video'

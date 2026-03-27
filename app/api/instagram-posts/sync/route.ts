@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { syncInstagramToDB } from '@/lib/instagram'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 
 /**
  * Sync Instagram posts from Instagram Graph API to database
@@ -8,7 +10,8 @@ import { syncInstagramToDB } from '@/lib/instagram'
  */
 export async function POST(request: NextRequest) {
   try {
-    console.log('Starting Instagram sync...')
+    const session = await getServerSession(authOptions)
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     // Fetch latest media from Instagram
     const result = await syncInstagramToDB()
