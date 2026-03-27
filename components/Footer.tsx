@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { Settings, X } from 'lucide-react'
+import { sanitizeHTML } from '@/lib/sanitize'
 import { motion, AnimatePresence } from 'framer-motion'
 import axios from 'axios'
 
@@ -148,7 +149,7 @@ export default function Footer() {
                 <div className="prose prose-invert prose-gold max-w-none">
                   <div
                     className="text-white/80 leading-relaxed whitespace-pre-wrap"
-                    dangerouslySetInnerHTML={{ __html: selectedLegalContent.content.replace(/\n/g, '<br/>') }}
+                    dangerouslySetInnerHTML={{ __html: sanitizeHTML(selectedLegalContent.content.replace(/\n/g, '<br/>')) }}
                   />
                 </div>
               </div>

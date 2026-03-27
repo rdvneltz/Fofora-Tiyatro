@@ -126,7 +126,7 @@ export async function POST(
       }
     })
   } catch (error) {
-    console.error('Notification error:', error)
+
     return NextResponse.json(
       {
         error: 'Bildirim gönderilemedi',

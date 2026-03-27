@@ -9,9 +9,10 @@ export async function GET() {
     const posts = await prisma.instagramPost.findMany({
       orderBy: { order: 'asc' }
     })
-    return NextResponse.json(posts)
+    const response = NextResponse.json(posts)
+    response.headers.set('Cache-Control', 'public, max-age=30, stale-while-revalidate=120')
+    return response
   } catch (error) {
-    console.error('Instagram posts fetch error:', error)
     return NextResponse.json({ error: 'Failed to fetch Instagram posts' }, { status: 500 })
   }
 }
@@ -38,7 +39,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(post)
   } catch (error) {
-    console.error('Instagram post creation error:', error)
     return NextResponse.json({ error: 'Failed to create Instagram post' }, { status: 500 })
   }
 }
@@ -67,7 +67,6 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json(post)
   } catch (error) {
-    console.error('Instagram post update error:', error)
     return NextResponse.json({ error: 'Failed to update Instagram post' }, { status: 500 })
   }
 }
@@ -90,7 +89,6 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Instagram post deletion error:', error)
     return NextResponse.json({ error: 'Failed to delete Instagram post' }, { status: 500 })
   }
 }

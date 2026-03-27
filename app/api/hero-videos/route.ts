@@ -8,7 +8,9 @@ export async function GET(request: NextRequest) {
     const videos = await prisma.heroVideo.findMany({
       orderBy: { order: 'asc' }
     })
-    return NextResponse.json(videos)
+    const response = NextResponse.json(videos)
+    response.headers.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=300')
+    return response
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch videos' }, { status: 500 })
   }
@@ -94,7 +96,7 @@ export async function PUT(request: NextRequest) {
       if (existingVideo && existingVideo.fileName !== fileName) {
         const { safeDeleteR2Url } = await import('@/lib/r2')
         await safeDeleteR2Url(existingVideo.fileName)
-        console.log('🗑️ Old hero video file deleted from R2')
+
       }
     }
 
@@ -117,7 +119,6 @@ export async function DELETE(request: NextRequest) {
     const id = searchParams.get('id')
 
     if (!id) {
-      console.error('No ID provided in delete request')
       return NextResponse.json({ error: 'ID required' }, { status: 400 })
     }
 
@@ -127,23 +128,18 @@ export async function DELETE(request: NextRequest) {
     })
 
     if (!existingVideo) {
-      console.error('Video not found with ID:', id)
       return NextResponse.json({ error: 'Video not found' }, { status: 404 })
     }
 
-    console.log('Deleting video:', existingVideo.fileName)
-
     // Delete from R2
     const { safeDeleteR2Url } = await import('@/lib/r2')
-    const r2Deleted = await safeDeleteR2Url(existingVideo.fileName)
-    console.log(`🗑️ Hero video R2 delete: ${r2Deleted ? 'success' : 'skipped/failed'} - ${existingVideo.fileName}`)
+    await safeDeleteR2Url(existingVideo.fileName)
 
     // Delete from database
     await prisma.heroVideo.delete({
       where: { id }
     })
 
-    console.log('✅ Video deleted successfully from database')
     return NextResponse.json({ success: true, message: 'Video deleted successfully' })
   } catch (error) {
     console.error('Delete error details:', error)

@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(inquiries)
   } catch (error) {
-    console.error('Failed to fetch inquiries:', error)
+
     return NextResponse.json({ error: 'Failed to fetch inquiries' }, { status: 500 })
   }
 }
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(inquiry, { status: 201 })
   } catch (error) {
-    console.error('Failed to create inquiry:', error)
+
     return NextResponse.json({ error: 'Failed to create inquiry' }, { status: 500 })
   }
 }
@@ -87,7 +87,7 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json(inquiry)
   } catch (error) {
-    console.error('Failed to update inquiry:', error)
+
     return NextResponse.json({ error: 'Failed to update inquiry' }, { status: 500 })
   }
 }
@@ -110,7 +110,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Failed to delete inquiry:', error)
+
     return NextResponse.json({ error: 'Failed to delete inquiry' }, { status: 500 })
   }
 }

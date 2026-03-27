@@ -16,8 +16,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    console.log('[CRON] Starting Instagram sync...')
-
     // Fetch latest media from Instagram
     const result = await syncInstagramToDB()
 
@@ -31,7 +29,6 @@ export async function GET(request: NextRequest) {
 
     // Delete all existing posts
     await prisma.instagramPost.deleteMany({})
-    console.log('[CRON] Cleared existing Instagram posts')
 
     // Insert new posts
     const createdPosts = await Promise.all(
@@ -41,8 +38,6 @@ export async function GET(request: NextRequest) {
         })
       )
     )
-
-    console.log(`[CRON] ✅ Created ${createdPosts.length} new Instagram posts`)
 
     return NextResponse.json({
       success: true,

@@ -8,7 +8,9 @@ export async function GET() {
     const contact = await prisma.contactInfo.findFirst({
       orderBy: { updatedAt: 'desc' }
     })
-    return NextResponse.json(contact)
+    const response = NextResponse.json(contact)
+    response.headers.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=300')
+    return response
   } catch (error) {
     return NextResponse.json({ error: 'Veri alınamadı' }, { status: 500 })
   }

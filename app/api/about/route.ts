@@ -9,7 +9,9 @@ export async function GET() {
       where: { active: true },
       orderBy: { updatedAt: 'desc' }
     })
-    return NextResponse.json(about)
+    const response = NextResponse.json(about)
+    response.headers.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=300')
+    return response
   } catch (error) {
     return NextResponse.json({ error: 'Veri alınamadı' }, { status: 500 })
   }

@@ -12,7 +12,9 @@ export async function GET(request: NextRequest) {
       where: admin ? {} : { published: true },
       orderBy: { createdAt: 'desc' },
     })
-    return NextResponse.json(posts)
+    const response = NextResponse.json(posts)
+    response.headers.set('Cache-Control', 'public, max-age=30, stale-while-revalidate=120')
+    return response
   } catch (error) {
     return NextResponse.json({ error: 'Veri alınamadı' }, { status: 500 })
   }

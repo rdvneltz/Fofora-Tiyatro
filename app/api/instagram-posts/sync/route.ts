@@ -25,7 +25,6 @@ export async function POST(request: NextRequest) {
 
     // Delete all existing posts
     await prisma.instagramPost.deleteMany({})
-    console.log('Cleared existing Instagram posts')
 
     // Insert new posts
     const createdPosts = await Promise.all(
@@ -35,8 +34,6 @@ export async function POST(request: NextRequest) {
         })
       )
     )
-
-    console.log(`Created ${createdPosts.length} new Instagram posts`)
 
     return NextResponse.json({
       success: true,

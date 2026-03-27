@@ -80,11 +80,9 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(formattedSlot, { status: 201 })
-  } catch (error: any) {
-    console.error('Slot creation error:', error)
+  } catch (error) {
     return NextResponse.json({
-      error: error.message || 'Failed to create slot',
-      details: error.code || 'unknown'
+      error: 'Failed to create slot'
     }, { status: 500 })
   }
 }
