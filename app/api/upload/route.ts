@@ -11,15 +11,7 @@ export async function POST(request: NextRequest) {
     const file = formData.get('file') as File
     const fileType = formData.get('type') as string // 'image' or 'video'
 
-    console.log('File details:', {
-      name: file?.name,
-      type: file?.type,
-      size: file?.size,
-      fileType: fileType
-    })
-
     if (!file) {
-      console.error('No file provided in upload request')
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
     }
 
@@ -29,7 +21,6 @@ export async function POST(request: NextRequest) {
     const maxSizeMB = isVideo ? 100 : 10
 
     if (file.size > maxSize) {
-      console.error(`File too large: ${(file.size / 1024 / 1024).toFixed(2)}MB > ${maxSizeMB}MB`)
       return NextResponse.json({
         error: `File too large. Maximum size is ${maxSizeMB}MB for ${isVideo ? 'videos' : 'images'}.`,
         details: `Your file is ${(file.size / 1024 / 1024).toFixed(2)}MB`
@@ -38,7 +29,6 @@ export async function POST(request: NextRequest) {
 
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
-    console.log('File buffer created, size:', buffer.length)
 
     // Determine target directory based on file type
     const targetDir = isVideo ? 'videos' : 'uploads'
@@ -48,11 +38,8 @@ export async function POST(request: NextRequest) {
     const filename = `${timestamp}-${file.name.replace(/\s/g, '-')}`
     const r2Key = `${targetDir}/${filename}` // e.g., "videos/123456-video.mp4"
 
-    console.log('Uploading to R2:', r2Key)
-
     // Upload to Cloudflare R2
     const publicUrl = await uploadToR2(buffer, r2Key, file.type)
-    console.log('File uploaded successfully to R2:', publicUrl)
 
     // Return the public URL
     return NextResponse.json({ url: publicUrl, filename, success: true })

@@ -33,6 +33,27 @@ const gotham = localFont({
 export const metadata: Metadata = {
   title: "Fofora Tiyatro | Sahnenin Büyüsüyle Kendini Yeniden Keşfet",
   description: "Fofora Tiyatro - İstanbul Üsküdar merkezli tiyatro eğitimi, drama atölyeleri ve oyunculuk kursları. 4 yaşından yetişkinlere kadar tiyatro eğitimi.",
+  keywords: ["tiyatro", "drama", "oyunculuk", "tiyatro eğitimi", "drama atölyesi", "çocuk tiyatrosu", "İstanbul", "Üsküdar", "sahne sanatları", "fofora tiyatro"],
+  authors: [{ name: "Fofora Tiyatro" }],
+  robots: "index, follow",
+  openGraph: {
+    type: "website",
+    locale: "tr_TR",
+    siteName: "Fofora Tiyatro",
+    title: "Fofora Tiyatro | Sahnenin Büyüsüyle Kendini Yeniden Keşfet",
+    description: "İstanbul Üsküdar merkezli tiyatro eğitimi, drama atölyeleri ve oyunculuk kursları. 4 yaşından yetişkinlere kadar tiyatro eğitimi.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Fofora Tiyatro | Sahnenin Büyüsüyle Kendini Yeniden Keşfet",
+    description: "İstanbul Üsküdar merkezli tiyatro eğitimi, drama atölyeleri ve oyunculuk kursları.",
+  },
+};
+
+export const viewport = {
+  themeColor: "#1e3a5f",
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({

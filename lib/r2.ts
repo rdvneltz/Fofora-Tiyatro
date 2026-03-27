@@ -67,7 +67,6 @@ export async function uploadToR2(
 
     // Return public URL
     const publicUrl = `${publicURL}/${fileName}`
-    console.log('✅ File uploaded to R2:', publicUrl)
     return publicUrl
   } catch (error) {
     console.error('❌ R2 upload error:', error)
@@ -90,7 +89,6 @@ export async function deleteFromR2(fileName: string): Promise<void> {
     })
 
     await r2Client.send(command)
-    console.log('✅ File deleted from R2:', fileName)
   } catch (error) {
     console.error('❌ R2 delete error:', error)
     throw new Error('Failed to delete file from R2')
@@ -138,7 +136,6 @@ export async function safeDeleteR2Url(url: string): Promise<boolean> {
 
   try {
     await deleteFromR2(key)
-    console.log('✅ R2 file deleted:', key)
     return true
   } catch (error) {
     console.error('❌ Failed to delete R2 file:', key, error)
@@ -174,7 +171,6 @@ export async function uploadImageToR2(
 
     // Return public URL
     const publicUrl = `${publicURL}/${fileName}`
-    console.log('✅ Image uploaded to R2:', publicUrl)
     return publicUrl
   } catch (error) {
     console.error('❌ R2 image upload error:', error)

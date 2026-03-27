@@ -19,7 +19,9 @@ export async function GET(request: NextRequest) {
           }
         }
       })
-      return NextResponse.json(album)
+      const response = NextResponse.json(album)
+      response.headers.set('Cache-Control', 'public, max-age=30, stale-while-revalidate=120')
+      return response
     }
 
     // Fetch all albums with items
@@ -31,9 +33,10 @@ export async function GET(request: NextRequest) {
         }
       }
     })
-    return NextResponse.json(albums)
+    const response = NextResponse.json(albums)
+    response.headers.set('Cache-Control', 'public, max-age=30, stale-while-revalidate=120')
+    return response
   } catch (error) {
-    console.error('Gallery fetch error:', error)
     return NextResponse.json({ error: 'Galeri verileri alınamadı' }, { status: 500 })
   }
 }
@@ -84,7 +87,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ error: 'Geçersiz tür' }, { status: 400 })
   } catch (error) {
-    console.error('Gallery create error:', error)
     return NextResponse.json({ error: 'Oluşturulamadı' }, { status: 500 })
   }
 }
@@ -104,7 +106,6 @@ export async function PUT(request: NextRequest) {
         if (existingAlbum?.coverImage && existingAlbum.coverImage !== data.coverImage) {
           const { safeDeleteR2Url } = await import('@/lib/r2')
           await safeDeleteR2Url(existingAlbum.coverImage)
-          console.log('🗑️ Old album cover deleted from R2')
         }
       }
 
@@ -132,13 +133,11 @@ export async function PUT(request: NextRequest) {
         // If url changed, delete old file
         if (updateData.url !== undefined && existingItem.url !== updateData.url) {
           await safeDeleteR2Url(existingItem.url)
-          console.log('🗑️ Old gallery item file deleted from R2')
         }
 
         // If thumbnail changed, delete old thumbnail
         if (updateData.thumbnail !== undefined && existingItem.thumbnail && existingItem.thumbnail !== updateData.thumbnail) {
           await safeDeleteR2Url(existingItem.thumbnail)
-          console.log('🗑️ Old gallery item thumbnail deleted from R2')
         }
       }
 
@@ -151,7 +150,6 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ error: 'Geçersiz tür' }, { status: 400 })
   } catch (error) {
-    console.error('Gallery update error:', error)
     return NextResponse.json({ error: 'Güncellenemedi' }, { status: 500 })
   }
 }
@@ -180,7 +178,6 @@ export async function DELETE(request: NextRequest) {
 
       if (album) {
         // Delete all item files from R2
-        console.log(`🗑️ Deleting ${album.items.length} item files from R2 for album: ${album.title}`)
         for (const item of album.items) {
           await safeDeleteR2Url(item.url)
           if (item.thumbnail) {
@@ -191,7 +188,6 @@ export async function DELETE(request: NextRequest) {
         // Delete album cover image from R2
         if (album.coverImage) {
           await safeDeleteR2Url(album.coverImage)
-          console.log('🗑️ Album cover deleted from R2')
         }
       }
 
@@ -199,7 +195,6 @@ export async function DELETE(request: NextRequest) {
       await prisma.galleryItem.deleteMany({ where: { albumId: id } })
       await prisma.galleryAlbum.delete({ where: { id } })
 
-      console.log('✅ Album and all contents deleted successfully')
       return NextResponse.json({ success: true, message: 'Albüm ve tüm içeriği silindi' })
     }
 
@@ -210,13 +205,11 @@ export async function DELETE(request: NextRequest) {
         const { safeDeleteR2Url } = await import('@/lib/r2')
 
         // Delete main file from R2
-        const mainDeleted = await safeDeleteR2Url(existingItem.url)
-        console.log(`🗑️ Gallery item R2 delete (url): ${mainDeleted ? 'success' : 'skipped/failed'} - ${existingItem.url}`)
+        await safeDeleteR2Url(existingItem.url)
 
         // Delete thumbnail from R2 if exists
         if (existingItem.thumbnail) {
-          const thumbDeleted = await safeDeleteR2Url(existingItem.thumbnail)
-          console.log(`🗑️ Gallery item R2 delete (thumbnail): ${thumbDeleted ? 'success' : 'skipped/failed'}`)
+          await safeDeleteR2Url(existingItem.thumbnail)
         }
       }
 
@@ -226,7 +219,6 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ error: 'Geçersiz tür' }, { status: 400 })
   } catch (error) {
-    console.error('Gallery delete error:', error)
     return NextResponse.json({
       error: 'Silinemedi',
       details: error instanceof Error ? error.message : 'Unknown error'

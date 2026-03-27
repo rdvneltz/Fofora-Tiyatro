@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
       key,
     })
   } catch (error) {
-    console.error('Presigned URL generation error:', error)
+
     return NextResponse.json(
       {
         error: 'Failed to generate presigned URL',

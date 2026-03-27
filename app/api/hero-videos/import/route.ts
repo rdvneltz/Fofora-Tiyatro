@@ -31,7 +31,7 @@ export async function POST() {
       videos: created
     })
   } catch (error) {
-    console.error('Error importing videos:', error)
+
     return NextResponse.json({ error: 'Import failed' }, { status: 500 })
   }
 }

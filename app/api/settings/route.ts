@@ -8,7 +8,9 @@ export async function GET() {
     const settings = await prisma.siteSettings.findFirst({
       orderBy: { updatedAt: 'desc' }
     })
-    return NextResponse.json(settings)
+    const response = NextResponse.json(settings)
+    response.headers.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=300')
+    return response
   } catch (error) {
     return NextResponse.json({ error: 'Veri alınamadı' }, { status: 500 })
   }
@@ -65,7 +67,7 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json(settings)
   } catch (error: any) {
-    console.error('Settings PATCH error:', error)
+
     return NextResponse.json({
       error: 'Ayarlar güncellenemedi',
       details: error.message

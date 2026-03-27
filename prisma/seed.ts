@@ -9,7 +9,13 @@ const prisma = new PrismaClient()
 
 async function main() {
   // Admin kullanıcı oluştur
-  const hashedPassword = await bcrypt.hash('admin123', 12)
+  // UYARI: Bu varsayılan şifreyi üretim ortamında mutlaka değiştirin!
+  const defaultPassword = process.env.ADMIN_DEFAULT_PASSWORD || 'admin123'
+  const hashedPassword = await bcrypt.hash(defaultPassword, 12)
+
+  if (!process.env.ADMIN_DEFAULT_PASSWORD) {
+    console.warn('⚠️  UYARI: Varsayılan admin şifresi kullanılıyor. Üretim ortamında ADMIN_DEFAULT_PASSWORD env değişkenini ayarlayın!')
+  }
 
   await prisma.user.upsert({
     where: { email: 'admin@foforatiyatro.com' },

@@ -8,6 +8,7 @@ import axios from 'axios'
 import Navbar from '@/components/Navbar'
 import VideoCarousel, { HeroVideoData, VideoContent } from '@/components/VideoCarousel'
 import AppointmentModal from '@/components/AppointmentModal'
+import { sanitizeHTML } from '@/lib/sanitize'
 import Footer from '@/components/Footer'
 import GallerySection from '@/components/GallerySection'
 
@@ -223,14 +224,10 @@ export default function Home() {
         if (aboutRes.data) setAbout(aboutRes.data)
 
         // Hero videoları set et (tam obje olarak)
-        console.log('Video data from API:', videosRes.data)
         if (videosRes.data && videosRes.data.length > 0) {
           const sortedVideos = videosRes.data
             .sort((a: any, b: any) => a.order - b.order)
-          console.log('All videos:', sortedVideos)
           setHeroVideos(sortedVideos)
-        } else {
-          console.log('No videos found or empty array')
         }
 
         // Testimonials set et
@@ -276,7 +273,7 @@ export default function Home() {
           setClickToNext(settingsRes.data.heroVideoClickToNext)
         }
       } catch (error) {
-        console.error('Data fetch error:', error)
+        // Error handled silently - UI will show default state
       } finally {
         setLoading(false)
       }
@@ -1284,7 +1281,7 @@ export default function Home() {
                     <div
                       className="text-white/80 leading-relaxed text-lg whitespace-pre-wrap"
                       dangerouslySetInnerHTML={{
-                        __html: selectedService.details.replace(/\n\n/g, '</p><p class="mb-4">').replace(/\n/g, '<br/>')
+                        __html: sanitizeHTML(selectedService.details.replace(/\n\n/g, '</p><p class="mb-4">').replace(/\n/g, '<br/>'))
                       }}
                     />
                   </div>
@@ -1434,7 +1431,7 @@ export default function Home() {
                   <div
                     className="text-white/80 leading-relaxed text-lg whitespace-pre-wrap"
                     dangerouslySetInnerHTML={{
-                      __html: selectedBlogPost.content.replace(/\n\n/g, '</p><p class="mb-4">').replace(/\n/g, '<br/>')
+                      __html: sanitizeHTML(selectedBlogPost.content.replace(/\n\n/g, '</p><p class="mb-4">').replace(/\n/g, '<br/>'))
                     }}
                   />
                 </div>
