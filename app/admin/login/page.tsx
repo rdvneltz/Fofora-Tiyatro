@@ -2,11 +2,9 @@
 
 import { useState } from 'react'
 import { signIn } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 
 export default function LoginPage() {
-  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -22,6 +20,7 @@ export default function LoginPage() {
         email,
         password,
         redirect: false,
+        callbackUrl: '/admin/dashboard',
       })
 
       if (result?.error) {
@@ -30,7 +29,13 @@ export default function LoginPage() {
         return
       }
 
-      router.push('/admin/dashboard')
+      if (result?.ok) {
+        // Full page reload to ensure session cookie is sent with the request
+        window.location.href = result.url || '/admin/dashboard'
+      } else {
+        setError('Giriş başarısız oldu')
+        setLoading(false)
+      }
     } catch (error) {
       setError('Bir hata oluştu')
       setLoading(false)
