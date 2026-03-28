@@ -232,6 +232,7 @@ export default function VideoCarousel({
   const isTransitioningRef = useRef(false)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const failedVideosRef = useRef<Set<number>>(new Set())
 
   // Filter active videos
   const activeVideos = useMemo(() => videos.filter(v => v.active), [videos])
@@ -296,21 +297,37 @@ export default function VideoCarousel({
     }
   }, [onContentChange])
 
-  // Safe play with retry logic
-  const safePlay = useCallback((videoEl: HTMLVideoElement, onSuccess?: () => void) => {
+  // Use ref to break circular dependency between safePlay and goToNextVideo
+  const goToNextVideoRef = useRef<() => void>(() => {})
+
+  // Safe play with retry logic and error recovery
+  const safePlay = useCallback((videoEl: HTMLVideoElement, onSuccess?: () => void, videoIndex?: number) => {
+    // Handle video load/network errors - skip to next video
+    const handleError = () => {
+      if (videoIndex !== undefined) {
+        failedVideosRef.current.add(videoIndex)
+        if (failedVideosRef.current.size < playlist.length) {
+          setTimeout(() => goToNextVideoRef.current(), 500)
+        }
+      }
+      videoEl.removeEventListener('error', handleError)
+    }
+    videoEl.addEventListener('error', handleError)
+
     const attemptPlay = () => {
       const playPromise = videoEl.play()
       if (playPromise !== undefined) {
         playPromise
           .then(() => {
+            videoEl.removeEventListener('error', handleError)
             setVideoReady(true)
             onSuccess?.()
           })
           .catch(() => {
-            // Retry: listen for user interaction to resume playback
             const handleInteraction = () => {
               videoEl.play()
                 .then(() => {
+                  videoEl.removeEventListener('error', handleError)
                   setVideoReady(true)
                   onSuccess?.()
                 })
@@ -323,10 +340,10 @@ export default function VideoCarousel({
             document.addEventListener('touchstart', handleInteraction, { once: true })
             document.addEventListener('scroll', handleInteraction, { once: true })
 
-            // Also retry after a short delay (some browsers unblock after page settles)
             retryTimeoutRef.current = setTimeout(() => {
               videoEl.play()
                 .then(() => {
+                  videoEl.removeEventListener('error', handleError)
                   setVideoReady(true)
                   onSuccess?.()
                   document.removeEventListener('click', handleInteraction)
@@ -339,7 +356,6 @@ export default function VideoCarousel({
       }
     }
 
-    // Wait for the video to have enough data before playing
     if (videoEl.readyState >= 3) {
       attemptPlay()
     } else {
@@ -348,8 +364,19 @@ export default function VideoCarousel({
         videoEl.removeEventListener('canplay', handleCanPlay)
       }
       videoEl.addEventListener('canplay', handleCanPlay)
+
+      // Timeout: if video doesn't load within 10s, skip to next
+      setTimeout(() => {
+        if (videoEl.readyState < 3 && videoIndex !== undefined) {
+          videoEl.removeEventListener('canplay', handleCanPlay)
+          failedVideosRef.current.add(videoIndex)
+          if (failedVideosRef.current.size < playlist.length) {
+            goToNextVideoRef.current()
+          }
+        }
+      }, 10000)
     }
-  }, [])
+  }, [playlist.length])
 
   // Go to next video
   const goToNextVideo = useCallback(() => {
@@ -368,7 +395,7 @@ export default function VideoCarousel({
       const activeVideo = showingFirst ? video1Ref.current : video2Ref.current
       if (activeVideo) {
         activeVideo.currentTime = 0
-        safePlay(activeVideo)
+        safePlay(activeVideo, undefined, currentIndex)
       }
       return
     }
@@ -383,10 +410,9 @@ export default function VideoCarousel({
       hiddenVideo.src = getVideoPath(nextVideo)
       hiddenVideo.load()
 
-      // Wait for hidden video to be ready, then transition
       safePlay(hiddenVideo, () => {
         isTransitioningRef.current = false
-      })
+      }, nextIndex)
     }
 
     setShowingFirst(!showingFirst)
@@ -407,6 +433,11 @@ export default function VideoCarousel({
 
   }, [currentIndex, playlist, playCounters, showingFirst, fadeDuration, getVideoPath, notifyContentChange, safePlay])
 
+  // Keep ref in sync
+  useEffect(() => {
+    goToNextVideoRef.current = goToNextVideo
+  }, [goToNextVideo])
+
   // Header click to next video
   const handleHeaderClick = useCallback(() => {
     if (clickToNext && playlist.length > 1) {
@@ -423,7 +454,7 @@ export default function VideoCarousel({
       video1Ref.current.src = getVideoPath(firstVideo)
       video1Ref.current.load()
 
-      safePlay(video1Ref.current)
+      safePlay(video1Ref.current, undefined, 0)
 
       notifyContentChange(firstVideo)
 

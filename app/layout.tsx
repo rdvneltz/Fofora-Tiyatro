@@ -36,6 +36,10 @@ export const metadata: Metadata = {
   keywords: ["tiyatro", "drama", "oyunculuk", "tiyatro eğitimi", "drama atölyesi", "çocuk tiyatrosu", "İstanbul", "Üsküdar", "sahne sanatları", "fofora tiyatro"],
   authors: [{ name: "Fofora Tiyatro" }],
   robots: "index, follow",
+  icons: {
+    icon: "/favicon.png",
+    apple: "/favicon.png",
+  },
   openGraph: {
     type: "website",
     locale: "tr_TR",
