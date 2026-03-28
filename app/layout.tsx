@@ -31,7 +31,7 @@ const gotham = localFont({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.foforatiyatro.com"),
+  metadataBase: new URL("https://foforatiyatro.com"),
   title: "Fofora Tiyatro | Sahnenin Büyüsüyle Kendini Yeniden Keşfet",
   description: "Fofora Tiyatro - İstanbul Üsküdar merkezli tiyatro eğitimi, drama atölyeleri ve oyunculuk kursları. 4 yaşından yetişkinlere kadar tiyatro eğitimi.",
   keywords: ["tiyatro", "drama", "oyunculuk", "tiyatro eğitimi", "drama atölyesi", "çocuk tiyatrosu", "İstanbul", "Üsküdar", "sahne sanatları", "fofora tiyatro"],
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "tr_TR",
-    url: "https://www.foforatiyatro.com",
+    url: "https://foforatiyatro.com",
     siteName: "Fofora Tiyatro",
     title: "Fofora Tiyatro | Sahnenin Büyüsüyle Kendini Yeniden Keşfet",
     description: "İstanbul Üsküdar merkezli tiyatro eğitimi, drama atölyeleri ve oyunculuk kursları. 4 yaşından yetişkinlere kadar tiyatro eğitimi.",
