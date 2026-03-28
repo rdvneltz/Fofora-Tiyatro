@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Cat head background -->
+  <ellipse cx="32" cy="36" rx="22" ry="20" fill="#1a1a1a"/>
+  <!-- Left ear -->
+  <path d="M12 28 L8 8 L22 22 Z" fill="#1a1a1a"/>
+  <path d="M13 26 L10 10 L21 21 Z" fill="#e8a0b0"/>
+  <!-- Right ear -->
+  <path d="M52 28 L56 8 L42 22 Z" fill="#1a1a1a"/>
+  <path d="M51 26 L54 10 L43 21 Z" fill="#e8a0b0"/>
+  <!-- Left eye -->
+  <ellipse cx="22" cy="34" rx="7" ry="7.5" fill="#f5c842"/>
+  <ellipse cx="22" cy="34" rx="4" ry="5" fill="#1a1a1a"/>
+  <ellipse cx="20" cy="32" rx="2" ry="2.5" fill="white" opacity="0.9"/>
+  <!-- Right eye -->
+  <ellipse cx="42" cy="34" rx="7" ry="7.5" fill="#f5c842"/>
+  <ellipse cx="42" cy="34" rx="4" ry="5" fill="#1a1a1a"/>
+  <ellipse cx="40" cy="32" rx="2" ry="2.5" fill="white" opacity="0.9"/>
+  <!-- Nose -->
+  <path d="M30 43 L32 46 L34 43 Z" fill="#e8a0b0"/>
+  <!-- Mouth -->
+  <path d="M32 46 Q28 50 26 48" fill="none" stroke="#555" stroke-width="1"/>
+  <path d="M32 46 Q36 50 38 48" fill="none" stroke="#555" stroke-width="1"/>
+  <!-- Paws -->
+  <ellipse cx="22" cy="56" rx="8" ry="4" fill="#1a1a1a"/>
+  <ellipse cx="42" cy="56" rx="8" ry="4" fill="#1a1a1a"/>
+  <!-- Sparkles -->
+  <text x="26" y="12" font-size="10" fill="#f5c842">✦</text>
+  <text x="34" y="8" font-size="7" fill="#f5c842">✦</text>
+  <text x="38" y="14" font-size="5" fill="#f5c842">✦</text>
+</svg>

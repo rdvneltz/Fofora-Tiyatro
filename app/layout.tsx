@@ -31,18 +31,23 @@ const gotham = localFont({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.foforatiyatro.com"),
   title: "Fofora Tiyatro | Sahnenin Büyüsüyle Kendini Yeniden Keşfet",
   description: "Fofora Tiyatro - İstanbul Üsküdar merkezli tiyatro eğitimi, drama atölyeleri ve oyunculuk kursları. 4 yaşından yetişkinlere kadar tiyatro eğitimi.",
   keywords: ["tiyatro", "drama", "oyunculuk", "tiyatro eğitimi", "drama atölyesi", "çocuk tiyatrosu", "İstanbul", "Üsküdar", "sahne sanatları", "fofora tiyatro"],
   authors: [{ name: "Fofora Tiyatro" }],
   robots: "index, follow",
   icons: {
-    icon: "/favicon.png",
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon.png", type: "image/png" },
+    ],
     apple: "/favicon.png",
   },
   openGraph: {
     type: "website",
     locale: "tr_TR",
+    url: "https://www.foforatiyatro.com",
     siteName: "Fofora Tiyatro",
     title: "Fofora Tiyatro | Sahnenin Büyüsüyle Kendini Yeniden Keşfet",
     description: "İstanbul Üsküdar merkezli tiyatro eğitimi, drama atölyeleri ve oyunculuk kursları. 4 yaşından yetişkinlere kadar tiyatro eğitimi.",
