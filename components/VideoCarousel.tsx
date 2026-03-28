@@ -273,10 +273,14 @@ export default function VideoCarousel({
   }, [activeVideos, featuredVideos, normalVideos, randomPlay])
 
   // Video path generator - handles both full R2 URLs and relative filenames
+  // Automatically converts old pub-*.r2.dev URLs to cdn.foforatiyatro.com
   const getVideoPath = useCallback((video: HeroVideoData | undefined) => {
     if (!video) return ''
     if (video.fileName.startsWith('http://') || video.fileName.startsWith('https://')) {
-      return video.fileName
+      return video.fileName.replace(
+        /https?:\/\/pub-[a-z0-9]+\.r2\.dev/,
+        'https://cdn.foforatiyatro.com'
+      )
     }
     return `${videoPath}/${video.fileName}`
   }, [videoPath])
