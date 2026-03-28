@@ -96,6 +96,14 @@ export async function deleteFromR2(fileName: string): Promise<void> {
 }
 
 /**
+ * Convert old pub-*.r2.dev URLs to cdn.foforatiyatro.com
+ */
+export function convertR2Url(url: string): string {
+  if (!url) return url
+  return url.replace(/https?:\/\/pub-[a-z0-9]+\.r2\.dev/, 'https://cdn.foforatiyatro.com')
+}
+
+/**
  * Extract file name from R2 public URL
  * @param url - Full R2 URL (e.g., "https://pub-xxxx.r2.dev/videos/1.mp4")
  * @returns File name (e.g., "videos/1.mp4")
