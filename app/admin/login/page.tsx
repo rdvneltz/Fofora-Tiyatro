@@ -30,8 +30,8 @@ export default function LoginPage() {
       }
 
       if (result?.ok) {
-        // Full page reload to ensure session cookie is sent with the request
-        window.location.href = result.url || '/admin/dashboard'
+        // Always use relative path to avoid domain mismatch issues
+        window.location.href = '/admin/dashboard'
       } else {
         setError('Giriş başarısız oldu')
         setLoading(false)
