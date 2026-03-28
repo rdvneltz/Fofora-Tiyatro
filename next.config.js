@@ -12,6 +12,10 @@ const nextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'cdn.foforatiyatro.com',
+      },
+      {
+        protocol: 'https',
         hostname: 'pub-b8f28bb13d1c4ec9b40f840eefa9bb4c.r2.dev',
       },
       {
