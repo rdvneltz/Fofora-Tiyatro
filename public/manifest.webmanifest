@@ -1,0 +1,14 @@
+{
+  "name": "Fofora Tiyatro Yönetim",
+  "short_name": "Fofora",
+  "description": "Fofora Tiyatro içerik ve takvim yönetimi",
+  "start_url": "/admin/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#11100f",
+  "theme_color": "#681d2a",
+  "icons": [
+    { "src": "/favicon.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/favicon.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

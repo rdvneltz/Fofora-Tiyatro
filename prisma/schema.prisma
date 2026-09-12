@@ -141,6 +141,26 @@ model SiteSettings {
   impactIntro     String?
   impactStats     Json?
   impactImage     String?
+  homepageContent Json?
+  navigation      Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model CalendarEvent {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  type        String   @default("education")
+  date        DateTime
+  startTime   String
+  endTime     String?
+  location    String?
+  description String?
+  image       String?
+  linkType    String?  @default("none")
+  linkValue   String?
+  active      Boolean  @default(true)
+  featured    Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }

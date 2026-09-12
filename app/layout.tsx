@@ -37,6 +37,8 @@ export const metadata: Metadata = {
   keywords: ["tiyatro", "drama", "oyunculuk", "tiyatro eğitimi", "drama atölyesi", "çocuk tiyatrosu", "İstanbul", "Üsküdar", "sahne sanatları", "fofora tiyatro"],
   authors: [{ name: "Fofora Tiyatro" }],
   robots: "index, follow",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: { capable: true, title: "Fofora Yönetim", statusBarStyle: "black-translucent" },
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },
@@ -60,7 +62,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport = {
-  themeColor: "#1e3a5f",
+  themeColor: "#681d2a",
   width: "device-width",
   initialScale: 1,
 };
