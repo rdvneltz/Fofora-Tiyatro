@@ -26,6 +26,7 @@ const samplePosts:Post[] = [
   {id:'p1',title:'Fiyonk',slug:'fiyonk',excerpt:'Acının gölgesinde yeni bir oyun.',category:'Yeni oyun',createdAt:'2026-03-20',image:'/demo/story-1.jpg'},
   {id:'p2',title:'Sen Kimsin?',slug:'sen-kimsin',excerpt:'Çocuk oyunumuz seyirciyle buluşuyor.',category:'Öğrenci oyunu',createdAt:'2026-04-12',image:'/demo/story-2.jpg'},
   {id:'p3',title:'Bir Nefes Dede Korkut',slug:'dede-korkut',excerpt:'Masallar sahnede yeniden hayat buluyor.',category:'Turne',createdAt:'2026-05-08',image:'/demo/story-3.jpg'},
+  {id:'p4',title:'Tartuffe',slug:'tartuffe',excerpt:'Klasik metin, Fofora sahnesinde yeni bir yorumla.',category:'Yeni oyun',createdAt:'2026-06-22',image:'/demo/story-6.jpg'},
 ]
 const sampleNews:Post[] = [
   {id:'n1',title:'Öğrencilerimizden Yeni Gösteri',slug:'ogrenci-gosterisi',excerpt:'Provalardan sahneye uzanan heyecanlı yolculuk.',category:'Sahneden',createdAt:'2026-03-12',image:'/demo/story-4.jpg'},
