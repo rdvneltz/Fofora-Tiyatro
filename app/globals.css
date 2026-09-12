@@ -126,6 +126,8 @@
 
 /* Admin must always scroll independently from the one-screen public canvas. */
 .admin-frame{height:100svh;min-height:0;overflow:hidden}.admin-content{height:100svh;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;scrollbar-gutter:stable}.admin-content [class*="text-white"]:not(button):not([class*="bg-"]){color:#292321!important}.admin-content [class*="text-gold"]{color:#681d2a!important}.admin-content label{font-size:max(.78rem,12px)!important;line-height:1.35}.admin-content input,.admin-content select,.admin-content textarea{font-size:max(.88rem,14px)!important}.admin-content button,.admin-content a{font-size:max(.76rem,12px)}.admin-content .text-xs{font-size:.72rem!important}.admin-content .text-sm{font-size:.82rem!important}
+.admin-frame>aside{overflow:hidden}.admin-frame aside nav{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding-right:3px}.admin-frame aside nav::-webkit-scrollbar{width:5px}.admin-frame aside nav::-webkit-scrollbar-thumb{background:#e9ff2755;border-radius:8px}
+.poster .poster-link{position:absolute;right:0;bottom:0;width:42px;height:42px;border-radius:50%;border:0;background:var(--acid);color:var(--ink);display:grid;place-items:center}
 @media (min-width:901px) and (min-aspect-ratio:4/3){.contact-teaser .form-button{grid-column:2;grid-row:3/5;justify-self:start;align-self:center;width:auto;min-width:150px;padding:0 22px}.contact-teaser .teaser-message{grid-row:3/5}}
 @media(max-width:900px){.admin-frame{height:100dvh}.admin-content{height:100dvh}.contact-teaser .form-button{width:auto;min-width:160px}}
 
