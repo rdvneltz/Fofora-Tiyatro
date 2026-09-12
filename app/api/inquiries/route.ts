@@ -52,6 +52,18 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    // Mesaj her durumda önce inbox'a kaydedilir; e-posta bildirimi başarısız olsa da kaybolmaz.
+    try {
+      const settings = await prisma.siteSettings.findFirst()
+      if (settings?.inquiryEmailEnabled && settings.inquiryEmailRecipients.length) {
+        const { sendInquiryEmail } = await import('@/lib/inquiry-email')
+        const delivered = await sendInquiryEmail(inquiry, settings.inquiryEmailRecipients)
+        if (delivered) await prisma.inquiry.update({ where: { id: inquiry.id }, data: { emailNotificationSent: true } })
+      }
+    } catch (mailError) {
+      console.error('Inquiry email notification failed', mailError)
+    }
+
     return NextResponse.json(inquiry, { status: 201 })
   } catch (error) {
 

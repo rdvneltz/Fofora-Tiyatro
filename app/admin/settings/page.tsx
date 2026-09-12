@@ -33,6 +33,8 @@ interface SiteSettings {
   }
   sectionOrder?: string[]
   heroVideoClickToNext?: boolean
+  inquiryEmailEnabled?: boolean
+  inquiryEmailRecipients?: string[]
 }
 
 export default function AdminSettings() {
@@ -61,7 +63,9 @@ export default function AdminSettings() {
       gallery: true,
     },
     sectionOrder: ['hero', 'services', 'about', 'team', 'testimonials', 'gallery', 'instagram', 'blog', 'contact'],
-    heroVideoClickToNext: true
+    heroVideoClickToNext: true,
+    inquiryEmailEnabled: false,
+    inquiryEmailRecipients: []
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -490,6 +494,14 @@ export default function AdminSettings() {
             </p>
           </div>
 
+          <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
+            <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2"><Globe className="w-6 h-6 text-gold-500" />Mesaj Bildirimleri</h2>
+            <label className="flex items-center gap-3 text-white mb-5"><input type="checkbox" checked={settings.inquiryEmailEnabled||false} onChange={e=>setSettings({...settings,inquiryEmailEnabled:e.target.checked})} className="w-5 h-5"/> Yeni mesajları e-postama gönder</label>
+            <label className="block text-white/70 text-sm">Bildirim adresleri</label>
+            <input value={(settings.inquiryEmailRecipients||[]).join(', ')} onChange={e=>setSettings({...settings,inquiryEmailRecipients:e.target.value.split(',').map(x=>x.trim()).filter(Boolean)})} placeholder="ornek@foforatiyatro.com, ikinci@adres.com" className="mt-2 w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white"/>
+            <p className="text-white/40 text-xs mt-2">Birden fazla adresi virgülle ayırabilirsiniz. Mesaj önce gelen kutusuna kaydedilir, sonra e-posta gönderilir.</p>
+          </div>
+
           {/* Hero Video Settings */}
           <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
             <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
@@ -542,8 +554,8 @@ export default function AdminSettings() {
             <li><strong>Programlar:</strong> Admin Programlar panelinden eğitim programlarını ekleyip düzenleyebilirsiniz</li>
             <li><strong>Hakkımızda:</strong> Admin Hakkımızda panelinden kurum bilgilerini güncelleyebilirsiniz</li>
             <li><strong>Ekip:</strong> Admin Ekip panelinden ekip üyelerini yönetebilirsiniz</li>
-            <li><strong>Kayıtlar:</strong> Admin Kayıtlar ve Uygun Saatler panellerinden kayıt sistemini yönetebilirsiniz</li>
-            <li><strong>Hero Videoları:</strong> Admin Videolar panelinden arka plan videolarını ve sıralarını ayarlayabilirsiniz</li>
+            <li><strong>Mesaj Kutusu:</strong> Web sitesinden gelen iletişim taleplerini okuyabilir ve durumlarını yönetebilirsiniz</li>
+            <li><strong>Vitrin ve Duyurular:</strong> Ana sayfadaki ilanları, bağlantıları ve yayın tarihlerini yönetebilirsiniz</li>
             <li><strong>Galeri:</strong> Admin Galeri panelinden albümler oluşturabilir, fotoğraf/video ekleyebilirsiniz</li>
           </ul>
         </div>

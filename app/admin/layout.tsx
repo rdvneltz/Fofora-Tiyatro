@@ -1,0 +1,11 @@
+'use client'
+import { usePathname } from 'next/navigation'
+import Link from 'next/link'
+import { signOut } from 'next-auth/react'
+import { BookOpen, ChevronLeft, FileText, GalleryHorizontalEnd, Inbox, LayoutDashboard, LogOut, Menu, Settings, Sparkles, Users, Video, X } from 'lucide-react'
+import { useState } from 'react'
+
+const links=[
+  ['Bugün','/admin/dashboard',LayoutDashboard],['Vitrin ve Duyurular','/admin/videos',Video],['Programlar','/admin/services',FileText],['Neler Yaptık?','/admin/impact',Sparkles],['Mesaj Kutusu','/admin/appointments',Inbox],['Bizden Haberler','/admin/blog',BookOpen],['Galeri ve Sahne Akışı','/admin/gallery',GalleryHorizontalEnd],['Ekip','/admin/team',Users],['Site Ayarları','/admin/settings',Settings],
+] as const
+export default function AdminLayout({children}:{children:React.ReactNode}){const path=usePathname(),[open,setOpen]=useState(false);if(path==='/admin/login')return children;return <div className="admin-frame"><button className="admin-menu" onClick={()=>setOpen(!open)}>{open?<X/>:<Menu/>}</button><aside className={open?'open':''}><Link href="/admin/dashboard" className="admin-brand"><span>Fofora</span><small>YÖNETİM</small></Link><nav>{links.map(([name,href,Icon])=><Link key={href} href={href} onClick={()=>setOpen(false)} className={path===href?'active':''}><Icon/>{name}</Link>)}</nav><div className="admin-bottom"><Link href="/" target="_blank"><ChevronLeft/> Siteyi görüntüle</Link><button onClick={()=>signOut({callbackUrl:'/admin/login'})}><LogOut/> Çıkış yap</button></div></aside><div className="admin-content">{children}</div></div>}

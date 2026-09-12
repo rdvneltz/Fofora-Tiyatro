@@ -7,6 +7,10 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const admin = searchParams.get('admin') === 'true'
+    if (admin) {
+      const session = await getServerSession(authOptions)
+      if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
 
     const posts = await prisma.blogPost.findMany({
       where: admin ? {} : { published: true },

@@ -61,14 +61,13 @@ export default function DashboardPage() {
   }
 
   const menuItems = [
-    { title: 'Hero Bölümü', href: '/admin/hero', icon: <Image className="w-6 h-6" />, color: 'from-blue-500 to-blue-600' },
-    { title: 'Hero Videoları', href: '/admin/videos', icon: <Video className="w-6 h-6" />, color: 'from-cyan-500 to-cyan-600' },
+    { title: 'Vitrin ve Duyurular', href: '/admin/videos', icon: <Video className="w-6 h-6" />, color: 'from-lime-500 to-yellow-500' },
     { title: 'Programlar', href: '/admin/services', icon: <FileText className="w-6 h-6" />, color: 'from-green-500 to-green-600' },
+    { title: 'Neler Yaptık?', href: '/admin/impact', icon: <Star className="w-6 h-6" />, color: 'from-yellow-400 to-lime-500' },
     { title: 'Ekip', href: '/admin/team', icon: <Users className="w-6 h-6" />, color: 'from-purple-500 to-purple-600' },
     { title: 'Hakkımızda', href: '/admin/about', icon: <LayoutDashboard className="w-6 h-6" />, color: 'from-yellow-500 to-yellow-600' },
     { title: 'İletişim', href: '/admin/contact', icon: <Phone className="w-6 h-6" />, color: 'from-red-500 to-red-600' },
-    { title: 'Kayıtlar', href: '/admin/appointments', icon: <Calendar className="w-6 h-6" />, color: 'from-orange-500 to-orange-600' },
-    { title: 'Uygun Saatler', href: '/admin/slots', icon: <Clock className="w-6 h-6" />, color: 'from-teal-500 to-teal-600' },
+    { title: 'Mesaj Kutusu', href: '/admin/appointments', icon: <Calendar className="w-6 h-6" />, color: 'from-orange-500 to-orange-600' },
     { title: 'Yorumlar', href: '/admin/testimonials', icon: <Star className="w-6 h-6" />, color: 'from-pink-500 to-pink-600' },
     { title: 'Blog', href: '/admin/blog', icon: <BookOpen className="w-6 h-6" />, color: 'from-indigo-500 to-indigo-600' },
     { title: 'Galeri', href: '/admin/gallery', icon: <GalleryHorizontalEnd className="w-6 h-6" />, color: 'from-amber-500 to-orange-600' },
@@ -125,7 +124,7 @@ export default function DashboardPage() {
             </div>
             <div className="glass rounded-xl p-6">
               <div className="text-orange-500 text-4xl font-bold mb-2">{stats.pendingAppointments}</div>
-              <div className="text-white/70">Bekleyen Kayıt</div>
+              <div className="text-white/70">Yeni Mesaj</div>
             </div>
             <div className="glass rounded-xl p-6">
               <div className="text-pink-500 text-4xl font-bold mb-2">{stats.testimonials}</div>

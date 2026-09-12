@@ -8,6 +8,10 @@ import { syncInstagramToDB } from '@/lib/instagram'
  */
 export async function GET(request: NextRequest) {
   try {
+    const secret = request.headers.get('authorization')
+    if (!process.env.CRON_SECRET || secret !== `Bearer ${process.env.CRON_SECRET}`) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     // Verify cron secret to prevent unauthorized access
     const authHeader = request.headers.get('authorization')
     const cronSecret = process.env.CRON_SECRET

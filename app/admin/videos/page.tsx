@@ -36,6 +36,15 @@ interface HeroVideo {
   playCount?: number
   featured?: boolean
   featuredWeight?: number
+  actionType?: string | null
+  actionValue?: string | null
+  actionLabel?: string | null
+  secondaryActionType?: string | null
+  secondaryActionValue?: string | null
+  secondaryActionLabel?: string | null
+  mobileFileName?: string | null
+  startsAt?: string | null
+  endsAt?: string | null
 }
 
 export default function AdminVideos() {
@@ -331,7 +340,16 @@ export default function AdminVideos() {
         playDuration: editingVideo.playDuration || null,
         playCount: editingVideo.playCount || 1,
         featured: editingVideo.featured,
-        featuredWeight: editingVideo.featuredWeight || 3
+        featuredWeight: editingVideo.featuredWeight || 3,
+        actionType: editingVideo.actionType || 'none',
+        actionValue: editingVideo.actionValue || null,
+        actionLabel: editingVideo.actionLabel || null,
+        secondaryActionType: editingVideo.secondaryActionType || 'none',
+        secondaryActionValue: editingVideo.secondaryActionValue || null,
+        secondaryActionLabel: editingVideo.secondaryActionLabel || null,
+        mobileFileName: editingVideo.mobileFileName || null,
+        startsAt: editingVideo.startsAt || null,
+        endsAt: editingVideo.endsAt || null
       })
       alert('Video ayarları kaydedildi')
       closeEditModal()
@@ -362,7 +380,7 @@ export default function AdminVideos() {
             <Link href="/admin/dashboard" className="text-gold-500 hover:text-gold-400">
               <ArrowLeft className="w-6 h-6" />
             </Link>
-            <h1 className="text-4xl font-bold text-white">Hero Video Yönetimi</h1>
+            <h1 className="text-4xl font-bold text-white">Vitrin ve Duyurular</h1>
           </div>
           <p className="text-white/60 mb-4">
             {videos.length} video yönetiliyor
@@ -684,7 +702,7 @@ export default function AdminVideos() {
               className="bg-navy-800 rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-white/20"
             >
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-white">Video Ayarları</h2>
+                <h2 className="text-2xl font-bold text-white">İlan Ayarları</h2>
                 <button
                   onClick={closeEditModal}
                   className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-all"
@@ -796,6 +814,21 @@ export default function AdminVideos() {
                       </div>
                     </div>
                   )}
+                </div>
+
+                <div className="p-4 bg-emerald-500/10 rounded-xl border border-emerald-500/30">
+                  <h4 className="text-white font-medium mb-4">İlan Tıklama Davranışı</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label className="block text-white/60 text-sm mb-2">Ana eylem</label><select value={editingVideo.actionType || 'none'} onChange={e=>setEditingVideo({...editingVideo,actionType:e.target.value})} className="w-full px-4 py-3 bg-navy-900 border border-white/20 rounded-lg text-white"><option value="none">İşlem yapma</option><option value="whatsapp">WhatsApp aç</option><option value="message">Mesaj formuna git</option><option value="section">Sayfa bölümüne kaydır</option><option value="internal">Site içi sayfa</option><option value="external">Harici bağlantı</option></select></div>
+                    <div><label className="block text-white/60 text-sm mb-2">Buton yazısı</label><input value={editingVideo.actionLabel || ''} onChange={e=>setEditingVideo({...editingVideo,actionLabel:e.target.value})} placeholder="Örn: Oyunu incele" className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white"/></div>
+                    <div className="md:col-span-2"><label className="block text-white/60 text-sm mb-2">Hedef / hazır mesaj</label><input value={editingVideo.actionValue || ''} onChange={e=>setEditingVideo({...editingVideo,actionValue:e.target.value})} placeholder="/egitimler/yetiskin-tiyatro veya WhatsApp mesajı" className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white"/></div>
+                    <div><label className="block text-white/60 text-sm mb-2">İkinci eylem</label><select value={editingVideo.secondaryActionType || 'none'} onChange={e=>setEditingVideo({...editingVideo,secondaryActionType:e.target.value})} className="w-full px-4 py-3 bg-navy-900 border border-white/20 rounded-lg text-white"><option value="none">Gösterme</option><option value="whatsapp">WhatsApp aç</option><option value="message">Mesaj formuna git</option><option value="section">Sayfa bölümüne kaydır</option><option value="internal">Site içi sayfa</option><option value="external">Harici bağlantı</option></select></div>
+                    <div><label className="block text-white/60 text-sm mb-2">İkinci buton yazısı</label><input value={editingVideo.secondaryActionLabel || ''} onChange={e=>setEditingVideo({...editingVideo,secondaryActionLabel:e.target.value})} placeholder="Örn: Bize yaz" className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white"/></div>
+                    <div className="md:col-span-2"><label className="block text-white/60 text-sm mb-2">İkinci hedef</label><input value={editingVideo.secondaryActionValue || ''} onChange={e=>setEditingVideo({...editingVideo,secondaryActionValue:e.target.value})} className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white"/></div>
+                  </div>
+                </div>
+                <div className="p-4 bg-orange-500/10 rounded-xl border border-orange-500/30">
+                  <h4 className="text-white font-medium mb-4">Yayın Planı</h4><div className="grid grid-cols-2 gap-4"><div><label className="block text-white/60 text-sm mb-2">Başlangıç</label><input type="datetime-local" value={editingVideo.startsAt?.slice(0,16)||''} onChange={e=>setEditingVideo({...editingVideo,startsAt:e.target.value||null})} className="w-full px-3 py-3 bg-white/10 border border-white/20 rounded-lg text-white"/></div><div><label className="block text-white/60 text-sm mb-2">Bitiş</label><input type="datetime-local" value={editingVideo.endsAt?.slice(0,16)||''} onChange={e=>setEditingVideo({...editingVideo,endsAt:e.target.value||null})} className="w-full px-3 py-3 bg-white/10 border border-white/20 rounded-lg text-white"/></div></div>
                 </div>
 
                 {/* Playback Settings */}
