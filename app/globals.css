@@ -29,6 +29,21 @@
 @media(max-width:900px){.admin-frame>aside{transform:translateX(-100%);transition:.25s}.admin-frame>aside.open{transform:none}.admin-content{padding-left:0}.admin-menu{display:grid}}
 .impact-collage{overflow:hidden;isolation:isolate}.impact-collage img{object-fit:cover;opacity:.42;z-index:-1}
 .hero-stage{background:#17130f url('/demo/hero-stage.png') center/cover no-repeat}
+.hero-previews{display:none}
+
+@media (min-width:901px) and (min-aspect-ratio:4/3){
+  .site-shell{grid-template-columns:28% 28% 28% 16%}
+  .hero-stage{padding-top:5.1vh;padding-bottom:1.4vh;overflow:visible!important}
+  .hero-copy{width:44%}.hero-copy h1{font-size:clamp(2.35rem,4vw,4.9rem);max-width:610px}.hero-copy .eyebrow{font-size:.65rem;margin-bottom:.55vh}.hero-copy>p:not(.eyebrow){font-size:.78rem;margin-top:.65vh}.hero-actions{margin-top:1vh}.hero-actions .button{min-height:3.7vh;padding:0 18px;font-size:.72rem;white-space:nowrap}
+  .hero-phone{height:57vh;width:23.5vw;right:11.4vw;top:5.7vh;transform:none;border-width:7px;border-radius:3vh;z-index:21}.phone-caption{padding:9vh 1.3vw 1.4vh}.phone-caption small{font-size:.62rem}.phone-caption b{font-size:.9rem}.hero-controls{left:60.5%;right:auto}
+  .hero-previews{display:flex;position:absolute;z-index:22;right:2.4vw;top:6vh;width:7.8vw;flex-direction:column;gap:.75vh}.hero-previews button{position:relative;height:7.6vh;border:5px solid var(--paper);background:#171311;overflow:hidden;box-shadow:0 5px 18px #0008}.hero-previews img,.hero-previews video{width:100%;height:100%;object-fit:cover}.hero-previews span{position:absolute;right:4px;bottom:2px;color:var(--acid);font-size:.5rem;font-weight:700}
+  .now-strip h2{font-size:clamp(1.05rem,1.4vw,1.55rem)}.now-strip strong{font-size:.7rem}.now-strip small{font-size:.48rem}
+  .poster-grid{gap:5px}.poster h3{font-size:clamp(.76rem,.92vw,1.08rem)}.poster p{font-size:.5rem}
+  .paper-section{padding-right:34%}.paper-section:after{display:none}.education-card h3{font-size:clamp(.8rem,.96vw,1.15rem)}.education-card small{font-size:.52rem}
+  .impact-intro>p:not(.eyebrow){font-size:.52rem}.impact-numbers span{font-size:.62rem}.impact-collage strong{font-size:.9rem}.impact-collage p{font-size:.5rem}
+  .news-grid h3{font-size:.68rem}.news-grid small,.news-grid a{font-size:.46rem}.team-grid h3{font-size:.64rem}.team-grid p{font-size:.45rem}
+  .contact-copy>p:not(.eyebrow){font-size:.5rem}.contact-copy a,.contact-copy span,.contact-section label{font-size:.46rem}.contact-section input,.contact-section select,.contact-section textarea{font-size:.52rem}.form-button{font-size:.54rem}
+}
 
 /* 16:9 editorial canvas: the complete front page fits in one desktop viewport. */
 @media (min-width:901px) and (min-aspect-ratio:4/3){
@@ -47,4 +62,16 @@
   .news-section,.team-section{padding:.8vh 1.35vw}.news-section .section-heading,.team-section .section-heading{height:2.5vh;margin-bottom:.35vh}.news-grid,.team-grid{height:calc(100% - 2.85vh)}.news-image{height:7.2vh;margin-bottom:.35vh}.news-grid h3{font-size:.58rem}.news-grid small,.news-grid a{font-size:.36rem}.team-grid article>div{height:8.4vh}.team-grid h3{font-size:.55rem;margin-top:.3vh}.team-grid p{font-size:.36rem}
   .contact-section{padding:.8vh 1.35vw;grid-template-columns:.44fr 1.56fr;gap:1vw;border-left:1px solid #bdb7ad}.contact-section h2{font-size:clamp(1.55rem,2vw,2.4rem)}.contact-copy>p:not(.eyebrow){font-size:.4rem;margin:.55vh 0}.contact-copy>div{gap:.25vh}.contact-copy a,.contact-copy span{font-size:.36rem}.contact-section form{gap:.35vh}.contact-section label{font-size:.36rem}.contact-section input,.contact-section select,.contact-section textarea{height:2.35vh;min-height:0;margin-top:.2vh;padding:.25vh .35vw;font-size:.42rem}.contact-section textarea{height:4.3vh}.form-button{height:2.6vh;min-height:0;font-size:.45rem}.contact-section .success{font-size:.36rem}
   footer{height:auto!important;min-height:0;padding:.35vh 1.8vw}.brand span{font-size:1rem}.brand small{font-size:.32rem;margin-top:.25rem}footer p{font-size:.43rem}footer svg{width:13px}footer>small{font-size:.34rem}
+}
+
+/* Final desktop tuning: enlarged social player + legible one-screen typography. */
+@media (min-width:901px) and (min-aspect-ratio:4/3){
+  .site-shell{grid-template-columns:28% 28% 28% 16%}
+  .hero-stage{padding:5.1vh 4.8vw 1.4vh;overflow:visible!important}.hero-copy{width:44%}.hero-copy h1{font-size:clamp(2.35rem,4vw,4.9rem)}.hero-copy .eyebrow{font-size:.65rem}.hero-copy>p:not(.eyebrow){font-size:.78rem}.hero-actions{margin-top:1vh}.hero-actions .button{min-height:3.7vh;padding:0 18px;font-size:.72rem;white-space:nowrap}
+  .hero-phone{height:57vh;width:23.5vw;right:11.4vw;top:5.7vh;transform:none;border-width:7px;border-radius:3vh;z-index:21}.phone-caption{padding:9vh 1.3vw 1.4vh}.phone-caption small{font-size:.62rem}.phone-caption b{font-size:.9rem}.hero-controls{left:60.5%;right:auto}
+  .hero-previews{display:flex;position:absolute;z-index:22;right:2.4vw;top:6vh;width:7.8vw;flex-direction:column;gap:.75vh}.hero-previews button{position:relative;height:7.6vh;border:5px solid var(--paper);background:#171311;overflow:hidden;box-shadow:0 5px 18px #0008}.hero-previews img,.hero-previews video{width:100%;height:100%;object-fit:cover}.hero-previews span{position:absolute;right:4px;bottom:2px;color:var(--acid);font-size:.5rem;font-weight:700}
+  .now-strip h2{font-size:clamp(1.05rem,1.4vw,1.55rem)}.now-strip strong{font-size:.7rem}.now-strip small{font-size:.48rem}.poster h3{font-size:clamp(.76rem,.92vw,1.08rem)}.poster p{font-size:.5rem}
+  .paper-section{padding-right:34%}.paper-section:after{display:none}.education-card h3{font-size:clamp(.8rem,.96vw,1.15rem)}.education-card small{font-size:.52rem}
+  .impact-intro>p:not(.eyebrow){font-size:.52rem}.impact-numbers span{font-size:.62rem}.impact-collage strong{font-size:.9rem}.impact-collage p{font-size:.5rem}.news-grid h3{font-size:.68rem}.news-grid small,.news-grid a{font-size:.46rem}.team-grid h3{font-size:.64rem}.team-grid p{font-size:.45rem}
+  .contact-copy>p:not(.eyebrow){font-size:.5rem}.contact-copy a,.contact-copy span,.contact-section label{font-size:.46rem}.contact-section input,.contact-section select,.contact-section textarea{font-size:.52rem}.form-button{font-size:.54rem}
 }
