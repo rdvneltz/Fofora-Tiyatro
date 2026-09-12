@@ -2,7 +2,7 @@
   "name": "Fofora Tiyatro Yönetim",
   "short_name": "Fofora",
   "description": "Fofora Tiyatro içerik ve takvim yönetimi",
-  "start_url": "/admin/dashboard",
+  "start_url": "/yeni/admin",
   "scope": "/",
   "display": "standalone",
   "background_color": "#11100f",

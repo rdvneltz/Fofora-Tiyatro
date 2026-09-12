@@ -68,6 +68,14 @@ npm run seed
 
 ---
 
-## 🔑 Admin Giriş
-- Email: admin@foforatiyatro.com
-- Şifre: admin123
+## Önizleme yayını (`/yeni`)
+
+- Yeni ana sayfa: `https://www.foforatiyatro.com/yeni`
+- Yönetim girişi: `https://www.foforatiyatro.com/yeni/admin`
+- Eski ana site bu aşamada kaldırılmamalıdır.
+- Vercel ortam değişkenlerine `.env.example` içindeki değerler eklenmelidir.
+- İlk yayında `npx prisma db push` ve ardından `ADMIN_DEFAULT_PASSWORD` tanımlıyken `npm run seed` çalıştırılmalıdır.
+
+## Admin güvenliği
+
+Admin e-postası `admin@foforatiyatro.com` olarak oluşturulur. Sabit veya varsayılan şifre yoktur; güçlü `ADMIN_DEFAULT_PASSWORD` ortam değişkeni zorunludur. İlk girişten sonra Profil ekranından şifre değiştirilmelidir.

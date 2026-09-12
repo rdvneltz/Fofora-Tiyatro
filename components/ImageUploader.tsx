@@ -44,11 +44,13 @@ export default function ImageUploader({
         setPreview(dataUrl)
       }
       reader.readAsDataURL(file)
+      void uploadFile(file)
     }
   }
 
-  const uploadFile = async () => {
-    if (!selectedFile) return
+  const uploadFile = async (fileOverride?: File) => {
+    const fileToUpload = fileOverride || selectedFile
+    if (!fileToUpload) return
 
     setUploading(true)
     setUploadProgress(0)
@@ -57,8 +59,8 @@ export default function ImageUploader({
     try {
       // Get presigned URL
       const presignedRes = await axios.post('/api/upload/presigned-url', {
-        fileName: selectedFile.name,
-        contentType: selectedFile.type,
+        fileName: fileToUpload.name,
+        contentType: fileToUpload.type,
         folder
       })
 
@@ -66,9 +68,9 @@ export default function ImageUploader({
       setUploadProgress(10)
 
       // Upload to R2
-      await axios.put(presignedUrl, selectedFile, {
+      await axios.put(presignedUrl, fileToUpload, {
         headers: {
-          'Content-Type': selectedFile.type
+          'Content-Type': fileToUpload.type
         },
         onUploadProgress: (progressEvent) => {
           if (progressEvent.total) {
@@ -229,7 +231,7 @@ export default function ImageUploader({
         {selectedFile && (
           <button
             type="button"
-            onClick={uploadFile}
+            onClick={()=>uploadFile()}
             disabled={uploading}
             className="px-6 py-3 bg-gradient-to-r from-gold-600 to-gold-500 text-white rounded-lg font-semibold hover:from-gold-700 hover:to-gold-600 transition-all disabled:opacity-50 flex items-center gap-2"
           >
