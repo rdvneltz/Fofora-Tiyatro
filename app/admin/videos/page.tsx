@@ -383,7 +383,7 @@ export default function AdminVideos() {
             <h1 className="text-4xl font-bold text-white">Vitrin ve Duyurular</h1>
           </div>
           <p className="text-white/60 mb-4">
-            {videos.length} video yönetiliyor
+            {videos.length} ilan yönetiliyor
             {featuredCount > 0 && <span className="text-gold-400 ml-2">({featuredCount} öne çıkan)</span>}
           </p>
 
@@ -399,7 +399,7 @@ export default function AdminVideos() {
                 className="w-5 h-5 rounded border-2 border-white/30 bg-white/10 checked:bg-gold-500 checked:border-gold-500 cursor-pointer transition-all"
               />
               <label htmlFor="randomPlay" className="text-white font-medium cursor-pointer select-none">
-                Videoları karışık sırada oynat
+                İlanları karışık sırada oynat
               </label>
               <span className="ml-2 text-white/40 text-sm">
                 {randomPlay ? 'Rastgele' : 'Sıralı'}
@@ -408,15 +408,15 @@ export default function AdminVideos() {
           </div>
         </div>
 
-        {/* Add Video Form */}
+        {/* Add media announcement */}
         <form onSubmit={addVideo} className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10 mb-8">
           <div className="space-y-4">
             <div>
-              <label className="block text-white mb-2 text-sm font-medium">Video Dosyaları Yükle</label>
+              <label className="block text-white mb-2 text-sm font-medium">İlan Görseli veya Videosu Yükle</label>
               <div className="flex gap-2">
                 <input
                   type="file"
-                  accept="video/mp4,video/webm"
+                  accept="image/jpeg,image/png,image/webp,video/mp4,video/webm"
                   multiple
                   onChange={handleVideoChange}
                   className="flex-1 px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-gold-500 file:text-white hover:file:bg-gold-600"
@@ -437,8 +437,8 @@ export default function AdminVideos() {
               </div>
               <p className="text-white/40 text-xs mt-1">
                 {videoFiles.length > 0
-                  ? `${videoFiles.length} video seçildi`
-                  : 'MP4 veya WebM formatında. Birden fazla video seçebilirsiniz.'}
+                  ? `${videoFiles.length} medya dosyası seçildi`
+                  : 'JPG, PNG, WebP, MP4 veya WebM. Birden fazla dosya seçebilirsiniz.'}
               </p>
             </div>
 
@@ -453,7 +453,7 @@ export default function AdminVideos() {
                 type="text"
                 value={newVideoName}
                 onChange={(e) => setNewVideoName(e.target.value)}
-                placeholder="Manuel dosya adı girin (örn: 1.mp4)"
+                placeholder="Manuel dosya adı veya URL girin"
                 disabled={videoFiles.length > 0}
                 className="flex-1 px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-gold-500 disabled:opacity-50"
               />
@@ -470,7 +470,7 @@ export default function AdminVideos() {
                 ) : (
                   <>
                     <Plus className="w-5 h-5" />
-                    {videoFiles.length > 0 ? `${videoFiles.length} Video Ekle` : 'Ekle'}
+                    {videoFiles.length > 0 ? `${videoFiles.length} İlan Ekle` : 'Ekle'}
                   </>
                 )}
               </button>
@@ -493,11 +493,11 @@ export default function AdminVideos() {
               <div className="flex-1">
                 <h3 className="text-white font-semibold text-lg">
                   {totalFiles > 1
-                    ? `Video Yükleniyor... (${currentUploadIndex}/${totalFiles})`
-                    : 'Video Yükleniyor...'}
+                    ? `Medya Yükleniyor... (${currentUploadIndex}/${totalFiles})`
+                    : 'Medya Yükleniyor...'}
                 </h3>
                 <p className="text-white/60 text-sm">
-                  Lütfen bekleyin, video R2 sunucusuna yükleniyor.
+                  Lütfen bekleyin, dosya Cloudflare R2 alanına yükleniyor.
                 </p>
               </div>
               <div className="text-2xl font-bold text-gold-400">{uploadProgress}%</div>
@@ -518,7 +518,7 @@ export default function AdminVideos() {
         <div className="space-y-4">
           {videos.length === 0 ? (
             <div className="bg-white/5 rounded-xl p-12 text-center">
-              <p className="text-white/60 text-lg">Henüz video eklenmemiş</p>
+              <p className="text-white/60 text-lg">Henüz vitrin ilanı eklenmemiş</p>
             </div>
           ) : (
             videos.map((video, index) => (

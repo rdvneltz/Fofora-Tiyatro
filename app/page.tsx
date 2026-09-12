@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowRight, ChevronLeft, ChevronRight, Instagram, Mail, MapPin, Menu, MessageCircle, Pause, Play, Sparkles, X } from 'lucide-react'
 
-type Slide = { id:string; fileName:string; title?:string|null; subtitle?:string|null; description?:string|null; actionType?:string|null; actionValue?:string|null; actionLabel?:string|null; secondaryActionType?:string|null; secondaryActionValue?:string|null; secondaryActionLabel?:string|null; playDuration?:number|null; active:boolean; order:number }
+type Slide = { id:string; fileName:string; title?:string|null; subtitle?:string|null; description?:string|null; actionType?:string|null; actionValue?:string|null; actionLabel?:string|null; secondaryActionType?:string|null; secondaryActionValue?:string|null; secondaryActionLabel?:string|null; playDuration?:number|null; startsAt?:string|null; endsAt?:string|null; active:boolean; order:number }
 type Service = { id:string; title:string; description:string; image?:string; ageGroup?:string; duration?:string }
 type Post = { id:string; title:string; slug:string; excerpt:string; image?:string; category:string; createdAt:string }
 type Team = { id:string; name:string; title:string; image:string }
@@ -37,7 +37,7 @@ export default function Home(){
   const [index,setIndex]=useState(0),[paused,setPaused]=useState(false),[menu,setMenu]=useState(false),[sending,setSending]=useState(false),[sent,setSent]=useState(false)
   useEffect(()=>{Promise.allSettled(['/api/hero-videos','/api/services','/api/blog','/api/team','/api/gallery','/api/contact','/api/settings'].map(u=>fetch(u).then(r=>r.json()))).then(r=>{
     const value=(i:number)=>r[i].status==='fulfilled'?(r[i] as PromiseFulfilledResult<any>).value:null
-    if(Array.isArray(value(0))&&value(0).length)setSlides(value(0).filter((s:Slide)=>s.active));if(Array.isArray(value(1))&&value(1).length)setServices(value(1));if(Array.isArray(value(2)))setPosts(value(2));if(Array.isArray(value(3)))setTeam(value(3));if(Array.isArray(value(4)))setGallery(value(4));if(value(5)?.phone)setContact(value(5));if(value(6)?.impactStats)setImpact({title:value(6).impactTitle||'Neler Yaptık?',intro:value(6).impactIntro||'',stats:value(6).impactStats})
+    if(Array.isArray(value(0))&&value(0).length){const now=Date.now(),live=value(0).filter((s:Slide)=>s.active&&(!s.startsAt||new Date(s.startsAt).getTime()<=now)&&(!s.endsAt||new Date(s.endsAt).getTime()>=now));if(live.length)setSlides(live)}if(Array.isArray(value(1))&&value(1).length)setServices(value(1));if(Array.isArray(value(2)))setPosts(value(2));if(Array.isArray(value(3)))setTeam(value(3));if(Array.isArray(value(4)))setGallery(value(4));if(value(5)?.phone)setContact(value(5));if(value(6)?.impactStats)setImpact({title:value(6).impactTitle||'Neler Yaptık?',intro:value(6).impactIntro||'',stats:value(6).impactStats})
   })},[])
   useEffect(()=>{if(paused||slides.length<2)return;const t=setTimeout(()=>setIndex(i=>(i+1)%slides.length),(slides[index]?.playDuration||7)*1000);return()=>clearTimeout(t)},[index,paused,slides])
   const current=slides[index]||fallbackSlides[0],media=path(current),video=/\.(mp4|webm|mov)(\?|$)/i.test(media),reels=useMemo(()=>gallery.flatMap(a=>a.items||[]).slice(0,8),[gallery])
