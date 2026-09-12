@@ -45,6 +45,31 @@
   .contact-copy>p:not(.eyebrow){font-size:.5rem}.contact-copy a,.contact-copy span,.contact-section label{font-size:.46rem}.contact-section input,.contact-section select,.contact-section textarea{font-size:.52rem}.form-button{font-size:.54rem}
 }
 
+/* Polished widescreen layout: realistic phone, restored manifesto and readable type. */
+@media (min-width:1200px) and (min-aspect-ratio:4/3){
+  .site-shell{grid-template-columns:28% 28% 28% 16%;grid-template-rows:32% 6% 23% 15% 20% 4%}
+  .hero-phone{left:65.1vw;right:auto;width:15.2vw;height:57vh;border:5px solid #252321;border-radius:2.4vw;box-shadow:0 18px 55px #0009}
+  .phone-notch{width:10px;height:10px;left:15px;top:15px;transform:none;border-radius:50%;background:#080808;box-shadow:0 0 0 2px #4c4945}
+  .hero-previews{right:2.2vw;width:7.4vw}.hero-previews button{height:7.5vh;border-width:4px}
+  .hero-controls{left:58.2%;right:auto;bottom:1.4vh}.hero-controls span{font-size:.72rem}.hero-controls button{width:3.5vh;height:3.5vh}
+  .paper-section{padding-right:31%}.paper-section:after{display:block;right:0;width:15.5%;padding:4vh 1vw;font-size:clamp(.68rem,.78vw,.95rem);z-index:3}
+  .education-grid{gap:6px}.education-card h3{font-size:clamp(.82rem,.92vw,1.08rem)}.education-card small{font-size:.55rem}
+  .section-heading a{font-size:.56rem}.poster p{font-size:.54rem}.poster>span{font-size:.56rem}
+  .impact-intro>p:not(.eyebrow){font-size:.58rem;line-height:1.35}.impact-numbers span{font-size:.67rem}.impact-collage p{font-size:.55rem}
+  .reel-card h3{font-size:.52rem}.news-grid h3{font-size:.72rem;line-height:1.1}.news-grid small,.news-grid a{font-size:.5rem}.team-grid h3{font-size:.68rem}.team-grid p{font-size:.5rem}
+  .contact-section{padding-top:1vh;padding-bottom:1vh}.contact-section h2{font-size:2.15rem}.contact-copy>p:not(.eyebrow){font-size:.55rem;line-height:1.3}.contact-copy a,.contact-copy span,.contact-section label{font-size:.5rem}.contact-section input,.contact-section select,.contact-section textarea{font-size:.56rem}.contact-copy>div{gap:.45vh}.form-button{font-size:.58rem}
+  footer p{font-size:.5rem}footer>small{font-size:.42rem}
+}
+
+/* Compact desktop/tablet: flow layout with independent horizontal rails. */
+@media (min-width:901px) and (max-width:1199px), (min-width:901px) and (max-aspect-ratio:4/3){
+  html,body{height:auto;overflow:auto}.site-shell{display:block;height:auto;min-height:100vh;overflow:hidden}.topbar{position:absolute}
+  .hero-stage{height:560px;min-height:560px;padding:80px 5vw 30px;overflow:hidden!important}.hero-copy{width:55%}.hero-copy h1{font-size:clamp(3rem,6vw,4.8rem)}.hero-phone{width:190px;height:390px;right:13vw;left:auto;top:95px;transform:none;border-radius:30px}.hero-previews{display:flex;right:2vw;top:100px;width:9vw;gap:8px}.hero-previews button{height:72px}.hero-controls{left:5vw;right:auto;bottom:20px}
+  .now-strip{height:82px;min-height:82px;overflow-x:auto}.now-strip>*{min-width:250px}.section{height:auto!important;padding:34px 3vw}.section-heading{height:auto;margin-bottom:20px}.poster-grid,.education-grid,.team-grid{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:10px}.poster{flex:0 0 190px;height:270px}.education-card{flex:0 0 205px;height:255px;scroll-snap-align:start}.education-visual{height:100%}.paper-section{padding-right:3vw}.paper-section:after{display:none}
+  .impact-section{height:auto!important;min-height:330px!important;padding:38px 4vw}.reel-section{height:auto!important}.reel-track{overflow-x:auto}.reel-card{flex:0 0 120px;height:200px}.news-section,.team-section{height:auto!important}.news-grid{height:auto}.news-image{height:130px}.team-grid article{flex:0 0 180px}.team-grid article>div{height:180px}
+  .contact-section{height:auto!important;min-height:360px!important;padding:42px 5vw}.contact-section h2{font-size:4rem}.contact-section input,.contact-section select,.contact-section textarea{min-height:38px;font-size:.75rem}.contact-section textarea{height:78px}footer{height:auto!important;min-height:64px}
+}
+
 /* 16:9 editorial canvas: the complete front page fits in one desktop viewport. */
 @media (min-width:901px) and (min-aspect-ratio:4/3){
   html,body{height:100%;overflow:hidden}
@@ -66,12 +91,21 @@
 
 /* Final desktop tuning: enlarged social player + legible one-screen typography. */
 @media (min-width:901px) and (min-aspect-ratio:4/3){
-  .site-shell{grid-template-columns:28% 28% 28% 16%}
+  .site-shell{grid-template-columns:28% 28% 28% 16%;grid-template-rows:32% 6% 23% 15% 20% 4%}
   .hero-stage{padding:5.1vh 4.8vw 1.4vh;overflow:visible!important}.hero-copy{width:44%}.hero-copy h1{font-size:clamp(2.35rem,4vw,4.9rem)}.hero-copy .eyebrow{font-size:.65rem}.hero-copy>p:not(.eyebrow){font-size:.78rem}.hero-actions{margin-top:1vh}.hero-actions .button{min-height:3.7vh;padding:0 18px;font-size:.72rem;white-space:nowrap}
-  .hero-phone{height:57vh;width:23.5vw;right:11.4vw;top:5.7vh;transform:none;border-width:7px;border-radius:3vh;z-index:21}.phone-caption{padding:9vh 1.3vw 1.4vh}.phone-caption small{font-size:.62rem}.phone-caption b{font-size:.9rem}.hero-controls{left:60.5%;right:auto}
-  .hero-previews{display:flex;position:absolute;z-index:22;right:2.4vw;top:6vh;width:7.8vw;flex-direction:column;gap:.75vh}.hero-previews button{position:relative;height:7.6vh;border:5px solid var(--paper);background:#171311;overflow:hidden;box-shadow:0 5px 18px #0008}.hero-previews img,.hero-previews video{width:100%;height:100%;object-fit:cover}.hero-previews span{position:absolute;right:4px;bottom:2px;color:var(--acid);font-size:.5rem;font-weight:700}
+  .hero-phone{height:57vh;width:15.2vw;left:65.1vw;right:auto;top:5.7vh;transform:none;border:5px solid #252321;border-radius:2.4vw;z-index:21;box-shadow:0 18px 55px #0009}.phone-notch{width:10px;height:10px;left:15px;top:15px;transform:none;border-radius:50%;background:#080808;box-shadow:0 0 0 2px #4c4945}.phone-caption{padding:9vh 1.3vw 1.4vh}.phone-caption small{font-size:.62rem}.phone-caption b{font-size:.9rem}.hero-controls{left:54.5%;right:auto}
+  .hero-previews{display:flex;position:absolute;z-index:22;right:2.2vw;top:6vh;width:7.4vw;flex-direction:column;gap:.75vh}.hero-previews button{position:relative;height:7.5vh;border:4px solid var(--paper);background:#171311;overflow:hidden;box-shadow:0 5px 18px #0008}.hero-previews img,.hero-previews video{width:100%;height:100%;object-fit:cover}.hero-previews span{position:absolute;right:4px;bottom:2px;color:var(--acid);font-size:.5rem;font-weight:700}
   .now-strip h2{font-size:clamp(1.05rem,1.4vw,1.55rem)}.now-strip strong{font-size:.7rem}.now-strip small{font-size:.48rem}.poster h3{font-size:clamp(.76rem,.92vw,1.08rem)}.poster p{font-size:.5rem}
-  .paper-section{padding-right:34%}.paper-section:after{display:none}.education-card h3{font-size:clamp(.8rem,.96vw,1.15rem)}.education-card small{font-size:.52rem}
+  .paper-section{padding-right:49%}.paper-section:after{display:block;right:0;width:15.5%;padding:4vh 1vw;font-size:clamp(.68rem,.78vw,.95rem);z-index:3}.education-card h3{font-size:clamp(.72rem,.84vw,1rem)}.education-card small{font-size:.52rem}
   .impact-intro>p:not(.eyebrow){font-size:.52rem}.impact-numbers span{font-size:.62rem}.impact-collage strong{font-size:.9rem}.impact-collage p{font-size:.5rem}.news-grid h3{font-size:.68rem}.news-grid small,.news-grid a{font-size:.46rem}.team-grid h3{font-size:.64rem}.team-grid p{font-size:.45rem}
-  .contact-copy>p:not(.eyebrow){font-size:.5rem}.contact-copy a,.contact-copy span,.contact-section label{font-size:.46rem}.contact-section input,.contact-section select,.contact-section textarea{font-size:.52rem}.form-button{font-size:.54rem}
+  .contact-section{padding-top:1vh;padding-bottom:1vh}.contact-copy>p:not(.eyebrow){font-size:.55rem;line-height:1.3}.contact-copy a,.contact-copy span,.contact-section label{font-size:.5rem}.contact-section input,.contact-section select,.contact-section textarea{font-size:.56rem}.contact-copy>div{gap:.45vh}.form-button{font-size:.58rem}
+}
+
+@media (min-width:901px) and (max-width:1199px){
+  html,body{height:auto!important;overflow:auto!important}.site-shell{display:block!important;height:auto!important;min-height:100vh;overflow:hidden}.site-shell>section{height:auto!important;overflow:hidden}.topbar{position:absolute}
+  .hero-stage{height:560px!important;min-height:560px!important;padding:80px 5vw 30px!important}.hero-copy{width:55%}.hero-copy h1{font-size:clamp(3rem,6vw,4.8rem)}.hero-phone{width:190px!important;height:390px!important;right:13vw!important;left:auto!important;top:95px!important;transform:none}.hero-previews{display:flex;right:2vw;top:100px;width:9vw;gap:8px}.hero-previews button{height:72px}.hero-controls{left:5vw;right:auto;bottom:20px}
+  .now-strip{height:82px!important;min-height:82px!important;overflow-x:auto}.now-strip>*{min-width:250px}.section{height:auto!important;padding:34px 3vw}.section-heading{height:auto!important;margin-bottom:20px}
+  .poster-grid,.education-grid,.team-grid{display:flex;height:auto!important;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:12px}.poster{flex:0 0 190px;height:270px!important;aspect-ratio:auto}.education-card{flex:0 0 205px;height:255px!important;scroll-snap-align:start}.education-visual{height:100%;aspect-ratio:auto}.paper-section{padding-right:3vw}.paper-section:after{display:none}
+  .impact-section{height:auto!important;min-height:330px!important;padding:38px 4vw}.reel-section{height:auto!important}.reel-track{height:auto!important;overflow-x:auto}.reel-card{flex:0 0 120px;height:200px}.news-section,.team-section{height:auto!important}.news-grid{height:auto}.news-image{height:130px}.team-grid article{flex:0 0 180px}.team-grid article>div{height:180px}
+  .contact-section{height:auto!important;min-height:360px!important;padding:42px 5vw}.contact-section h2{font-size:4rem}.contact-section input,.contact-section select,.contact-section textarea{min-height:38px;font-size:.75rem}.contact-section textarea{height:78px}footer{height:auto!important;min-height:64px}
 }
