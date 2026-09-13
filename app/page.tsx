@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -58,9 +58,28 @@ export default function Home(){
   const [stageTab,setStageTab]=useState<'plays'|'calendar'>('plays'),[messageOpen,setMessageOpen]=useState(false)
   const [testimonials,setTestimonials]=useState<TestimonialItem[]>([]),[testimonialsOpen,setTestimonialsOpen]=useState(false)
   const [testimonialIndex,setTestimonialIndex]=useState(0)
+  const testimonialClipRef=useRef<HTMLDivElement>(null),testimonialQuoteRef=useRef<HTMLQuoteElement>(null)
   const [cardMode,setCardMode]=useState(false)
   useEffect(()=>{fetch('/api/testimonials').then(r=>r.ok?r.json():[]).then(data=>{if(Array.isArray(data))setTestimonials(data)}).catch(()=>undefined)},[])
-  useEffect(()=>{if(testimonials.length<2)return;const t=setInterval(()=>setTestimonialIndex(i=>(i+1)%testimonials.length),5000);return()=>clearInterval(t)},[testimonials])
+  useEffect(()=>{
+    if(testimonials.length===0)return
+    const clip=testimonialClipRef.current,quote=testimonialQuoteRef.current
+    let timer:ReturnType<typeof setTimeout>
+    quote?.style.setProperty('transform','translateY(0)')
+    quote?.style.setProperty('transition','none')
+    const overflow=clip&&quote?Math.max(0,quote.scrollHeight-clip.clientHeight):0
+    if(overflow>4&&quote){
+      const raf=requestAnimationFrame(()=>{
+        const duration=Math.min(9000,Math.max(2200,overflow*38))
+        quote.style.transition=`transform ${duration}ms linear`
+        requestAnimationFrame(()=>quote.style.setProperty('transform',`translateY(-${overflow}px)`))
+        if(testimonials.length>1)timer=setTimeout(()=>setTestimonialIndex(i=>(i+1)%testimonials.length),duration+1500)
+      })
+      return()=>{cancelAnimationFrame(raf);clearTimeout(timer)}
+    }
+    if(testimonials.length>1)timer=setTimeout(()=>setTestimonialIndex(i=>(i+1)%testimonials.length),5000)
+    return()=>clearTimeout(timer)
+  },[testimonialIndex,testimonials])
   const [reelOpen,setReelOpen]=useState<ReelItem|null>(null)
   const [instagramPosts,setInstagramPosts]=useState<{id:string;mediaUrl:string;mediaType:string;caption?:string|null}[]>([])
   useEffect(()=>{fetch('/api/instagram-posts').then(r=>r.ok?r.json():[]).then(data=>{if(Array.isArray(data))setInstagramPosts(data.filter((p:any)=>p.active&&p.mediaUrl))}).catch(()=>undefined)},[])
@@ -96,7 +115,7 @@ export default function Home(){
   const send=async(e:React.FormEvent<HTMLFormElement>)=>{e.preventDefault();setSending(true);const form=e.currentTarget,res=await fetch('/api/inquiries',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.fromEntries(new FormData(form).entries()))});setSending(false);if(res.ok){form.reset();setSent(true)}}
 
   const contactBlock=<section id="iletisim" className={testimonials.length?'contact-section has-testimonials':'contact-section'}>
-      {testimonials.length>0&&<aside className="contact-frame contact-testimonials"><h3><Quote/> Ne Diyorlar?</h3><div className="testimonial-rotator" onClick={()=>setTestimonialsOpen(true)}><AnimatePresence mode="wait"><motion.figure key={testimonials[testimonialIndex%testimonials.length].id} initial={{opacity:0,y:14}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-14}} transition={{duration:.5}}><Quote className="rotator-quote"/><blockquote>{testimonials[testimonialIndex%testimonials.length].content}</blockquote><figcaption>{testimonials[testimonialIndex%testimonials.length].name}{testimonials[testimonialIndex%testimonials.length].title?` · ${testimonials[testimonialIndex%testimonials.length].title}`:''}</figcaption></motion.figure></AnimatePresence></div>{testimonials.length>1&&<div className="testimonial-dots">{testimonials.map((t,i)=><button key={t.id} className={i===testimonialIndex%testimonials.length?'active':''} onClick={()=>setTestimonialIndex(i)} aria-label={`${i+1}. yorumu göster`}/>)}</div>}<button className="testimonial-more" onClick={()=>setTestimonialsOpen(true)}>Tümünü gör <ArrowRight/></button></aside>}
+      {testimonials.length>0&&<aside className="contact-frame contact-testimonials"><h3><Quote/> Ne Diyorlar?</h3><div className="testimonial-rotator" onClick={()=>setTestimonialsOpen(true)}><AnimatePresence mode="wait"><motion.figure key={testimonials[testimonialIndex%testimonials.length].id} initial={{opacity:0,y:14}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-14}} transition={{duration:.5}}><Quote className="rotator-quote"/><div className="rotator-clip" ref={testimonialClipRef}><blockquote ref={testimonialQuoteRef}>{testimonials[testimonialIndex%testimonials.length].content}</blockquote></div><figcaption>{testimonials[testimonialIndex%testimonials.length].name}{testimonials[testimonialIndex%testimonials.length].title?` · ${testimonials[testimonialIndex%testimonials.length].title}`:''}</figcaption></motion.figure></AnimatePresence></div>{testimonials.length>1&&<div className="testimonial-dots">{testimonials.map((t,i)=><button key={t.id} className={i===testimonialIndex%testimonials.length?'active':''} onClick={()=>setTestimonialIndex(i)} aria-label={`${i+1}. yorumu göster`}/>)}</div>}<button className="testimonial-more" onClick={()=>setTestimonialsOpen(true)}>Tümünü gör <ArrowRight/></button></aside>}
       <div className="contact-frame contact-write">
         <div className="contact-copy"><p className="eyebrow ink">BİR MERHABA YETER</p><h2>{copy.contactTitle}</h2><p>{copy.contactText}</p><div><a href={`https://wa.me/${contact.phone.replace(/\D/g,'')}`} target="_blank"><MessageCircle/> WhatsApp’tan yaz</a><a href={`mailto:${contact.email}`}><Mail/> {contact.email}</a><span><MapPin/> {contact.address}</span></div></div>
         <form className="contact-teaser" onSubmit={e=>{e.preventDefault();setMessageOpen(true)}} onClick={()=>setMessageOpen(true)}><div className="form-row"><label className="teaser-name">Adınız Soyadınız<input readOnly tabIndex={-1}/></label><label className="teaser-email">E-posta<input readOnly tabIndex={-1}/></label></div><label className="teaser-subject">Konu<select tabIndex={-1} defaultValue=""><option value="">Bir konu seçin</option></select></label><label className="teaser-message">Mesajınız<textarea readOnly tabIndex={-1}/></label></form>
