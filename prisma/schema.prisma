@@ -117,6 +117,7 @@ model SiteSettings {
   heroVideoRandomPlay Boolean @default(false) // Random video playback order
   heroVideoClickToNext Boolean @default(true) // Click on header to go to next video
   inquiryEmailEnabled Boolean @default(false)
+  cardModeEnabled Boolean @default(false) // Anasayfayı tek sayfalık kartvizite indirger
   inquiryEmailRecipients String[]
   impactTitle     String? @default("Neler Yaptık?")
   impactIntro     String?

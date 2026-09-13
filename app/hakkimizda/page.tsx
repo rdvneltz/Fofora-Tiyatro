@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { ArrowLeft, Check } from 'lucide-react'
+import SiteHeader from '../../components/SiteHeader'
 
 type About = { title: string; content: string; mission?: string | null; vision?: string | null; values: string[]; image?: string | null }
 
@@ -28,6 +29,8 @@ export default function AboutPage() {
   }, [])
 
   return (
+    <>
+    <SiteHeader/>
     <main className="detail-page">
       <a href={`${base}/`}><ArrowLeft /> Ana sayfaya dön</a>
       {about.image && <div className="detail-hero"><Image src={about.image} alt={about.title} fill priority sizes="100vw" /></div>}
@@ -49,5 +52,6 @@ export default function AboutPage() {
         )}
       </article>
     </main>
+    </>
   )
 }

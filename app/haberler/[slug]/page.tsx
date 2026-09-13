@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { useParams, usePathname } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
+import SiteHeader from '../../../components/SiteHeader'
 
 const fallbackPosts: Record<string, any> = {
   'ogrenci-gosterisi': { title: 'Öğrencilerimizden Yeni Gösteri', category: 'Sahneden', createdAt: '2026-03-12', excerpt: 'Provalardan sahneye uzanan heyecanlı yolculuk.', content: 'Öğrencilerimizin dönem boyunca ürettiği çalışmaları seyirciyle buluşturduk. Sahne, birlikte büyüdüğümüz hikâyelere açıldı.', image: '/demo/story-4.jpg' },
@@ -16,6 +17,7 @@ export default function NewsDetail() {
   const pathname = usePathname()
   const base = pathname.startsWith('/yeni') ? '/yeni' : ''
   const [post, setPost] = useState<any>(fallbackPosts[slug])
+  const [label, setLabel] = useState('Bizden Haberler')
 
   useEffect(() => {
     fetch('/api/blog').then((response) => response.ok ? response.json() : []).then((items) => {
@@ -23,8 +25,23 @@ export default function NewsDetail() {
       const found = items.find((item: any) => item.slug === slug)
       if (found) setPost(found)
     }).catch(() => undefined)
+    fetch('/api/settings').then(r => r.ok ? r.json() : null).then(data => {
+      if (data?.homepageContent?.newsTitle) setLabel(data.homepageContent.newsTitle)
+    }).catch(() => undefined)
   }, [slug])
 
-  if (!post) return <main className="detail-page"><a href={`${base}/#haberler`}><ArrowLeft /> Haberlere dön</a><h1>Haber bulunamadı.</h1></main>
-  return <main className="detail-page"><a href={`${base}/#haberler`}><ArrowLeft /> Haberlere dön</a>{post.image && <div className="detail-hero"><Image src={post.image} alt={post.title} fill priority sizes="100vw" /></div>}<article className="news-detail"><p className="eyebrow">{post.category} • {new Date(post.createdAt).toLocaleDateString('tr-TR')}</p><h1>{post.title}</h1><p className="lead">{post.excerpt}</p><div className="rich-copy">{post.content}</div></article></main>
+  if (!post) return <><SiteHeader/><main className="detail-page"><a href={`${base}/haberler`}><ArrowLeft /> {label}’e dön</a><h1>Haber bulunamadı.</h1></main></>
+  return <>
+    <SiteHeader/>
+    <main className="detail-page">
+      <a href={`${base}/haberler`}><ArrowLeft /> {label}’e dön</a>
+      {post.image && <div className="detail-hero"><Image src={post.image} alt={post.title} fill priority sizes="100vw" /></div>}
+      <article className="news-detail">
+        <p className="eyebrow">{post.category} • {new Date(post.createdAt).toLocaleDateString('tr-TR')}</p>
+        <h1>{post.title}</h1>
+        <p className="lead">{post.excerpt}</p>
+        <div className="rich-copy">{post.content}</div>
+      </article>
+    </main>
+  </>
 }
