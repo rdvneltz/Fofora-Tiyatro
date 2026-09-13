@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
-import { ArrowLeft, ArrowRight, Mail, MapPin, MessageCircle, Quote, Star } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Clock, Mail, MapPin, MessageCircle, Quote, Star } from 'lucide-react'
 import SiteHeader from '../../components/SiteHeader'
 import usePageTitle from '../../components/usePageTitle'
 
@@ -12,7 +12,7 @@ export default function IletisimPage() {
   usePageTitle('İletişim')
   const pathname = usePathname()
   const base = pathname.startsWith('/yeni') ? '/yeni' : ''
-  const [contact, setContact] = useState({ phone: '+90 538 496 26 24', email: 'foforatiyatro@gmail.com', address: 'İcadiye, Üsküdar / İstanbul', mapUrl: '' })
+  const [contact, setContact] = useState({ phone: '+90 538 496 26 24', email: 'foforatiyatro@gmail.com', address: 'İcadiye, Üsküdar / İstanbul', mapUrl: '', workingHours: '' })
   const [testimonials, setTestimonials] = useState<TestimonialItem[]>([])
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
@@ -38,7 +38,7 @@ export default function IletisimPage() {
       <div className="listing-header"><p className="eyebrow ink">BİR MERHABA YETER</p><h1>İletişim</h1><p className="lead">Soru, fikir, iş birliği ya da eğitim bilgisi… Mesajınız doğrudan ekibimizin gelen kutusuna ulaşsın.</p></div>
       <div className="contact-page-grid">
         <div className="contact-page-info">
-          <div className="contact-copy"><div><a href={`https://wa.me/${contact.phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer"><MessageCircle /> WhatsApp’tan yaz</a><a href={`mailto:${contact.email}`}><Mail /> {contact.email}</a><a href={contact.mapUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(contact.address)}`} target="_blank" rel="noopener noreferrer"><MapPin /> {contact.address}</a></div></div>
+          <div className="contact-copy"><div><a href={`https://wa.me/${contact.phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer"><MessageCircle /> WhatsApp’tan yaz</a><a href={`mailto:${contact.email}`}><Mail /> {contact.email}</a><a href={contact.mapUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(contact.address)}`} target="_blank" rel="noopener noreferrer"><MapPin /> {contact.address}</a>{contact.workingHours && <span><Clock /> {contact.workingHours}</span>}</div></div>
           {testimonials.length > 0 && <div className="contact-testimonials" style={{ marginTop: 40 }}>
             <h3><Quote /> Ne Diyorlar?</h3>
             <div className="testimonials-grid" style={{ gridTemplateColumns: '1fr' }}>

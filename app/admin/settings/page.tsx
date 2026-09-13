@@ -253,6 +253,7 @@ export default function AdminSettings() {
               <Globe className="w-6 h-6 text-gold-500" />
               Genel Bilgiler
             </h2>
+            <p className="text-white/50 text-sm mb-4 -mt-2">Not: Site Adı, Başlığı ve Açıklaması şu an sadece kayıt amaçlıdır; tarayıcı sekmesi başlığı ve arama motoru (SEO) meta bilgileri site kodunda sabit tanımlıdır ve buradan değişmez.</p>
 
             <div className="space-y-4">
               <div>
@@ -292,7 +293,8 @@ export default function AdminSettings() {
               </div>
 
               <div>
-                <label className="block text-white mb-2">Footer Metni</label>
+                <label className="block text-white mb-2">Footer Metni <span className="text-white/40 font-normal">(kullanılmıyor — bkz. Footer Ayarları &gt; Telif Hakkı Metni)</span></label>
+                <p className="text-white/40 text-xs mb-2">Bu alan artık site alt bilgisinde gösterilmiyor. Alt bilgideki telif metnini değiştirmek için soldaki menüden "Footer Ayarları" sayfasını kullanın.</p>
                 <input
                   type="text"
                   value={settings.footerText || ''}
@@ -310,6 +312,7 @@ export default function AdminSettings() {
               <Palette className="w-6 h-6 text-gold-500" />
               Renk Ayarları
             </h2>
+            <p className="text-white/50 text-sm mb-4 -mt-2">Not: Bu renkler yalnızca bu yönetim panelinin kendi gold/navy tonlarını değiştirir. Ziyaretçilerin gördüğü herkese açık site kendi sabit renk paletini kullanır ve buradan etkilenmez.</p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -359,10 +362,11 @@ export default function AdminSettings() {
           {/* Sayfa Bölümleri Yönetimi - Merged Section */}
           <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
             <h3 className="text-2xl font-bold text-white mb-4">Sayfa Bölümleri Yönetimi</h3>
-            <p className="text-white/60 text-sm mb-6">
+            <p className="text-white/60 text-sm mb-2">
               Bölümlerin görünürlüğünü ve sırasını buradan yönetebilirsiniz.
               Yukarı/aşağı ok tuşları ile sıralamayı, toggle ile görünürlüğü ayarlayın.
             </p>
+            <p className="text-amber-300/80 text-sm mb-6">⚠ Bu bölüm henüz herkese açık ana sayfaya bağlı değil: buradaki değişiklikler şu an sitede görünür bir etki yapmıyor. Ana sayfa, tek ekrana sığacak şekilde özel olarak tasarlandığından (sabit CSS grid), görünürlük/sıra kontrolü güvenle eklenmeden önce o tasarımın ayrıca uyarlanması gerekiyor.</p>
 
             <div className="space-y-3">
               {settings.sectionOrder?.map((sectionKey, index) => (
@@ -528,6 +532,7 @@ export default function AdminSettings() {
                   <p className="text-white/50 text-sm mt-1">
                     Header alanına tıklandığında bir sonraki videoya geçilsin mi?
                   </p>
+                  <p className="text-amber-300/80 text-sm mt-1">⚠ Bu ayar henüz siteye bağlı değil: ana sayfada video alanına tıklamak zaten o videonun kendi butonunu (ör. "Eğitimleri keşfet") tetikliyor ve bu iki davranış çakışabileceğinden bilinçli olarak bağlanmadı. İleri/geri video okları ana sayfada zaten mevcut.</p>
                 </div>
                 <label className="flex items-center cursor-pointer">
                   <input

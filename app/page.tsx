@@ -7,7 +7,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowRight, ChevronLeft, ChevronRight, Instagram, Mail, MapPin, MessageCircle, Pause, Play, Quote, Sparkles, Star, X } from 'lucide-react'
 import SiteHeader from '../components/SiteHeader'
 
-type Slide = { id:string; fileName:string; title?:string|null; subtitle?:string|null; description?:string|null; actionType?:string|null; actionValue?:string|null; actionLabel?:string|null; secondaryActionType?:string|null; secondaryActionValue?:string|null; secondaryActionLabel?:string|null; playDuration?:number|null; startsAt?:string|null; endsAt?:string|null; active:boolean; order:number }
+type Slide = { id:string; fileName:string; title?:string|null; subtitle?:string|null; description?:string|null; actionType?:string|null; actionValue?:string|null; actionLabel?:string|null; secondaryActionType?:string|null; secondaryActionValue?:string|null; secondaryActionLabel?:string|null; playDuration?:number|null; playCount?:number|null; featured?:boolean; featuredWeight?:number|null; useCustomContent?:boolean; startsAt?:string|null; endsAt?:string|null; active:boolean; order:number }
 type Service = { id:string; title:string; description:string; image?:string; ageGroup?:string; duration?:string }
 type Post = { id:string; title:string; slug:string; excerpt:string; image?:string; category:string; createdAt:string }
 type Team = { id:string; name:string; title:string; image:string }
@@ -56,6 +56,10 @@ export default function Home(){
   const [contact,setContact]=useState({phone:'+90 538 496 26 24',email:'foforatiyatro@gmail.com',address:'İcadiye, Üsküdar / İstanbul',mapUrl:''})
   const [impact,setImpact]=useState({title:'Neler Yaptık?',intro:'Her sayı bir prova, her fotoğraf başka bir karşılaşma. Fofora’nın bugüne kadar biriktirdiği hikâyeler.',stats:defaultStats,image:'/demo/story-5.jpg'})
   const [index,setIndex]=useState(0),[socialIndex,setSocialIndex]=useState(0),[paused,setPaused]=useState(false),[sending,setSending]=useState(false),[sent,setSent]=useState(false)
+  const [loaded,setLoaded]=useState(false)
+  const [footerSettings,setFooterSettings]=useState<{copyrightText?:string|null;legalLinks?:{title:string;content:string;active:boolean;order:number}[]|null;socialMedia?:{platform:string;url:string;active:boolean}[]|null}>({})
+  const [legalOpen,setLegalOpen]=useState<{title:string;content:string}|null>(null)
+  const playRepeatRef=useRef(0),[repeatTick,setRepeatTick]=useState(0)
   const [stageTab,setStageTab]=useState<'plays'|'calendar'>('plays'),[messageOpen,setMessageOpen]=useState(false)
   const [testimonials,setTestimonials]=useState<TestimonialItem[]>([]),[testimonialsOpen,setTestimonialsOpen]=useState(false)
   const [testimonialIndex,setTestimonialIndex]=useState(0)
@@ -92,26 +96,54 @@ export default function Home(){
   useEffect(()=>{
     Promise.allSettled(['/api/hero-videos','/api/services','/api/blog','/api/team','/api/gallery','/api/contact','/api/settings','/api/calendar'].map(u=>fetch(u).then(r=>r.json()))).then(r=>{
       const value=(i:number)=>r[i].status==='fulfilled'?(r[i] as PromiseFulfilledResult<any>).value:null
+      const settings=value(6)
       if(Array.isArray(value(0))&&value(0).length){
         const now=Date.now()
-        const live=value(0).filter((s:Slide)=>s.active&&(!s.startsAt||new Date(s.startsAt).getTime()<=now)&&(!s.endsAt||new Date(s.endsAt).getTime()>=now))
-        if(live.length)setSlides(live.map((slide:Slide,i:number)=>{
-          const demo=fallbackSlides[i%fallbackSlides.length]
-          return {...demo,...slide,title:slide.title||demo.title,subtitle:slide.subtitle||demo.subtitle,description:slide.description||demo.description,actionLabel:slide.actionLabel||demo.actionLabel}
-        }))
+        const live=value(0).filter((s:any)=>s.active&&(!s.startsAt||new Date(s.startsAt).getTime()<=now)&&(!s.endsAt||new Date(s.endsAt).getTime()>=now))
+        if(live.length){
+          const featured=live.filter((s:any)=>s.featured),normal=live.filter((s:any)=>!s.featured)
+          let ordered=live
+          if(featured.length){
+            const minWeight=Math.max(1,Math.min(...featured.map((s:any)=>s.featuredWeight||3)))
+            const result:any[]=[];let ni=0,fi=0
+            for(let i=0;i<live.length*3&&result.length<Math.max(live.length*2,10);i++){
+              if((i+1)%minWeight===0)result.push(featured[fi++%featured.length])
+              else if(normal.length)result.push(normal[ni++%normal.length])
+              else result.push(featured[fi++%featured.length])
+            }
+            ordered=result
+          }
+          if(settings?.heroVideoRandomPlay)ordered=[...ordered].sort(()=>Math.random()-.5)
+          setSlides(ordered.map((slide:any,i:number)=>{
+            const demo=fallbackSlides[i%fallbackSlides.length],custom=!!slide.useCustomContent
+            return {...demo,...slide,title:custom&&slide.title?slide.title:demo.title,subtitle:custom&&slide.subtitle?slide.subtitle:demo.subtitle,description:custom&&slide.description?slide.description:demo.description,actionLabel:slide.actionLabel||demo.actionLabel}
+          }))
+        }
       }
       if(Array.isArray(value(1))&&value(1).length)setServices(value(1))
       if(Array.isArray(value(2)))setPosts(value(2))
       if(Array.isArray(value(3))&&value(3).length)setTeam(value(3))
       if(Array.isArray(value(4)))setGallery(value(4))
       if(value(5)?.phone)setContact(value(5))
-      if(value(6)?.impactStats)setImpact({title:value(6).impactTitle||'Neler Yaptık?',intro:value(6).impactIntro||'',stats:value(6).impactStats,image:value(6).impactImage||'/demo/story-5.jpg'})
-      if(value(6)?.homepageContent)setCopy({...defaultContent,...value(6).homepageContent})
-      if(value(6)?.cardModeEnabled)setCardMode(true)
+      if(settings?.impactStats)setImpact({title:settings.impactTitle||'Neler Yaptık?',intro:settings.impactIntro||'',stats:settings.impactStats,image:settings.impactImage||'/demo/story-5.jpg'})
+      if(settings?.homepageContent)setCopy({...defaultContent,...settings.homepageContent})
+      if(settings?.cardModeEnabled)setCardMode(true)
+      if(settings)setFooterSettings({copyrightText:settings.copyrightText,legalLinks:settings.legalLinks,socialMedia:settings.socialMedia})
       if(Array.isArray(value(7)))setCalendar(value(7))
+      setLoaded(true)
     })
   },[])
-  useEffect(()=>{if(paused||slides.length<2)return;const t=setTimeout(()=>setIndex(i=>(i+1)%slides.length),(slides[index]?.playDuration||7)*1000);return()=>clearTimeout(t)},[index,paused,slides])
+  useEffect(()=>{playRepeatRef.current=0},[index])
+  useEffect(()=>{
+    if(paused||slides.length<2)return
+    const cur=slides[index]
+    const t=setTimeout(()=>{
+      const max=cur?.playCount||1
+      if(playRepeatRef.current+1<max){playRepeatRef.current+=1;setRepeatTick(v=>v+1)}
+      else setIndex(i=>(i+1)%slides.length)
+    },(cur?.playDuration||7)*1000)
+    return()=>clearTimeout(t)
+  },[index,paused,slides,repeatTick])
   const current=slides[index]||fallbackSlides[0],media=path(current),video=/\.(mp4|webm|mov)(\?|$)/i.test(media),reels=useMemo(()=>{const ig=instagramPosts.map(p=>({id:`ig-${p.id}`,type:p.mediaType==='VIDEO'?'video':'image',url:p.mediaUrl,thumbnail:p.mediaUrl,title:p.caption?p.caption.slice(0,40):'Instagram’dan',description:p.caption||undefined}));const galleryItems=gallery.filter(a=>a.active).flatMap(a=>(a.items||[]).filter(it=>it.active));const featured=galleryItems.filter(it=>it.featured),rest=galleryItems.filter(it=>!it.featured);return [...featured,...ig,...rest].slice(0,8)},[gallery,instagramPosts])
   const socialItems=reels.length?reels:Array.from({length:6},(_,i)=>({id:`r${i}`,type:'image',url:`/demo/training-${i+1}.jpg`,thumbnail:'',title:['Prova günü','Bu ekip başka','Karaktere doğru','Tiyatro iyi gelir','Perde arkası','Alkış zamanı'][i]}))
   useEffect(()=>{if(paused||socialItems.length<2)return;const t=setTimeout(()=>setSocialIndex(i=>(i+1)%socialItems.length),5000);return()=>clearTimeout(t)},[paused,socialIndex,socialItems.length])
@@ -129,7 +161,11 @@ export default function Home(){
     </section>
   const testimonialsModal=testimonialsOpen&&<div className="testimonials-modal" role="dialog" aria-modal="true" aria-label="Tüm yorumlar"><button className="modal-close" onClick={()=>setTestimonialsOpen(false)} aria-label="Kapat"><X/></button><div className="testimonials-modal-inner"><p className="eyebrow ink">NE DİYORLAR?</p><h2>Yorumlar</h2><div className="testimonials-grid">{testimonials.map(t=><article key={t.id}>{t.rating>0&&<div className="stars">{Array.from({length:5},(_,i)=><Star key={i} fill={i<t.rating?'currentColor':'none'}/>)}</div>}<p>“{t.content}”</p><span>{t.name}{t.title?` · ${t.title}`:''}</span></article>)}</div></div></div>
   const reelModal=reelOpen&&<div className="reel-modal" role="dialog" aria-modal="true" aria-label={reelOpen.title||'Sahne akışı'} onClick={()=>setReelOpen(null)}><button className="modal-close" onClick={()=>setReelOpen(null)} aria-label="Kapat"><X/></button><div className="reel-modal-inner" onClick={e=>e.stopPropagation()}><div className="reel-modal-media">{reelOpen.type==='video'?<video src={reelOpen.url} controls autoPlay playsInline/>:<Image src={reelOpen.thumbnail||reelOpen.url} alt={reelOpen.title||''} fill sizes="60vw"/>}</div>{(reelOpen.title||reelOpen.description)&&<div className="reel-modal-copy">{reelOpen.title&&<h3>{reelOpen.title}</h3>}{reelOpen.description&&<p>{reelOpen.description}</p>}</div>}</div></div>
-  const footerBlock=<footer><a className="brand"><span>Fofora</span><small>TIYATRO</small></a><p>{copy.footerTagline}</p><div><a href="https://instagram.com/foforatiyatro"><Instagram/></a><a href={`mailto:${contact.email}`}><Mail/></a></div><small>© {new Date().getFullYear()} Fofora Tiyatro</small></footer>
+  const socialArr=Array.isArray(footerSettings.socialMedia)?footerSettings.socialMedia:(footerSettings.socialMedia&&typeof footerSettings.socialMedia==='object'?Object.entries(footerSettings.socialMedia as any).map(([platform,url])=>({platform,url:String(url),active:true})):[])
+  const igLink=socialArr.find(s=>s.platform==='instagram'&&s.active&&s.url)?.url||'https://instagram.com/foforatiyatro'
+  const legalActive=(footerSettings.legalLinks||[]).filter(l=>l.active).sort((a,b)=>a.order-b.order)
+  const footerBlock=<footer><a className="brand"><span>Fofora</span><small>TIYATRO</small></a><p>{copy.footerTagline}</p><div><a href={igLink} target="_blank" rel="noopener noreferrer"><Instagram/></a><a href={`mailto:${contact.email}`}><Mail/></a></div>{legalActive.length>0&&<nav className="footer-legal">{legalActive.map(l=><button key={l.title} onClick={()=>setLegalOpen(l)}>{l.title}</button>)}</nav>}<small>{footerSettings.copyrightText||`© ${new Date().getFullYear()} Fofora Tiyatro`}</small></footer>
+  const legalModal=legalOpen&&<div className="reel-modal" role="dialog" aria-modal="true" aria-label={legalOpen.title} onClick={()=>setLegalOpen(null)}><button className="modal-close" onClick={()=>setLegalOpen(null)} aria-label="Kapat"><X/></button><div className="reel-modal-inner legal-modal-inner" onClick={e=>e.stopPropagation()}><h3>{legalOpen.title}</h3><p style={{whiteSpace:'pre-wrap'}}>{legalOpen.content}</p></div></div>
   const messageModal=messageOpen&&<div className="message-modal" role="dialog" aria-modal="true" aria-label="Fofora’ya mesaj gönder"><button className="modal-close" onClick={()=>setMessageOpen(false)} aria-label="Kapat"><X/></button><div><p className="eyebrow ink">BİR MERHABA YETER</p><h2>Bize Yazın.</h2><p>Mesajınız doğrudan ekibimizin gelen kutusuna ulaşır.</p></div><form onSubmit={async e=>{await send(e);setMessageOpen(false)}}><div className="form-row"><label>Adınız Soyadınız<input name="name" required autoFocus/></label><label>Telefon<input name="phone" required/></label></div><label>E-posta<input name="email" type="email"/></label><label>Konu<select name="subject" required defaultValue=""><option value="" disabled>Bir konu seçin</option><option>Eğitimler</option><option>Oyunlar ve bilet</option><option>Okul / kurum iş birliği</option><option>Basın ve iletişim</option><option>Diğer</option></select></label><label>Mesajınız<textarea name="message" rows={6} required/></label><button className="button form-button" disabled={sending}>{sending?'Gönderiliyor…':'Mesajı gönder'} <ArrowRight/></button></form></div>
 
   if(cardMode) return <>
@@ -140,6 +176,7 @@ export default function Home(){
     </main>
     {testimonialsModal}
     {footerBlock}
+    {legalModal}
     {messageModal}
   </>
 
@@ -152,16 +189,17 @@ export default function Home(){
       <div className="hero-previews">{socialPreviews.map((item,i)=><button key={item.id} onClick={()=>setSocialIndex((socialIndex+i+1)%socialItems.length)} aria-label={`${item.title||'Sıradaki içerik'} önizlemesi`}>{item.type==='video'?<video src={item.url} muted playsInline/>:<Image src={item.thumbnail||item.url} alt={item.title||''} fill sizes="140px"/>}<span>{String((socialIndex+i+2)%socialItems.length||socialItems.length).padStart(2,'0')}</span></button>)}</div>
     </section>
     <section className="now-strip"><h2>{copy.nowTitle}</h2>{copy.nowItems.map((x:string[],i:number)=><div key={i}><small>{x[0]}</small><strong>{i===2&&posts[0]?.title?posts[0].title:x[1]}</strong></div>)}</section>
-    <section id="oyunlar" className="section dark-section"><div className="stage-tabs"><div><button className={stageTab==='plays'?'active':''} onClick={()=>setStageTab('plays')}>{copy.playsTitle}</button><button className={stageTab==='calendar'?'active':''} onClick={()=>setStageTab('calendar')}>{copy.calendarTitle}</button></div><a href={`${base}/oyunlar`}>Tümünü gör <ArrowRight/></a></div>{stageTab==='plays'?<div className="poster-grid">{(posts.filter(p=>/oyun|etkinlik/i.test(p.category)).slice(0,4).length?posts.filter(p=>/oyun|etkinlik/i.test(p.category)).slice(0,4):samplePosts).map((p,i)=><a className={`poster p-${i}`} key={p.id} href={`${base}/haberler/${p.slug}`} aria-label={`${p.title} detayını aç`}>{p.image&&<Image src={p.image} alt="" fill sizes="30vw"/>}<span>0{i+1}</span><div><small>{p.category}</small><h3>{p.title}</h3><p>{p.excerpt}</p></div></a>)}</div>:<div className="calendar-list">{(calendar.length?calendar.slice(0,4):[['PZT 14','17:30','Çocuk Tiyatro Atölyesi'],['SALI 15','19:30','Yetişkin Oyunculuk'],['CMT 19','20:00','Fiyonk — Oyun'],['PAZ 20','13:00','Genç Grup Provası']]).map((x:any)=><article key={x.id||x[0]}><strong>{x.id?new Date(x.date).toLocaleDateString('tr-TR',{weekday:'short',day:'2-digit'}).toUpperCase():x[0]}</strong><b>{x.startTime||x[1]}</b><span>{x.title||x[2]}</span></article>)}</div>}</section>
+    <section id="oyunlar" className="section dark-section"><div className="stage-tabs"><div><button className={stageTab==='plays'?'active':''} onClick={()=>setStageTab('plays')}>{copy.playsTitle}</button><button className={stageTab==='calendar'?'active':''} onClick={()=>setStageTab('calendar')}>{copy.calendarTitle}</button></div><a href={`${base}/oyunlar`}>Tümünü gör <ArrowRight/></a></div>{stageTab==='plays'?<div className="poster-grid">{(!loaded?Array.from({length:4},(_,i)=>({id:`sk-${i}`,skeleton:true})):(posts.filter(p=>/oyun|etkinlik/i.test(p.category)).slice(0,4).length?posts.filter(p=>/oyun|etkinlik/i.test(p.category)).slice(0,4):samplePosts)).map((p:any,i)=>p.skeleton?<div className={`poster p-${i} skeleton-block`} key={p.id}/>:<a className={`poster p-${i}`} key={p.id} href={`${base}/haberler/${p.slug}`} aria-label={`${p.title} detayını aç`}>{p.image&&<Image src={p.image} alt="" fill sizes="30vw"/>}<span>0{i+1}</span><div><small>{p.category}</small><h3>{p.title}</h3><p>{p.excerpt}</p></div></a>)}</div>:<div className="calendar-list">{(!loaded?Array.from({length:4},(_,i)=>({id:`sk-${i}`,skeleton:true})):(calendar.length?calendar.slice(0,4):[['PZT 14','17:30','Çocuk Tiyatro Atölyesi'],['SALI 15','19:30','Yetişkin Oyunculuk'],['CMT 19','20:00','Fiyonk — Oyun'],['PAZ 20','13:00','Genç Grup Provası']])).map((x:any)=>x.skeleton?<article className="skeleton-block" key={x.id}/>:<article key={x.id||x[0]}><strong>{x.id?new Date(x.date).toLocaleDateString('tr-TR',{weekday:'short',day:'2-digit'}).toUpperCase():x[0]}</strong><b>{x.startTime||x[1]}</b><span>{x.title||x[2]}{x.location?` · ${x.location}`:''}</span></article>)}</div>}</section>
     <section id="egitimler" className="section paper-section"><Heading eyebrow="SAHNEYE ÇIK" title={copy.educationTitle} href={`${base}/egitimler`} light/><div className="education-grid">{services.slice(0,5).map((s,i)=><a className="education-card" key={s.id} href={`${base}/egitimler/${s.id}`}><div className={`education-visual e-${i}`}>{s.image&&<Image src={s.image} alt={s.title} fill sizes="20vw"/>}</div><small>{s.ageGroup}{s.duration&&` • ${s.duration}`}</small><h3>{s.title}</h3><p>{s.description}</p></a>)}</div><aside className="slogan-panel"><strong>{copy.sloganTitle}</strong><span>{copy.sloganText}</span></aside></section>
     <section id="neler-yaptik" className="impact-section"><div className="impact-intro"><p className="eyebrow">BİRLİKTE BÜYÜDÜK</p><h2>{impact.title}</h2><p>{impact.intro}</p></div><div className="impact-numbers">{impact.stats.map((s:string[],i:number)=><motion.div key={s[1]} initial={{opacity:0,y:20}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{delay:i*.1}}><strong>{s[0]}</strong><span>{s[1]}</span></motion.div>)}</div><div className="impact-collage"><Image src={impact.image} alt="Fofora geçmişinden" fill sizes="30vw"/><b>2019</b><strong>PERDE<br/>AÇILDI</strong><b>2026</b><p>Sahnede büyüyen<br/>bir topluluk.</p></div></section>
     <section className="section reel-section"><Heading eyebrow="PERDENİN ARKASI" title={copy.reelsTitle} href={`${base}/bizden-kareler`} light/><div className="reel-track">{socialItems.map((r,i)=><button className={`reel-card r-${i}`} key={r.id} onClick={()=>setReelOpen(r)} aria-label={`${r.title||'Bizden bir kare'} — büyüt`}>{r.url&&(r.type==='video'?<video src={r.url} muted playsInline/>:<Image src={r.thumbnail||r.url} alt={r.title||''} fill sizes="220px"/>)}<h3>{r.title}</h3></button>)}</div></section>
-    <section id="haberler" className="section news-section"><Heading eyebrow="GÜNCEL" title={copy.newsTitle} href={`${base}/haberler`} light/><div className="news-grid">{(posts.slice(0,3).length?posts.slice(0,3):sampleNews).map((p,i)=><article key={p.id}><div className={`news-image n-${i}`}>{p.image&&<Image src={p.image} alt={p.title} fill sizes="33vw"/>}</div><small>{p.category} • {new Date(p.createdAt).toLocaleDateString('tr-TR')}</small><h3>{p.title}</h3><p>{p.excerpt}</p><a href={`${base}/haberler/${p.slug}`}>Devamını oku <ArrowRight/></a></article>)}</div></section>
-    {team.length>0&&<section id="ekip" className="section team-section"><Heading eyebrow="BİRLİKTE ÜRETİYORUZ" title={copy.teamTitle} href={`${base}/ekibimiz`}/><div className="team-grid">{team.slice(0,4).map(m=><article key={m.id}><div><Image src={m.image} alt={m.name} fill sizes="25vw"/></div><h3>{m.name}</h3><p>{m.title}</p></article>)}</div></section>}
+    <section id="haberler" className="section news-section"><Heading eyebrow="GÜNCEL" title={copy.newsTitle} href={`${base}/haberler`} light/><div className="news-grid">{(!loaded?Array.from({length:3},(_,i)=>({id:`sk-${i}`,skeleton:true})):(posts.slice(0,3).length?posts.slice(0,3):sampleNews)).map((p:any,i)=>p.skeleton?<article className="skeleton-block" key={p.id}/>:<article key={p.id}><div className={`news-image n-${i}`}>{p.image&&<Image src={p.image} alt={p.title} fill sizes="33vw"/>}</div><small>{p.category} • {new Date(p.createdAt).toLocaleDateString('tr-TR')}</small><h3>{p.title}</h3><p>{p.excerpt}</p><a href={`${base}/haberler/${p.slug}`}>Devamını oku <ArrowRight/></a></article>)}</div></section>
+    {(!loaded||team.length>0)&&<section id="ekip" className="section team-section"><Heading eyebrow="BİRLİKTE ÜRETİYORUZ" title={copy.teamTitle} href={`${base}/ekibimiz`}/><div className="team-grid">{(!loaded?Array.from({length:4},(_,i)=>({id:`sk-${i}`,skeleton:true})):team.slice(0,4)).map((m:any)=>m.skeleton?<article className="skeleton-block" key={m.id}/>:<article key={m.id}><div><Image src={m.image} alt={m.name} fill sizes="25vw"/></div><h3>{m.name}</h3><p>{m.title}</p></article>)}</div></section>}
     {contactBlock}
     {testimonialsModal}
     {reelModal}
     {footerBlock}
+    {legalModal}
     {messageModal}
   </main>
 }

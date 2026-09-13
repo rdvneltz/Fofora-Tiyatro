@@ -3,10 +3,17 @@ import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url)
+    const admin = searchParams.get('admin') === 'true'
+    if (admin) {
+      const session = await getServerSession(authOptions)
+      if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const about = await prisma.aboutSection.findFirst({
-      where: { active: true },
+      where: admin ? {} : { active: true },
       orderBy: { updatedAt: 'desc' }
     })
     const response = NextResponse.json(about)
