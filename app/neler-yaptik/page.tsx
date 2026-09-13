@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 import SiteHeader from '../../components/SiteHeader'
+import usePageTitle from '../../components/usePageTitle'
 
 const defaultStats = [['12', 'Oyun'], ['350+', 'Öğrenci'], ['28', 'Öğrenci gösterisi'], ['6', 'Yıllık yolculuk']]
 
@@ -12,6 +13,7 @@ export default function NelerYaptikPage() {
   const pathname = usePathname()
   const base = pathname.startsWith('/yeni') ? '/yeni' : ''
   const [impact, setImpact] = useState({ title: 'Neler Yaptık?', intro: 'Her sayı bir prova, her fotoğraf başka bir karşılaşma. Fofora’nın bugüne kadar biriktirdiği hikâyeler.', stats: defaultStats, image: '/demo/story-5.jpg' })
+  usePageTitle(impact.title)
   const [gallery, setGallery] = useState<{ id: string; items: { id: string; type: string; url: string; thumbnail?: string; title?: string }[] }[]>([])
 
   useEffect(() => {

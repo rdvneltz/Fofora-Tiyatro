@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { ArrowLeft, Check } from 'lucide-react'
 import SiteHeader from '../../components/SiteHeader'
+import usePageTitle from '../../components/usePageTitle'
 
 type About = { title: string; content: string; mission?: string | null; vision?: string | null; values: string[]; image?: string | null }
 
@@ -21,6 +22,7 @@ export default function AboutPage() {
   const pathname = usePathname()
   const base = pathname.startsWith('/yeni') ? '/yeni' : ''
   const [about, setAbout] = useState<About>(fallback)
+  usePageTitle(about.title)
 
   useEffect(() => {
     fetch('/api/about').then(r => (r.ok ? r.json() : null)).then(data => {

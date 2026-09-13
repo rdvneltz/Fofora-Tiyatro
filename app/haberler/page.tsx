@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 import SiteHeader from '../../components/SiteHeader'
+import usePageTitle from '../../components/usePageTitle'
 
 type Post = { id: string; title: string; slug: string; excerpt: string; image?: string; category: string; createdAt: string }
 
@@ -19,6 +20,7 @@ export default function HaberlerListing() {
   const base = pathname.startsWith('/yeni') ? '/yeni' : ''
   const [posts, setPosts] = useState<Post[]>([])
   const [label, setLabel] = useState('Bizden Haberler')
+  usePageTitle(label)
 
   useEffect(() => {
     fetch('/api/blog').then(r => r.ok ? r.json() : []).then(data => { if (Array.isArray(data)) setPosts(data) }).catch(() => undefined)

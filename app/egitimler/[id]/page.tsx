@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { useParams, usePathname } from 'next/navigation'
 import { ArrowLeft, MessageCircle } from 'lucide-react'
 import SiteHeader from '../../../components/SiteHeader'
+import usePageTitle from '../../../components/usePageTitle'
 
 const fallbackPrograms: Record<string, any> = {
   cocuk: { title: 'Çocuk', ageGroup: '4–12 yaş', description: 'Oyunla keşfet, sahnede özgürleş.', details: 'Çocukların hayal gücünü, ifade becerisini ve ekip ruhunu oyun yoluyla güçlendiren yaratıcı tiyatro programı.', image: '/demo/training-1.jpg' },
@@ -19,6 +20,7 @@ export default function EducationDetail() {
   const pathname = usePathname()
   const base = pathname.startsWith('/yeni') ? '/yeni' : ''
   const [item, setItem] = useState<any>(fallbackPrograms[id])
+  usePageTitle(item?.title)
   const [label, setLabel] = useState('Eğitimler')
   const [contact, setContact] = useState({ phone: '+90 538 496 26 24' })
   const [whatsappText, setWhatsappText] = useState('Merhaba, {program} hakkında bilgi almak istiyorum.')

@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 import SiteHeader from '../../components/SiteHeader'
+import usePageTitle from '../../components/usePageTitle'
 
 type Team = { id: string; name: string; title: string; image: string }
 
@@ -20,6 +21,7 @@ export default function EkibimizListing() {
   const base = pathname.startsWith('/yeni') ? '/yeni' : ''
   const [team, setTeam] = useState<Team[]>(fallbackTeam)
   const [label, setLabel] = useState('Ekibimiz')
+  usePageTitle(label)
 
   useEffect(() => {
     fetch('/api/team').then(r => r.ok ? r.json() : []).then(data => { if (Array.isArray(data) && data.length) setTeam(data) }).catch(() => undefined)

@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 import SiteHeader from '../../components/SiteHeader'
+import usePageTitle from '../../components/usePageTitle'
 
 type Service = { id: string; title: string; description: string; image?: string; ageGroup?: string; duration?: string }
 
@@ -21,6 +22,7 @@ export default function EgitimlerListing() {
   const base = pathname.startsWith('/yeni') ? '/yeni' : ''
   const [services, setServices] = useState<Service[]>(fallbackServices)
   const [label, setLabel] = useState('Eğitimler')
+  usePageTitle(label)
 
   useEffect(() => {
     fetch('/api/services').then(r => r.ok ? r.json() : []).then(data => { if (Array.isArray(data) && data.length) setServices(data) }).catch(() => undefined)

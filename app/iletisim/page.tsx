@@ -4,10 +4,12 @@ import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { ArrowLeft, ArrowRight, Mail, MapPin, MessageCircle, Quote, Star } from 'lucide-react'
 import SiteHeader from '../../components/SiteHeader'
+import usePageTitle from '../../components/usePageTitle'
 
 type TestimonialItem = { id: string; name: string; title: string; content: string; rating: number }
 
 export default function IletisimPage() {
+  usePageTitle('İletişim')
   const pathname = usePathname()
   const base = pathname.startsWith('/yeni') ? '/yeni' : ''
   const [contact, setContact] = useState({ phone: '+90 538 496 26 24', email: 'foforatiyatro@gmail.com', address: 'İcadiye, Üsküdar / İstanbul' })

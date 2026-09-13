@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { useParams, usePathname } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 import SiteHeader from '../../../components/SiteHeader'
+import usePageTitle from '../../../components/usePageTitle'
 
 const fallbackPosts: Record<string, any> = {
   'ogrenci-gosterisi': { title: 'Öğrencilerimizden Yeni Gösteri', category: 'Sahneden', createdAt: '2026-03-12', excerpt: 'Provalardan sahneye uzanan heyecanlı yolculuk.', content: 'Öğrencilerimizin dönem boyunca ürettiği çalışmaları seyirciyle buluşturduk. Sahne, birlikte büyüdüğümüz hikâyelere açıldı.', image: '/demo/story-4.jpg' },
@@ -17,6 +18,7 @@ export default function NewsDetail() {
   const pathname = usePathname()
   const base = pathname.startsWith('/yeni') ? '/yeni' : ''
   const [post, setPost] = useState<any>(fallbackPosts[slug])
+  usePageTitle(post?.title)
   const [label, setLabel] = useState('Bizden Haberler')
 
   useEffect(() => {

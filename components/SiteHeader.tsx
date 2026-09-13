@@ -44,9 +44,11 @@ export default function SiteHeader({ variant = 'solid' }: { variant?: 'solid' | 
         {logo ? <img src={logo} alt="Fofora Tiyatro" className="brand-logo" /> : <><span>Fofora</span><small>TIYATRO</small></>}
       </Link>
       <nav className={menu ? 'nav-links open' : 'nav-links'}>
-        {links.map(([label, href]) => (
-          <Link key={href} href={`${base}${href}`} onClick={() => setMenu(false)}>{label}</Link>
-        ))}
+        {links.map(([label, href]) => {
+          const currentPath = base && pathname.startsWith(base) ? pathname.slice(base.length) || '/' : pathname
+          const isActive = currentPath === href || currentPath.startsWith(`${href}/`)
+          return <Link key={href} href={`${base}${href}`} className={isActive ? 'active' : undefined} onClick={() => setMenu(false)}>{label}</Link>
+        })}
         <a href="https://instagram.com/foforatiyatro" target="_blank" rel="noopener noreferrer"><Instagram size={18} /></a>
       </nav>
       <button className="menu-button" onClick={() => setMenu(!menu)} aria-label={menu ? 'Menüyü kapat' : 'Menüyü aç'}>{menu ? <X /> : <Menu />}</button>
