@@ -35,6 +35,7 @@ interface SiteSettings {
   heroVideoClickToNext?: boolean
   inquiryEmailEnabled?: boolean
   inquiryEmailRecipients?: string[]
+  cardModeEnabled?: boolean
 }
 
 export default function AdminSettings() {
@@ -65,7 +66,8 @@ export default function AdminSettings() {
     sectionOrder: ['hero', 'services', 'about', 'team', 'testimonials', 'gallery', 'instagram', 'blog', 'contact'],
     heroVideoClickToNext: true,
     inquiryEmailEnabled: false,
-    inquiryEmailRecipients: []
+    inquiryEmailRecipients: [],
+    cardModeEnabled: false
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -233,6 +235,16 @@ export default function AdminSettings() {
               folder="images/logos"
             />
             <p className="text-white/40 text-sm mt-4">PNG, JPG veya SVG. Maksimum 2MB.</p>
+          </div>
+
+          {/* Kartvizit modu */}
+          <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
+            <h2 className="text-2xl font-bold text-white mb-2">Kartvizit Modu</h2>
+            <p className="text-white/60 mb-4">Açıkken anasayfa yerine sadece logo, iletişim bilgileri, WhatsApp ve Bize Yazın bölümünden oluşan tek sayfalık bir kartvizit gösterilir. İçeriğinizi tamamlayana kadar kullanabilirsiniz; diğer sayfalar (Eğitimler, Haberler, vb.) bu moddan etkilenmez, normal çalışmaya devam eder.</p>
+            <label className="flex items-center gap-3 text-white">
+              <input type="checkbox" checked={settings.cardModeEnabled || false} onChange={e => setSettings({ ...settings, cardModeEnabled: e.target.checked })} className="w-5 h-5" />
+              Anasayfayı kartvizit moduna al
+            </label>
           </div>
 
           {/* Basic Info */}

@@ -24,24 +24,6 @@ async function main() {
     },
   })
 
-  // Hero section - sadece yoksa ekle
-  const heroCount = await prisma.heroSection.count()
-  if (heroCount === 0) {
-    await prisma.heroSection.create({
-      data: {
-        title: 'FOFORA TİYATRO',
-        subtitle: 'Sahnenin Büyüsüyle Kendini Yeniden Keşfet',
-        description: 'Boşluk sanatın sahnesidir - Her yaştan bireylere tiyatro eğitimi ile yaratıcılığını keşfet',
-        buttonText: 'Hemen Kayıt Ol',
-        buttonLink: '#contact',
-        logo: '/assets/fofora-logo.png',
-        logoWidth: 250,
-        logoHeight: 250,
-        active: true,
-      },
-    })
-  }
-
   // Eğitim Programları
   const programs = [
     {
@@ -170,20 +152,6 @@ async function main() {
         contact: true,
       },
       copyrightText: '© 2024 Fofora Tiyatro. Sahnenin büyüsüyle hayatınızı dönüştürün.',
-      appointmentFormSettings: {
-        consultationTypes: [
-          'Çocuk Drama Atölyesi (4-6 yaş)',
-          'Çocuk Drama Atölyesi (7-9 yaş)',
-          'Çocuk Drama Atölyesi (10-12 yaş)',
-          'Gençlik Tiyatro Atölyesi (13-17 yaş)',
-          'Yetişkin Oyun Oluşturma',
-          'Konservatuvar Hazırlık',
-          'Diksiyon Eğitimi',
-          'Genel Bilgi'
-        ],
-        showLawyerSelection: true,
-        descriptionLabel: 'Mesajınız veya özel talepleriniz'
-      }
     },
   })
   }
@@ -246,7 +214,7 @@ Velilerimiz ve seyircilerimizin yoğun ilgisiyle karşılanan oyun, tüm ekibimi
   console.log('Seed tamamlandı! Fofora Tiyatro veritabanı hazır.')
   console.log('Admin bilgileri:')
   console.log('Email: admin@foforatiyatro.com')
-  console.log('Şifre: admin123')
+  console.log('Şifre: ADMIN_DEFAULT_PASSWORD ortam değişkeninde tanımladığınız şifre')
 }
 
 main()

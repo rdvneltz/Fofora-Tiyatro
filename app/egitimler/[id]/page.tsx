@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { useParams, usePathname } from 'next/navigation'
 import { ArrowLeft, MessageCircle } from 'lucide-react'
+import SiteHeader from '../../../components/SiteHeader'
+import usePageTitle from '../../../components/usePageTitle'
 
 const fallbackPrograms: Record<string, any> = {
   cocuk: { title: 'Çocuk', ageGroup: '4–12 yaş', description: 'Oyunla keşfet, sahnede özgürleş.', details: 'Çocukların hayal gücünü, ifade becerisini ve ekip ruhunu oyun yoluyla güçlendiren yaratıcı tiyatro programı.', image: '/demo/training-1.jpg' },
@@ -18,6 +20,10 @@ export default function EducationDetail() {
   const pathname = usePathname()
   const base = pathname.startsWith('/yeni') ? '/yeni' : ''
   const [item, setItem] = useState<any>(fallbackPrograms[id])
+  usePageTitle(item?.title)
+  const [label, setLabel] = useState('Eğitimler')
+  const [contact, setContact] = useState({ phone: '+90 538 496 26 24' })
+  const [whatsappText, setWhatsappText] = useState('Merhaba, {program} hakkında bilgi almak istiyorum.')
 
   useEffect(() => {
     fetch('/api/services').then((response) => response.ok ? response.json() : []).then((items) => {
@@ -25,8 +31,30 @@ export default function EducationDetail() {
       const found = items.find((service: any) => service.id === id) || items.find((service: any) => service.title?.toLocaleLowerCase('tr').includes(id.replaceAll('-', ' ')))
       if (found) setItem(found)
     }).catch(() => undefined)
+    fetch('/api/contact').then(r => r.ok ? r.json() : null).then(data => { if (data?.phone) setContact(data) }).catch(() => undefined)
+    fetch('/api/settings').then(r => r.ok ? r.json() : null).then(data => {
+      if (data?.homepageContent?.educationTitle) setLabel(data.homepageContent.educationTitle)
+      if (data?.homepageContent?.whatsappText) setWhatsappText(data.homepageContent.whatsappText)
+    }).catch(() => undefined)
   }, [id])
 
-  if (!item) return <main className="detail-page"><a href={`${base}/#egitimler`}><ArrowLeft /> Eğitimlere dön</a><h1>Program bulunamadı.</h1></main>
-  return <main className="detail-page"><a href={`${base}/#egitimler`}><ArrowLeft /> Eğitimlere dön</a><div className="detail-layout"><div className="detail-media">{item.image && <Image src={item.image} alt={item.title} fill sizes="50vw" />}</div><article><p className="eyebrow">{item.ageGroup} {item.duration && `• ${item.duration}`}</p><h1>{item.title}</h1><p className="lead">{item.description}</p><div className="rich-copy">{item.details}</div><a className="button acid" href={`${base}/#iletisim`}>Bilgi al <MessageCircle /></a></article></div></main>
+  const waHref = `https://wa.me/${contact.phone.replace(/\D/g, '').replace(/^0/, '90')}?text=${encodeURIComponent(item ? `Merhaba, "${item.title}" programı hakkında bilgi almak istiyorum.` : whatsappText)}`
+
+  if (!item) return <><SiteHeader/><main className="detail-page"><a href={`${base}/egitimler`}><ArrowLeft /> {label}’e dön</a><h1>Program bulunamadı.</h1></main></>
+  return <>
+    <SiteHeader/>
+    <main className="detail-page">
+      <a href={`${base}/egitimler`}><ArrowLeft /> {label}’e dön</a>
+      <div className="detail-layout">
+        <div className="detail-media">{item.image && <Image src={item.image} alt={item.title} fill sizes="50vw" />}</div>
+        <article>
+          <p className="eyebrow">{item.ageGroup} {item.duration && `• ${item.duration}`}</p>
+          <h1>{item.title}</h1>
+          <p className="lead">{item.description}</p>
+          <div className="rich-copy">{item.details}</div>
+          <a className="button acid" href={waHref} target="_blank" rel="noopener noreferrer">Bilgi al <MessageCircle /></a>
+        </article>
+      </div>
+    </main>
+  </>
 }

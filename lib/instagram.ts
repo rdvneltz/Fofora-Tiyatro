@@ -89,6 +89,9 @@ export async function syncInstagramToDB() {
       success: true,
       media: allMedia.map((item, index) => ({
         postUrl: item.permalink,
+        mediaUrl: item.media_url,
+        mediaType: item.media_type,
+        caption: item.caption || null,
         order: index,
         active: true
       }))
