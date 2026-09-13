@@ -39,7 +39,7 @@ export default function NewsDetail() {
       <a href={`${base}/haberler`}><ArrowLeft /> {label}’e dön</a>
       {post.image && <div className="detail-hero"><Image src={post.image} alt={post.title} fill priority sizes="100vw" /></div>}
       <article className="news-detail">
-        <p className="eyebrow">{post.category} • {new Date(post.createdAt).toLocaleDateString('tr-TR')}</p>
+        <p className="eyebrow ink">{post.category} • {new Date(post.createdAt).toLocaleDateString('tr-TR')}</p>
         <h1>{post.title}</h1>
         <p className="lead">{post.excerpt}</p>
         <div className="rich-copy">{post.content}</div>

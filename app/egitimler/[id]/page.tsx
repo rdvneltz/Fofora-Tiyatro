@@ -48,7 +48,7 @@ export default function EducationDetail() {
       <div className="detail-layout">
         <div className="detail-media">{item.image && <Image src={item.image} alt={item.title} fill sizes="50vw" />}</div>
         <article>
-          <p className="eyebrow">{item.ageGroup} {item.duration && `• ${item.duration}`}</p>
+          <p className="eyebrow ink">{item.ageGroup} {item.duration && `• ${item.duration}`}</p>
           <h1>{item.title}</h1>
           <p className="lead">{item.description}</p>
           <div className="rich-copy">{item.details}</div>
