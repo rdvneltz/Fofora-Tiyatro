@@ -122,6 +122,50 @@ export default function AdminGallery() {
   const [bulkUploading, setBulkUploading] = useState(false)
   const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0 })
 
+  // Temporary sample content (so the homepage isn't empty while real photos are being gathered)
+  const [seeding, setSeeding] = useState(false)
+  const seedSampleContent = async () => {
+    if (!confirm('Anasayfada gösterilmek üzere 6 geçici örnek fotoğraf eklenecek. Gerçek fotoğraflarınız hazır olduğunda bu albümü ve içindekileri silip kendi fotoğraflarınızı ekleyebilirsiniz. Devam edilsin mi?')) return
+    setSeeding(true)
+    try {
+      const { data: album } = await axios.post('/api/gallery', {
+        type: 'album',
+        title: 'Bizden Kareler (örnek)',
+        description: 'Geçici örnek fotoğraflar - gerçek kareleriniz hazır olduğunda bu albümü silip kendi fotoğraflarınızı ekleyin.',
+        order: 0,
+        active: true,
+      })
+      const samples: { url: string; title: string; featured: boolean }[] = [
+        { url: '/demo/training-1.jpg', title: 'Prova Sahnesi', featured: true },
+        { url: '/demo/training-2.jpg', title: 'Sahne Arkası', featured: false },
+        { url: '/demo/training-3.jpg', title: 'Eğitmenle Çalışma', featured: false },
+        { url: '/demo/training-4.jpg', title: 'Grup Provası', featured: true },
+        { url: '/demo/training-5.jpg', title: 'Karakter Çalışması', featured: false },
+        { url: '/demo/training-6.jpg', title: 'Sahneye Hazırlık', featured: false },
+      ]
+      for (let i = 0; i < samples.length; i++) {
+        const s = samples[i]
+        const { data: item } = await axios.post('/api/gallery', {
+          type: 'item',
+          albumId: album.id,
+          itemType: 'image',
+          url: s.url,
+          title: s.title,
+          order: i,
+        })
+        if (s.featured) {
+          await axios.put('/api/gallery', { type: 'item', id: item.id, featured: true })
+        }
+      }
+      await fetchAlbums()
+    } catch (error) {
+      console.error('Sample content seed error:', error)
+      alert('Örnek içerik eklenemedi')
+    } finally {
+      setSeeding(false)
+    }
+  }
+
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/admin/login')
@@ -538,6 +582,16 @@ export default function AdminGallery() {
                   >
                     İlk albümünüzü oluşturun
                   </button>
+                  <div className="mt-4 pt-4 border-t border-white/10">
+                    <p className="text-white/30 text-xs mb-2">Anasayfa boş görünmesin diye geçici içerik mi lazım?</p>
+                    <button
+                      onClick={seedSampleContent}
+                      disabled={seeding}
+                      className="text-sm px-4 py-2 bg-white/10 hover:bg-white/20 disabled:opacity-50 rounded-lg text-white/80 transition-colors"
+                    >
+                      {seeding ? 'Ekleniyor...' : 'Örnek İçerik Ekle (geçici)'}
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
