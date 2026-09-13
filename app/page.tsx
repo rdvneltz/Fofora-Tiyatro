@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -58,28 +58,33 @@ export default function Home(){
   const [stageTab,setStageTab]=useState<'plays'|'calendar'>('plays'),[messageOpen,setMessageOpen]=useState(false)
   const [testimonials,setTestimonials]=useState<TestimonialItem[]>([]),[testimonialsOpen,setTestimonialsOpen]=useState(false)
   const [testimonialIndex,setTestimonialIndex]=useState(0)
-  const testimonialClipRef=useRef<HTMLDivElement>(null),testimonialQuoteRef=useRef<HTMLQuoteElement>(null)
+  const testimonialCountRef=useRef(0),testimonialTimerRef=useRef<ReturnType<typeof setTimeout>>()
   const [cardMode,setCardMode]=useState(false)
   useEffect(()=>{fetch('/api/testimonials').then(r=>r.ok?r.json():[]).then(data=>{if(Array.isArray(data))setTestimonials(data)}).catch(()=>undefined)},[])
-  useEffect(()=>{
-    if(testimonials.length===0)return
-    const clip=testimonialClipRef.current,quote=testimonialQuoteRef.current
-    let timer:ReturnType<typeof setTimeout>
-    quote?.style.setProperty('transform','translateY(0)')
-    quote?.style.setProperty('transition','none')
-    const overflow=clip&&quote?Math.max(0,quote.scrollHeight-clip.clientHeight):0
-    if(overflow>4&&quote){
-      const raf=requestAnimationFrame(()=>{
+  useEffect(()=>{testimonialCountRef.current=testimonials.length},[testimonials])
+  // A callback ref (not a useEffect keyed on the index) because AnimatePresence's mode="wait" delays
+  // mounting the next quote until the previous one's exit animation finishes — an effect fired on index
+  // change would often measure a not-yet-mounted node. The callback ref fires exactly when React attaches
+  // the real DOM node, whenever that actually happens, so the scroll setup can never race it.
+  const testimonialQuoteRef=useCallback((quote:HTMLQuoteElement|null)=>{
+    clearTimeout(testimonialTimerRef.current)
+    if(!quote)return
+    const clip=quote.parentElement
+    const advance=()=>{if(testimonialCountRef.current>1)setTestimonialIndex(i=>(i+1)%testimonialCountRef.current)}
+    quote.style.transition='none'
+    quote.style.transform='translateY(0)'
+    const overflow=clip?Math.max(0,quote.scrollHeight-clip.clientHeight):0
+    if(overflow>4){
+      requestAnimationFrame(()=>{
         const duration=Math.min(9000,Math.max(2200,overflow*38))
         quote.style.transition=`transform ${duration}ms linear`
         requestAnimationFrame(()=>quote.style.setProperty('transform',`translateY(-${overflow}px)`))
-        if(testimonials.length>1)timer=setTimeout(()=>setTestimonialIndex(i=>(i+1)%testimonials.length),duration+1500)
+        testimonialTimerRef.current=setTimeout(advance,duration+1500)
       })
-      return()=>{cancelAnimationFrame(raf);clearTimeout(timer)}
+    } else {
+      testimonialTimerRef.current=setTimeout(advance,5000)
     }
-    if(testimonials.length>1)timer=setTimeout(()=>setTestimonialIndex(i=>(i+1)%testimonials.length),5000)
-    return()=>clearTimeout(timer)
-  },[testimonialIndex,testimonials])
+  },[])
   const [reelOpen,setReelOpen]=useState<ReelItem|null>(null)
   const [instagramPosts,setInstagramPosts]=useState<{id:string;mediaUrl:string;mediaType:string;caption?:string|null}[]>([])
   useEffect(()=>{fetch('/api/instagram-posts').then(r=>r.ok?r.json():[]).then(data=>{if(Array.isArray(data))setInstagramPosts(data.filter((p:any)=>p.active&&p.mediaUrl))}).catch(()=>undefined)},[])
@@ -115,7 +120,7 @@ export default function Home(){
   const send=async(e:React.FormEvent<HTMLFormElement>)=>{e.preventDefault();setSending(true);const form=e.currentTarget,res=await fetch('/api/inquiries',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.fromEntries(new FormData(form).entries()))});setSending(false);if(res.ok){form.reset();setSent(true)}}
 
   const contactBlock=<section id="iletisim" className={testimonials.length?'contact-section has-testimonials':'contact-section'}>
-      {testimonials.length>0&&<aside className="contact-frame contact-testimonials"><h3><Quote/> Ne Diyorlar?</h3><div className="testimonial-rotator" onClick={()=>setTestimonialsOpen(true)}><AnimatePresence mode="wait"><motion.figure key={testimonials[testimonialIndex%testimonials.length].id} initial={{opacity:0,y:14}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-14}} transition={{duration:.5}}><Quote className="rotator-quote"/><div className="rotator-clip" ref={testimonialClipRef}><blockquote ref={testimonialQuoteRef}>{testimonials[testimonialIndex%testimonials.length].content}</blockquote></div><figcaption>{testimonials[testimonialIndex%testimonials.length].name}{testimonials[testimonialIndex%testimonials.length].title?` · ${testimonials[testimonialIndex%testimonials.length].title}`:''}</figcaption></motion.figure></AnimatePresence></div>{testimonials.length>1&&<div className="testimonial-dots">{testimonials.map((t,i)=><button key={t.id} className={i===testimonialIndex%testimonials.length?'active':''} onClick={()=>setTestimonialIndex(i)} aria-label={`${i+1}. yorumu göster`}/>)}</div>}<button className="testimonial-more" onClick={()=>setTestimonialsOpen(true)}>Tümünü gör <ArrowRight/></button></aside>}
+      {testimonials.length>0&&<aside className="contact-frame contact-testimonials"><h3><Quote/> Ne Diyorlar?</h3><div className="testimonial-rotator" onClick={()=>setTestimonialsOpen(true)}><AnimatePresence mode="wait"><motion.figure key={testimonials[testimonialIndex%testimonials.length].id} initial={{opacity:0,y:14}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-14}} transition={{duration:.5}}><div className="rotator-clip"><blockquote ref={testimonialQuoteRef}>{testimonials[testimonialIndex%testimonials.length].content}</blockquote></div><figcaption>{testimonials[testimonialIndex%testimonials.length].name}{testimonials[testimonialIndex%testimonials.length].title?` · ${testimonials[testimonialIndex%testimonials.length].title}`:''}</figcaption></motion.figure></AnimatePresence></div>{testimonials.length>1&&<div className="testimonial-dots">{testimonials.map((t,i)=><button key={t.id} className={i===testimonialIndex%testimonials.length?'active':''} onClick={()=>setTestimonialIndex(i)} aria-label={`${i+1}. yorumu göster`}/>)}</div>}<button className="testimonial-more" onClick={()=>setTestimonialsOpen(true)}>Tümünü gör <ArrowRight/></button></aside>}
       <div className="contact-frame contact-write">
         <div className="contact-copy"><p className="eyebrow ink">BİR MERHABA YETER</p><h2>{copy.contactTitle}</h2><p>{copy.contactText}</p><div><a href={`https://wa.me/${contact.phone.replace(/\D/g,'')}`} target="_blank"><MessageCircle/> WhatsApp’tan yaz</a><a href={`mailto:${contact.email}`}><Mail/> {contact.email}</a><span><MapPin/> {contact.address}</span></div></div>
         <form className="contact-teaser" onSubmit={e=>{e.preventDefault();setMessageOpen(true)}} onClick={()=>setMessageOpen(true)}><div className="form-row"><label className="teaser-name">Adınız Soyadınız<input readOnly tabIndex={-1}/></label><label className="teaser-email">E-posta<input readOnly tabIndex={-1}/></label></div><label className="teaser-subject">Konu<select tabIndex={-1} defaultValue=""><option value="">Bir konu seçin</option></select></label><label className="teaser-message">Mesajınız<textarea readOnly tabIndex={-1}/></label></form>
@@ -149,7 +154,7 @@ export default function Home(){
     <section id="oyunlar" className="section dark-section"><div className="stage-tabs"><div><button className={stageTab==='plays'?'active':''} onClick={()=>setStageTab('plays')}>{copy.playsTitle}</button><button className={stageTab==='calendar'?'active':''} onClick={()=>setStageTab('calendar')}>{copy.calendarTitle}</button></div><a href={`${base}/oyunlar`}>Tümünü gör <ArrowRight/></a></div>{stageTab==='plays'?<div className="poster-grid">{(posts.filter(p=>/oyun|etkinlik/i.test(p.category)).slice(0,4).length?posts.filter(p=>/oyun|etkinlik/i.test(p.category)).slice(0,4):samplePosts).map((p,i)=><a className={`poster p-${i}`} key={p.id} href={`${base}/haberler/${p.slug}`} aria-label={`${p.title} detayını aç`}>{p.image&&<Image src={p.image} alt="" fill sizes="30vw"/>}<span>0{i+1}</span><div><small>{p.category}</small><h3>{p.title}</h3><p>{p.excerpt}</p></div></a>)}</div>:<div className="calendar-list">{(calendar.length?calendar.slice(0,4):[['PZT 14','17:30','Çocuk Tiyatro Atölyesi'],['SALI 15','19:30','Yetişkin Oyunculuk'],['CMT 19','20:00','Fiyonk — Oyun'],['PAZ 20','13:00','Genç Grup Provası']]).map((x:any)=><article key={x.id||x[0]}><strong>{x.id?new Date(x.date).toLocaleDateString('tr-TR',{weekday:'short',day:'2-digit'}).toUpperCase():x[0]}</strong><b>{x.startTime||x[1]}</b><span>{x.title||x[2]}</span></article>)}</div>}</section>
     <section id="egitimler" className="section paper-section"><Heading eyebrow="SAHNEYE ÇIK" title={copy.educationTitle} href={`${base}/egitimler`} light/><div className="education-grid">{services.slice(0,5).map((s,i)=><a className="education-card" key={s.id} href={`${base}/egitimler/${s.id}`}><div className={`education-visual e-${i}`}>{s.image&&<Image src={s.image} alt={s.title} fill sizes="20vw"/>}</div><small>{s.ageGroup}{s.duration&&` • ${s.duration}`}</small><h3>{s.title}</h3><p>{s.description}</p></a>)}</div><aside className="slogan-panel"><strong>{copy.sloganTitle}</strong><span>{copy.sloganText}</span></aside></section>
     <section id="neler-yaptik" className="impact-section"><div className="impact-intro"><p className="eyebrow">BİRLİKTE BÜYÜDÜK</p><h2>{impact.title}</h2><p>{impact.intro}</p></div><div className="impact-numbers">{impact.stats.map((s:string[],i:number)=><motion.div key={s[1]} initial={{opacity:0,y:20}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{delay:i*.1}}><strong>{s[0]}</strong><span>{s[1]}</span></motion.div>)}</div><div className="impact-collage"><Image src={impact.image} alt="Fofora geçmişinden" fill sizes="30vw"/><b>2019</b><strong>PERDE<br/>AÇILDI</strong><b>2026</b><p>Sahnede büyüyen<br/>bir topluluk.</p></div></section>
-    <section className="section reel-section"><Heading eyebrow="PERDENİN ARKASI" title={copy.reelsTitle} href={`${base}/neler-yaptik`} light/><div className="reel-track">{socialItems.map((r,i)=><button className={`reel-card r-${i}`} key={r.id} onClick={()=>setReelOpen(r)} aria-label={`${r.title||'Sahne akışı içeriği'} — büyüt`}>{r.url&&(r.type==='video'?<video src={r.url} muted playsInline/>:<Image src={r.thumbnail||r.url} alt={r.title||''} fill sizes="220px"/>)}<span><Play fill="currentColor"/></span><h3>{r.title}</h3></button>)}</div></section>
+    <section className="section reel-section"><Heading eyebrow="PERDENİN ARKASI" title={copy.reelsTitle} href={`${base}/neler-yaptik`} light/><div className="reel-track">{socialItems.map((r,i)=><button className={`reel-card r-${i}`} key={r.id} onClick={()=>setReelOpen(r)} aria-label={`${r.title||'Sahne akışı içeriği'} — büyüt`}>{r.url&&(r.type==='video'?<video src={r.url} muted playsInline/>:<Image src={r.thumbnail||r.url} alt={r.title||''} fill sizes="220px"/>)}<h3>{r.title}</h3></button>)}</div></section>
     <section id="haberler" className="section news-section"><Heading eyebrow="GÜNCEL" title={copy.newsTitle} href={`${base}/haberler`} light/><div className="news-grid">{(posts.slice(0,3).length?posts.slice(0,3):sampleNews).map((p,i)=><article key={p.id}><div className={`news-image n-${i}`}>{p.image&&<Image src={p.image} alt={p.title} fill sizes="33vw"/>}</div><small>{p.category} • {new Date(p.createdAt).toLocaleDateString('tr-TR')}</small><h3>{p.title}</h3><p>{p.excerpt}</p><a href={`${base}/haberler/${p.slug}`}>Devamını oku <ArrowRight/></a></article>)}</div></section>
     {team.length>0&&<section id="ekip" className="section team-section"><Heading eyebrow="BİRLİKTE ÜRETİYORUZ" title={copy.teamTitle} href={`${base}/ekibimiz`}/><div className="team-grid">{team.slice(0,4).map(m=><article key={m.id}><div><Image src={m.image} alt={m.name} fill sizes="25vw"/></div><h3>{m.name}</h3><p>{m.title}</p></article>)}</div></section>}
     {contactBlock}
