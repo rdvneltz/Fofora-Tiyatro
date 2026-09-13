@@ -135,6 +135,32 @@ model SiteSettings {
   appointmentFormSettings Json? // {consultationTypes: string[], showLawyerSelection: boolean, descriptionLabel: string}
   heroVideoRandomPlay Boolean @default(false) // Random video playback order
   heroVideoClickToNext Boolean @default(true) // Click on header to go to next video
+  inquiryEmailEnabled Boolean @default(false)
+  inquiryEmailRecipients String[]
+  impactTitle     String? @default("Neler Yaptık?")
+  impactIntro     String?
+  impactStats     Json?
+  impactImage     String?
+  homepageContent Json?
+  navigation      Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model CalendarEvent {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  type        String   @default("education")
+  date        DateTime
+  startTime   String
+  endTime     String?
+  location    String?
+  description String?
+  image       String?
+  linkType    String?  @default("none")
+  linkValue   String?
+  active      Boolean  @default(true)
+  featured    Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -188,6 +214,15 @@ model HeroVideo {
   // Öne çıkarma özelliği
   featured        Boolean  @default(false) // Öne çıkar
   featuredWeight  Int      @default(3) // Öne çıkarma ağırlığı (her X videoda 1 kez)
+  actionType      String?  @default("none") // none, whatsapp, message, section, internal, external
+  actionValue     String?
+  actionLabel     String?
+  secondaryActionType  String?
+  secondaryActionValue String?
+  secondaryActionLabel String?
+  mobileFileName  String?
+  startsAt        DateTime?
+  endsAt          DateTime?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
@@ -241,6 +276,7 @@ model Inquiry {
   status          String   @default("new") // new, read, replied, archived
   adminNotes      String?  // Admin notları
   repliedAt       DateTime? // Ne zaman yanıtlandı
+  emailNotificationSent Boolean @default(false)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }

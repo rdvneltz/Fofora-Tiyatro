@@ -36,6 +36,9 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
+    const allowedTypes = ['image/jpeg','image/png','image/webp','image/gif','video/mp4','video/webm','video/quicktime']
+    if (!allowedTypes.includes(contentType)) return NextResponse.json({ error: 'Desteklenmeyen dosya türü' }, { status: 400 })
+    const safeFolder = typeof folder === 'string' && ['uploads','images','videos','gallery'].includes(folder) ? folder : undefined
 
     const r2Client = getR2Client()
     const bucketName = process.env.R2_BUCKET_NAME
@@ -46,8 +49,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Determine folder based on content type or explicit folder parameter
-    let folderName = folder || 'uploads'
-    if (!folder) {
+    let folderName = safeFolder || 'uploads'
+    if (!safeFolder) {
       if (contentType.startsWith('video/')) {
         folderName = 'videos'
       } else if (contentType.startsWith('image/')) {
@@ -57,7 +60,7 @@ export async function POST(request: NextRequest) {
 
     // Generate unique key
     const timestamp = Date.now()
-    const sanitizedFileName = fileName.replace(/\s/g, '-')
+    const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9._-]/g, '-').replace(/\.{2,}/g, '.')
     const key = `${folderName}/${timestamp}-${sanitizedFileName}`
 
     // Create presigned URL for upload

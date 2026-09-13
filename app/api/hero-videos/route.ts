@@ -32,7 +32,9 @@ export async function POST(request: NextRequest) {
       playDuration,
       playCount = 1,
       featured = false,
-      featuredWeight = 3
+      featuredWeight = 3,
+      actionType, actionValue, actionLabel, secondaryActionType,
+      secondaryActionValue, secondaryActionLabel, mobileFileName, startsAt, endsAt
     } = body
 
     const video = await prisma.heroVideo.create({
@@ -47,7 +49,11 @@ export async function POST(request: NextRequest) {
         playDuration,
         playCount,
         featured,
-        featuredWeight
+        featuredWeight,
+        actionType, actionValue, actionLabel, secondaryActionType,
+        secondaryActionValue, secondaryActionLabel, mobileFileName,
+        startsAt: startsAt ? new Date(startsAt) : null,
+        endsAt: endsAt ? new Date(endsAt) : null
       }
     })
 
@@ -74,7 +80,9 @@ export async function PUT(request: NextRequest) {
       playDuration,
       playCount,
       featured,
-      featuredWeight
+      featuredWeight,
+      actionType, actionValue, actionLabel, secondaryActionType,
+      secondaryActionValue, secondaryActionLabel, mobileFileName, startsAt, endsAt
     } = body
 
     const updateData: any = {}
@@ -89,6 +97,15 @@ export async function PUT(request: NextRequest) {
     if (playCount !== undefined) updateData.playCount = playCount
     if (featured !== undefined) updateData.featured = featured
     if (featuredWeight !== undefined) updateData.featuredWeight = featuredWeight
+    if (actionType !== undefined) updateData.actionType = actionType
+    if (actionValue !== undefined) updateData.actionValue = actionValue
+    if (actionLabel !== undefined) updateData.actionLabel = actionLabel
+    if (secondaryActionType !== undefined) updateData.secondaryActionType = secondaryActionType
+    if (secondaryActionValue !== undefined) updateData.secondaryActionValue = secondaryActionValue
+    if (secondaryActionLabel !== undefined) updateData.secondaryActionLabel = secondaryActionLabel
+    if (mobileFileName !== undefined) updateData.mobileFileName = mobileFileName
+    if (startsAt !== undefined) updateData.startsAt = startsAt ? new Date(startsAt) : null
+    if (endsAt !== undefined) updateData.endsAt = endsAt ? new Date(endsAt) : null
 
     // If fileName is changing, delete the old file from R2
     if (fileName !== undefined) {

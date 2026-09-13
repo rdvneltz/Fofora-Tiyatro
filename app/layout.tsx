@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import Providers from "@/components/Providers";
 import ThemeProvider from "@/components/ThemeProvider";
+import PWARegister from "@/components/PWARegister";
 
 const gotham = localFont({
   src: [
@@ -32,11 +33,13 @@ const gotham = localFont({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://foforatiyatro.com"),
-  title: "Fofora Tiyatro | Sahnenin Büyüsüyle Kendini Yeniden Keşfet",
-  description: "Fofora Tiyatro - İstanbul Üsküdar merkezli tiyatro eğitimi, drama atölyeleri ve oyunculuk kursları. 4 yaşından yetişkinlere kadar tiyatro eğitimi.",
+  title: "Fofora Tiyatro | Sahne Senin",
+  description: "Üsküdar’da çocuk, genç ve yetişkinler için tiyatro eğitimleri; Fofora oyunları, öğrenci gösterileri ve sahneden haberler.",
   keywords: ["tiyatro", "drama", "oyunculuk", "tiyatro eğitimi", "drama atölyesi", "çocuk tiyatrosu", "İstanbul", "Üsküdar", "sahne sanatları", "fofora tiyatro"],
   authors: [{ name: "Fofora Tiyatro" }],
   robots: "index, follow",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: { capable: true, title: "Fofora Yönetim", statusBarStyle: "black-translucent" },
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },
@@ -49,18 +52,18 @@ export const metadata: Metadata = {
     locale: "tr_TR",
     url: "https://foforatiyatro.com",
     siteName: "Fofora Tiyatro",
-    title: "Fofora Tiyatro | Sahnenin Büyüsüyle Kendini Yeniden Keşfet",
-    description: "İstanbul Üsküdar merkezli tiyatro eğitimi, drama atölyeleri ve oyunculuk kursları. 4 yaşından yetişkinlere kadar tiyatro eğitimi.",
+    title: "Fofora Tiyatro | Sahne Senin",
+    description: "Tiyatro eğitimleri, oyunlar, öğrenci gösterileri ve sahneden haberler.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Fofora Tiyatro | Sahnenin Büyüsüyle Kendini Yeniden Keşfet",
-    description: "İstanbul Üsküdar merkezli tiyatro eğitimi, drama atölyeleri ve oyunculuk kursları.",
+    title: "Fofora Tiyatro | Sahne Senin",
+    description: "Tiyatro eğitimleri, oyunlar, öğrenci gösterileri ve sahneden haberler.",
   },
 };
 
 export const viewport = {
-  themeColor: "#1e3a5f",
+  themeColor: "#681d2a",
   width: "device-width",
   initialScale: 1,
 };
@@ -73,6 +76,7 @@ export default function RootLayout({
   return (
     <html lang="tr">
       <body className={`${gotham.variable} font-gotham antialiased`}>
+        <PWARegister />
         <ThemeProvider />
         <Providers>
           {children}

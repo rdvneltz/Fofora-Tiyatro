@@ -8,7 +8,11 @@ export async function GET() {
     const settings = await prisma.siteSettings.findFirst({
       orderBy: { updatedAt: 'desc' }
     })
-    const response = NextResponse.json(settings)
+    const session = await getServerSession(authOptions)
+    const publicSettings = settings && !session
+      ? (({ inquiryEmailRecipients, ...safe }) => safe)(settings)
+      : settings
+    const response = NextResponse.json(publicSettings)
     response.headers.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=300')
     return response
   } catch (error) {
