@@ -30,22 +30,6 @@ export async function POST() {
       }
     }
 
-    // 2. HeroSection - backgroundImage, videoUrl, logo
-    const heroSections = await prisma.heroSection.findMany()
-    for (const hero of heroSections) {
-      const data: any = {}
-      const newBg = replaceR2Url(hero.backgroundImage)
-      const newVideo = replaceR2Url(hero.videoUrl)
-      const newLogo = replaceR2Url(hero.logo)
-      if (newBg !== hero.backgroundImage) data.backgroundImage = newBg
-      if (newVideo !== hero.videoUrl) data.videoUrl = newVideo
-      if (newLogo !== hero.logo) data.logo = newLogo
-      if (Object.keys(data).length > 0) {
-        await prisma.heroSection.update({ where: { id: hero.id }, data })
-        results.push(`HeroSection ${hero.id}: updated`)
-      }
-    }
-
     // 3. Service - image
     const services = await prisma.service.findMany()
     for (const svc of services) {
