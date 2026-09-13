@@ -33,6 +33,7 @@ interface Inquiry {
   adminNotes?: string
   repliedAt?: string
   createdAt: string
+  emailNotificationSent?: boolean
 }
 
 export default function InboxPage() {
@@ -310,6 +311,12 @@ export default function InboxPage() {
                         <Clock className="w-4 h-4 text-white/40" />
                         <span className="text-white/60 text-sm">
                           {new Date(selectedInquiry.createdAt).toLocaleString('tr-TR')}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Mail className={`w-4 h-4 ${selectedInquiry.emailNotificationSent ? 'text-green-400' : 'text-white/30'}`} />
+                        <span className={`text-sm ${selectedInquiry.emailNotificationSent ? 'text-green-400' : 'text-white/40'}`}>
+                          {selectedInquiry.emailNotificationSent ? 'E-posta bildirimi gönderildi' : 'E-posta bildirimi gönderilmedi (Site Ayarları\'nda kapalı olabilir veya RESEND_API_KEY tanımlı değil)'}
                         </span>
                       </div>
                     </div>

@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowRight, ChevronLeft, ChevronRight, Instagram, Mail, MapPin, MessageCircle, Pause, Play, Quote, Sparkles, Star, X } from 'lucide-react'
+import { useSession } from 'next-auth/react'
 import SiteHeader from '../components/SiteHeader'
 
 type Slide = { id:string; fileName:string; title?:string|null; subtitle?:string|null; description?:string|null; actionType?:string|null; actionValue?:string|null; actionLabel?:string|null; secondaryActionType?:string|null; secondaryActionValue?:string|null; secondaryActionLabel?:string|null; playDuration?:number|null; playCount?:number|null; featured?:boolean; featuredWeight?:number|null; useCustomContent?:boolean; startsAt?:string|null; endsAt?:string|null; active:boolean; order:number }
@@ -65,6 +66,8 @@ export default function Home(){
   const [testimonialIndex,setTestimonialIndex]=useState(0)
   const testimonialCountRef=useRef(0),testimonialTimerRef=useRef<ReturnType<typeof setTimeout>>()
   const [cardMode,setCardMode]=useState(false)
+  const {status:authStatus}=useSession()
+  const isAdminPreview=cardMode&&authStatus==='authenticated'
   useEffect(()=>{fetch('/api/testimonials').then(r=>r.ok?r.json():[]).then(data=>{if(Array.isArray(data))setTestimonials(data)}).catch(()=>undefined)},[])
   useEffect(()=>{testimonialCountRef.current=testimonials.length},[testimonials])
   // A callback ref (not a useEffect keyed on the index) because AnimatePresence's mode="wait" delays
@@ -168,8 +171,8 @@ export default function Home(){
   const legalModal=legalOpen&&<div className="reel-modal" role="dialog" aria-modal="true" aria-label={legalOpen.title} onClick={()=>setLegalOpen(null)}><button className="modal-close" onClick={()=>setLegalOpen(null)} aria-label="Kapat"><X/></button><div className="reel-modal-inner legal-modal-inner" onClick={e=>e.stopPropagation()}><h3>{legalOpen.title}</h3><p style={{whiteSpace:'pre-wrap'}}>{legalOpen.content}</p></div></div>
   const messageModal=messageOpen&&<div className="message-modal" role="dialog" aria-modal="true" aria-label="Fofora’ya mesaj gönder"><button className="modal-close" onClick={()=>setMessageOpen(false)} aria-label="Kapat"><X/></button><div><p className="eyebrow ink">BİR MERHABA YETER</p><h2>Bize Yazın.</h2><p>Mesajınız doğrudan ekibimizin gelen kutusuna ulaşır.</p></div><form onSubmit={async e=>{await send(e);setMessageOpen(false)}}><div className="form-row"><label>Adınız Soyadınız<input name="name" required autoFocus/></label><label>Telefon<input name="phone" required/></label></div><label>E-posta<input name="email" type="email"/></label><label>Konu<select name="subject" required defaultValue=""><option value="" disabled>Bir konu seçin</option><option>Eğitimler</option><option>Oyunlar ve bilet</option><option>Okul / kurum iş birliği</option><option>Basın ve iletişim</option><option>Diğer</option></select></label><label>Mesajınız<textarea name="message" rows={6} required/></label><button className="button form-button" disabled={sending}>{sending?'Gönderiliyor…':'Mesajı gönder'} <ArrowRight/></button></form></div>
 
-  if(cardMode) return <>
-    <SiteHeader variant="solid"/>
+  if(cardMode&&!isAdminPreview) return <>
+    <SiteHeader variant="solid" minimal/>
     <main className="card-page">
       <div className="card-intro"><p className="eyebrow ink">FOFORA TİYATRO</p><h1>{copy.sloganTitle}</h1><p>{copy.sloganText}</p></div>
       {contactBlock}
@@ -181,6 +184,7 @@ export default function Home(){
   </>
 
   return <main className="site-shell">
+    {isAdminPreview&&<div className="admin-preview-banner">Kartvizit modu aktif — bu tam görünümü sadece giriş yapmış admin olarak siz görüyorsunuz. Ziyaretçiler sadece kartvizit ekranını görür.</div>}
     <SiteHeader variant="overlay"/>
     <section id="hero" className="hero-stage"><AnimatePresence mode="wait"><motion.div key={current.id} className="hero-media" initial={{opacity:0,scale:1.04}} animate={{opacity:1,scale:1}} exit={{opacity:0}}>{media?(video?<video src={media} autoPlay muted playsInline loop/>:<Image src={media} alt="" fill priority sizes="100vw"/>):<div className={`hero-placeholder h-${index%2}`}/>}</motion.div></AnimatePresence><div className="hero-scrim"/><AnimatePresence mode="wait"><motion.div key={'c'+current.id} className="hero-copy" initial={{opacity:0,y:30}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-20}} onClick={()=>go(current.actionType,current.actionValue)}><p className="eyebrow">{current.subtitle}</p><h1>{current.title?.split('\n').map(x=><span key={x}>{x}</span>)}</h1><p>{current.description}</p><div className="hero-actions" onClick={e=>e.stopPropagation()}><button className="button acid" onClick={()=>go(current.actionType,current.actionValue)}>{current.actionLabel||'Keşfet'} <ArrowRight/></button>{current.secondaryActionLabel&&<button className="button outline" onClick={()=>go(current.secondaryActionType,current.secondaryActionValue)}>{current.secondaryActionLabel} <ArrowRight/></button>}</div></motion.div></AnimatePresence>
       <div className="hero-controls"><button onClick={()=>setIndex(i=>(i-1+slides.length)%slides.length)}><ChevronLeft/></button><span>{String(index+1).padStart(2,'0')} / {String(slides.length).padStart(2,'0')}</span><button onClick={()=>setIndex(i=>(i+1)%slides.length)}><ChevronRight/></button><button onClick={()=>setPaused(!paused)}>{paused?<Play/>:<Pause/>}</button></div>
