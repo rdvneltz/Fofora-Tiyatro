@@ -246,7 +246,7 @@ Velilerimiz ve seyircilerimizin yoğun ilgisiyle karşılanan oyun, tüm ekibimi
   console.log('Seed tamamlandı! Fofora Tiyatro veritabanı hazır.')
   console.log('Admin bilgileri:')
   console.log('Email: admin@foforatiyatro.com')
-  console.log('Şifre: admin123')
+  console.log('Şifre: ADMIN_DEFAULT_PASSWORD ortam değişkeninde tanımladığınız şifre')
 }
 
 main()
