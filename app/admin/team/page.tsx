@@ -51,7 +51,7 @@ export default function TeamPage() {
 
   const fetchTeam = async () => {
     try {
-      const { data } = await axios.get('/api/team')
+      const { data } = await axios.get('/api/team?admin=true')
       setTeam(data)
     } catch (error) {
       console.error('Ekip yüklenemedi', error)

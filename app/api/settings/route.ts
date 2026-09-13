@@ -38,6 +38,23 @@ export async function PUT(request: NextRequest) {
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     const body = await request.json()
     const { id, ...data } = body
+
+    if (data.logo !== undefined || data.favicon !== undefined || data.impactImage !== undefined) {
+      const existing = await prisma.siteSettings.findUnique({ where: { id } })
+      if (existing) {
+        const { safeDeleteR2Url } = await import('@/lib/r2')
+        if (data.logo !== undefined && existing.logo && existing.logo !== data.logo) {
+          await safeDeleteR2Url(existing.logo)
+        }
+        if (data.favicon !== undefined && existing.favicon && existing.favicon !== data.favicon) {
+          await safeDeleteR2Url(existing.favicon)
+        }
+        if (data.impactImage !== undefined && existing.impactImage && existing.impactImage !== data.impactImage) {
+          await safeDeleteR2Url(existing.impactImage)
+        }
+      }
+    }
+
     const settings = await prisma.siteSettings.update({ where: { id }, data })
     return NextResponse.json(settings)
   } catch (error) {
@@ -62,6 +79,20 @@ export async function PATCH(request: NextRequest) {
         data: body
       })
     } else {
+      // Check if logo/favicon/impactImage changed - delete old files from R2
+      if (body.logo !== undefined || body.favicon !== undefined || body.impactImage !== undefined) {
+        const { safeDeleteR2Url } = await import('@/lib/r2')
+        if (body.logo !== undefined && settings.logo && settings.logo !== body.logo) {
+          await safeDeleteR2Url(settings.logo)
+        }
+        if (body.favicon !== undefined && settings.favicon && settings.favicon !== body.favicon) {
+          await safeDeleteR2Url(settings.favicon)
+        }
+        if (body.impactImage !== undefined && settings.impactImage && settings.impactImage !== body.impactImage) {
+          await safeDeleteR2Url(settings.impactImage)
+        }
+      }
+
       // Update existing settings
       settings = await prisma.siteSettings.update({
         where: { id: settings.id },

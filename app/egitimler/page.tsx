@@ -3,11 +3,21 @@
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Sparkles, type LucideIcon } from 'lucide-react'
+import * as LucideIcons from 'lucide-react'
 import SiteHeader from '../../components/SiteHeader'
 import usePageTitle from '../../components/usePageTitle'
 
-type Service = { id: string; title: string; description: string; image?: string; ageGroup?: string; duration?: string }
+type Service = { id: string; title: string; description: string; icon?: string; image?: string; ageGroup?: string; duration?: string }
+
+// Programın "icon" alanı bir lucide-react ikon adı (örn. "Scale") ya da bir emoji olabilir.
+function ServiceIcon({ icon }: { icon?: string }) {
+  if (!icon) return null
+  const isEmoji = /\p{Extended_Pictographic}/u.test(icon)
+  if (isEmoji) return <span className="listing-icon" aria-hidden>{icon}</span>
+  const Icon = (LucideIcons as unknown as Record<string, LucideIcon>)[icon] || Sparkles
+  return <Icon className="listing-icon" aria-hidden />
+}
 
 const fallbackServices: Service[] = [
   { id: 'cocuk', title: 'Çocuk', description: 'Oyunla keşfet, sahnede özgürleş.', ageGroup: '4–12 yaş', image: '/demo/training-1.jpg' },
@@ -41,7 +51,7 @@ export default function EgitimlerListing() {
           <a key={s.id} className="listing-card" href={`${base}/egitimler/${s.id}`}>
             <div className="listing-media">{s.image && <Image src={s.image} alt={s.title} fill sizes="(max-width:700px) 100vw, 33vw" />}</div>
             <small>{s.ageGroup}{s.duration && ` • ${s.duration}`}</small>
-            <h3>{s.title}</h3>
+            <h3><ServiceIcon icon={s.icon} /> {s.title}</h3>
             <p>{s.description}</p>
           </a>
         ))}

@@ -52,7 +52,7 @@ export default function ServicesPage() {
 
   const fetchServices = async () => {
     try {
-      const { data } = await axios.get('/api/services')
+      const { data } = await axios.get('/api/services?admin=true')
       setServices(data)
     } catch (error) {
       console.error('Programlar yüklenemedi', error)

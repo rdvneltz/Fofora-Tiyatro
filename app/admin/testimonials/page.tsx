@@ -53,7 +53,7 @@ export default function TestimonialsPage() {
 
   const fetchTestimonials = async () => {
     try {
-      const { data } = await axios.get('/api/testimonials')
+      const { data } = await axios.get('/api/testimonials?admin=true')
       setTestimonials(data)
     } catch (error) {
       console.error('Yorumlar yüklenemedi', error)

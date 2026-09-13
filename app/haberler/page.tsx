@@ -7,7 +7,7 @@ import { ArrowLeft } from 'lucide-react'
 import SiteHeader from '../../components/SiteHeader'
 import usePageTitle from '../../components/usePageTitle'
 
-type Post = { id: string; title: string; slug: string; excerpt: string; image?: string; category: string; createdAt: string }
+type Post = { id: string; title: string; slug: string; excerpt: string; image?: string; category: string; createdAt: string; tags?: string[] }
 
 const sampleNews: Post[] = [
   { id: 'n1', title: 'Öğrencilerimizden Yeni Gösteri', slug: 'ogrenci-gosterisi', excerpt: 'Provalardan sahneye uzanan heyecanlı yolculuk.', category: 'Sahneden', createdAt: '2026-03-12', image: '/demo/story-4.jpg' },
@@ -43,6 +43,27 @@ export default function HaberlerListing() {
             <small>{p.category} • {new Date(p.createdAt).toLocaleDateString('tr-TR')}</small>
             <h3>{p.title}</h3>
             <p>{p.excerpt}</p>
+            {Array.isArray(p.tags) && p.tags.length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+                {p.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    style={{
+                      fontSize: '.62rem',
+                      textTransform: 'uppercase',
+                      letterSpacing: '.04em',
+                      fontWeight: 700,
+                      padding: '3px 10px',
+                      borderRadius: 999,
+                      border: '1px solid #c9c3b7',
+                      color: 'var(--wine)',
+                    }}
+                  >
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            )}
           </a>
         ))}
       </div>

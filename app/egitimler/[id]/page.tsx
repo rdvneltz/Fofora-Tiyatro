@@ -3,9 +3,19 @@
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { useParams, usePathname } from 'next/navigation'
-import { ArrowLeft, MessageCircle } from 'lucide-react'
+import { ArrowLeft, MessageCircle, Sparkles, type LucideIcon } from 'lucide-react'
+import * as LucideIcons from 'lucide-react'
 import SiteHeader from '../../../components/SiteHeader'
 import usePageTitle from '../../../components/usePageTitle'
+
+// Programın "icon" alanı bir lucide-react ikon adı (örn. "Scale") ya da bir emoji olabilir.
+function ServiceIcon({ icon }: { icon?: string }) {
+  if (!icon) return null
+  const isEmoji = /\p{Extended_Pictographic}/u.test(icon)
+  if (isEmoji) return <span className="detail-icon" aria-hidden>{icon}</span>
+  const Icon = (LucideIcons as unknown as Record<string, LucideIcon>)[icon] || Sparkles
+  return <Icon className="detail-icon" aria-hidden />
+}
 
 const fallbackPrograms: Record<string, any> = {
   cocuk: { title: 'Çocuk', ageGroup: '4–12 yaş', description: 'Oyunla keşfet, sahnede özgürleş.', details: 'Çocukların hayal gücünü, ifade becerisini ve ekip ruhunu oyun yoluyla güçlendiren yaratıcı tiyatro programı.', image: '/demo/training-1.jpg' },
@@ -48,8 +58,8 @@ export default function EducationDetail() {
       <div className="detail-layout">
         <div className="detail-media">{item.image && <Image src={item.image} alt={item.title} fill sizes="50vw" />}</div>
         <article>
-          <p className="eyebrow">{item.ageGroup} {item.duration && `• ${item.duration}`}</p>
-          <h1>{item.title}</h1>
+          <p className="eyebrow ink">{item.ageGroup} {item.duration && `• ${item.duration}`}</p>
+          <h1><ServiceIcon icon={item.icon} /> {item.title}</h1>
           <p className="lead">{item.description}</p>
           <div className="rich-copy">{item.details}</div>
           <a className="button acid" href={waHref} target="_blank" rel="noopener noreferrer">Bilgi al <MessageCircle /></a>

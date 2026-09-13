@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Instagram, Menu, X } from 'lucide-react'
 
-const defaultLabels = { playsTitle: 'Oyunlar', educationTitle: 'Eğitimler', impactTitle: 'Neler Yaptık?', newsTitle: 'Bizden Haberler', teamTitle: 'Ekibimiz' }
+const defaultLabels = { playsTitle: 'Oyunlar', educationTitle: 'Eğitimler', impactTitle: 'Neler Yaptık?', reelsTitle: 'Bizden Kareler', newsTitle: 'Bizden Haberler', teamTitle: 'Ekibimiz' }
 
 export default function SiteHeader({ variant = 'solid' }: { variant?: 'solid' | 'overlay' }) {
   const pathname = usePathname()
@@ -22,6 +22,7 @@ export default function SiteHeader({ variant = 'solid' }: { variant?: 'solid' | 
         playsTitle: data.homepageContent?.playsTitle || l.playsTitle,
         educationTitle: data.homepageContent?.educationTitle || l.educationTitle,
         impactTitle: data.impactTitle || l.impactTitle,
+        reelsTitle: data.homepageContent?.reelsTitle || l.reelsTitle,
         newsTitle: data.homepageContent?.newsTitle || l.newsTitle,
         teamTitle: data.homepageContent?.teamTitle || l.teamTitle,
       }))
@@ -32,6 +33,7 @@ export default function SiteHeader({ variant = 'solid' }: { variant?: 'solid' | 
     [labels.playsTitle, '/oyunlar'],
     [labels.educationTitle, '/egitimler'],
     [labels.impactTitle, '/neler-yaptik'],
+    [labels.reelsTitle, '/bizden-kareler'],
     ['Hakkımızda', '/hakkimizda'],
     [labels.newsTitle, '/haberler'],
     [labels.teamTitle, '/ekibimiz'],

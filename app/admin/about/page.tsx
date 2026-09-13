@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import axios from 'axios'
+import ImageUploader from '@/components/ImageUploader'
 
 interface AboutSection {
   id: string
@@ -46,7 +47,7 @@ export default function AboutPage() {
 
   const fetchAbout = async () => {
     try {
-      const { data } = await axios.get('/api/about')
+      const { data } = await axios.get('/api/about?admin=true')
       if (data) {
         setAbout(data)
         setFormData({
@@ -128,6 +129,15 @@ export default function AboutPage() {
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white"
                 required
+              />
+            </div>
+
+            <div>
+              <ImageUploader
+                currentUrl={formData.image}
+                onUrlChange={(url) => setFormData({ ...formData, image: url })}
+                label="Hakkımızda Fotoğrafı"
+                folder="images/about"
               />
             </div>
 

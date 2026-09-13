@@ -251,15 +251,24 @@ export default function InboxPage() {
           </div>
         </div>
 
-        {/* Sağ Panel - Detay (Desktop only) */}
-        <div className="hidden md:flex flex-1 flex-col">
+        {/* Sağ Panel - Detay (mobile: full-screen overlay when a message is selected, desktop: side panel) */}
+        <div className={`${selectedInquiry ? 'fixed inset-0 z-40 flex bg-gradient-to-br from-navy-900 to-navy-800' : 'hidden'} md:static md:z-auto md:bg-none md:flex flex-1 flex-col`}>
           {selectedInquiry ? (
             <>
               {/* Detay Header */}
               <div className="p-6 border-b border-white/10 flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-bold text-white">{selectedInquiry.name}</h2>
-                  <p className="text-gold-400">{selectedInquiry.subject}</p>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setSelectedInquiry(null)}
+                    className="md:hidden p-2 -ml-2 rounded-lg text-white/70 hover:bg-white/10 transition-all"
+                    aria-label="Listeye dön"
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                  </button>
+                  <div>
+                    <h2 className="text-xl font-bold text-white">{selectedInquiry.name}</h2>
+                    <p className="text-gold-400">{selectedInquiry.subject}</p>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   {getStatusBadge(selectedInquiry.status)}
