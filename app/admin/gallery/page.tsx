@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowLeft, Plus, Trash2, Edit3, Save, X, Image as ImageIcon, Film, Youtube,
-  ChevronUp, ChevronDown, Eye, EyeOff, Folder, Upload, AlertTriangle, ExternalLink, Copy
+  ChevronUp, ChevronDown, Eye, EyeOff, Folder, Upload, AlertTriangle, ExternalLink, Copy, Star
 } from 'lucide-react'
 import Link from 'next/link'
 import axios from 'axios'
@@ -22,6 +22,7 @@ interface GalleryItem {
   description?: string
   order: number
   active: boolean
+  featured: boolean
 }
 
 interface GalleryAlbum {
@@ -321,6 +322,19 @@ export default function AdminGallery() {
     }
   }
 
+  const toggleItemFeatured = async (item: GalleryItem) => {
+    try {
+      await axios.put('/api/gallery', {
+        type: 'item',
+        id: item.id,
+        featured: !item.featured,
+      })
+      fetchAlbums()
+    } catch (error) {
+      console.error('Item featured toggle error:', error)
+    }
+  }
+
   const moveItem = async (index: number, direction: number) => {
     if (!selectedAlbum) return
     const items = selectedAlbum.items.sort((a, b) => a.order - b.order)
@@ -597,6 +611,11 @@ export default function AdminGallery() {
                       >
                         {/* Thumbnail */}
                         <GalleryItemThumb item={item} />
+                        {item.featured && (
+                          <span className="absolute top-2 left-2 z-10 flex items-center gap-1 px-2 py-0.5 bg-gold-500/90 text-navy-900 text-[10px] font-bold rounded-full">
+                            <Star className="w-2.5 h-2.5" fill="currentColor" /> Öne çıkan
+                          </span>
+                        )}
 
                         {/* Info */}
                         <div className="p-3 bg-white/5">
@@ -609,6 +628,13 @@ export default function AdminGallery() {
 
                         {/* Hover Controls */}
                         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => toggleItemFeatured(item)}
+                            className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
+                            title={item.featured ? 'Öne çıkanlardan kaldır' : 'Ana sayfada öne çıkar'}
+                          >
+                            <Star className={`w-4 h-4 ${item.featured ? 'text-gold-400' : 'text-gray-300'}`} fill={item.featured ? 'currentColor' : 'none'} />
+                          </button>
                           <button
                             onClick={() => toggleItemActive(item)}
                             className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"

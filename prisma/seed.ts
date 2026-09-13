@@ -156,6 +156,29 @@ async function main() {
   })
   }
 
+  // Galeri - sadece albüm yoksa ekle (ana sayfadaki Bizden Kareler bölümünün öne çıkan içeriği buradan gelir)
+  const galleryAlbumCount = await prisma.galleryAlbum.count()
+  if (galleryAlbumCount === 0) {
+    await prisma.galleryAlbum.create({
+      data: {
+        title: 'Prova ve Sahne Anları',
+        description: 'Atölyelerden ve gösterilerden kareler.',
+        order: 0,
+        active: true,
+        items: {
+          create: [
+            { type: 'image', url: '/demo/training-1.jpg', title: 'Prova günü', description: 'Çocuk Drama Atölyesi öğrencileri sahne öncesi son provada.', order: 0, active: true, featured: true },
+            { type: 'image', url: '/demo/training-2.jpg', title: 'Bu ekip başka', description: 'Genç Tiyatro Atölyesi ekibinden bir kare.', order: 1, active: true, featured: true },
+            { type: 'image', url: '/demo/training-3.jpg', title: 'Karaktere doğru', description: 'Karakter çalışması sırasında doğaçlama anı.', order: 2, active: true, featured: true },
+            { type: 'image', url: '/demo/training-4.jpg', title: 'Tiyatro iyi gelir', description: 'Yetişkin Oyunculuk Atölyesi’nden bir prova anı.', order: 3, active: true, featured: true },
+            { type: 'image', url: '/demo/training-5.jpg', title: 'Perde arkası', description: 'Sahne arkasında son hazırlıklar.', order: 4, active: true, featured: true },
+            { type: 'image', url: '/demo/training-6.jpg', title: 'Alkış zamanı', description: 'Gösteri sonrası alkışlar.', order: 5, active: true, featured: true },
+          ],
+        },
+      },
+    })
+  }
+
   // Örnek blog yazıları - slug'a göre upsert
   await prisma.blogPost.upsert({
     where: { slug: 'tiyatro-egitimi-neden-onemli' },

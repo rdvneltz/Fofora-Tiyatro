@@ -213,6 +213,7 @@ model GalleryItem {
   description String?
   order       Int      @default(0)
   active      Boolean  @default(true)
+  featured    Boolean  @default(false) // Ana sayfadaki Bizden Kareler bölümünde öne çıkar
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }

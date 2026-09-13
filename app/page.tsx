@@ -11,7 +11,7 @@ type Slide = { id:string; fileName:string; title?:string|null; subtitle?:string|
 type Service = { id:string; title:string; description:string; image?:string; ageGroup?:string; duration?:string }
 type Post = { id:string; title:string; slug:string; excerpt:string; image?:string; category:string; createdAt:string }
 type Team = { id:string; name:string; title:string; image:string }
-type Album = { id:string; active:boolean; items:{ id:string; type:string; url:string; thumbnail?:string; title?:string; description?:string; active:boolean }[] }
+type Album = { id:string; active:boolean; items:{ id:string; type:string; url:string; thumbnail?:string; title?:string; description?:string; active:boolean; featured:boolean }[] }
 type ReelItem = { id:string; type:string; url:string; thumbnail?:string; title?:string; description?:string }
 type CalendarItem = { id:string; title:string; type:string; date:string; startTime:string }
 type TestimonialItem = { id:string; name:string; title:string; content:string; rating:number }
@@ -47,12 +47,13 @@ const fallbackTeam:Team[]=[
 const defaultStats=[['12','Oyun'],['350+','Öğrenci'],['28','Öğrenci gösterisi'],['6','Yıllık yolculuk']]
 const defaultContent={nowTitle:'Şu Anda Fofora’da',nowItems:[['SIRADAKİ OYUN','Yeni sezon hazırlıkları başladı'],['KAYITLAR','Çocuk, genç ve yetişkin grupları'],['BİZDEN HABERLER','Sahnede büyüyen bir topluluk']],playsTitle:'Yaklaşan Oyunlar',calendarTitle:'Takvim',educationTitle:'Eğitimler',reelsTitle:'Bizden Kareler',newsTitle:'Bizden Haberler',teamTitle:'Ekibimiz',contactTitle:'Bize Yazın.',contactText:'Soru, fikir, iş birliği ya da eğitim bilgisi… Mesajınız doğrudan ekibimizin gelen kutusuna ulaşsın.',sloganTitle:'“Herkesin anlatacak bir hikâyesi var.”',sloganText:'Fofora Tiyatro Üsküdar’da, hayatın tam içinde.',footerTagline:'Üsküdar’da daha fazla sahne, daha fazla insan için.',whatsappText:'Merhaba, Fofora Tiyatro hakkında bilgi almak istiyorum.'}
 const path=(s:Slide)=>!s.fileName?'':s.fileName.startsWith('/')?s.fileName:s.fileName.startsWith('http')?s.fileName.replace(/https?:\/\/pub-[a-z0-9]+\.r2\.dev/,'https://cdn.foforatiyatro.com'):`/videos/${s.fileName}`
+const mapsHref=(address:string,mapUrl?:string)=>mapUrl||`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`
 
 export default function Home(){
   const pathname=usePathname(),base=pathname.startsWith('/yeni')?'/yeni':''
   const [slides,setSlides]=useState<Slide[]>(fallbackSlides),[services,setServices]=useState<Service[]>(fallbackServices),[posts,setPosts]=useState<Post[]>([]),[team,setTeam]=useState<Team[]>(fallbackTeam),[gallery,setGallery]=useState<Album[]>([]),[calendar,setCalendar]=useState<CalendarItem[]>([])
   const [copy,setCopy]=useState(defaultContent)
-  const [contact,setContact]=useState({phone:'+90 538 496 26 24',email:'foforatiyatro@gmail.com',address:'İcadiye, Üsküdar / İstanbul'})
+  const [contact,setContact]=useState({phone:'+90 538 496 26 24',email:'foforatiyatro@gmail.com',address:'İcadiye, Üsküdar / İstanbul',mapUrl:''})
   const [impact,setImpact]=useState({title:'Neler Yaptık?',intro:'Her sayı bir prova, her fotoğraf başka bir karşılaşma. Fofora’nın bugüne kadar biriktirdiği hikâyeler.',stats:defaultStats,image:'/demo/story-5.jpg'})
   const [index,setIndex]=useState(0),[socialIndex,setSocialIndex]=useState(0),[paused,setPaused]=useState(false),[sending,setSending]=useState(false),[sent,setSent]=useState(false)
   const [stageTab,setStageTab]=useState<'plays'|'calendar'>('plays'),[messageOpen,setMessageOpen]=useState(false)
@@ -111,7 +112,7 @@ export default function Home(){
     })
   },[])
   useEffect(()=>{if(paused||slides.length<2)return;const t=setTimeout(()=>setIndex(i=>(i+1)%slides.length),(slides[index]?.playDuration||7)*1000);return()=>clearTimeout(t)},[index,paused,slides])
-  const current=slides[index]||fallbackSlides[0],media=path(current),video=/\.(mp4|webm|mov)(\?|$)/i.test(media),reels=useMemo(()=>{const ig=instagramPosts.map(p=>({id:`ig-${p.id}`,type:p.mediaType==='VIDEO'?'video':'image',url:p.mediaUrl,thumbnail:p.mediaUrl,title:p.caption?p.caption.slice(0,40):'Instagram’dan',description:p.caption||undefined}));const galleryItems=gallery.filter(a=>a.active).flatMap(a=>(a.items||[]).filter(it=>it.active));return [...galleryItems,...ig].slice(0,8)},[gallery,instagramPosts])
+  const current=slides[index]||fallbackSlides[0],media=path(current),video=/\.(mp4|webm|mov)(\?|$)/i.test(media),reels=useMemo(()=>{const ig=instagramPosts.map(p=>({id:`ig-${p.id}`,type:p.mediaType==='VIDEO'?'video':'image',url:p.mediaUrl,thumbnail:p.mediaUrl,title:p.caption?p.caption.slice(0,40):'Instagram’dan',description:p.caption||undefined}));const galleryItems=gallery.filter(a=>a.active).flatMap(a=>(a.items||[]).filter(it=>it.active));const featured=galleryItems.filter(it=>it.featured),rest=galleryItems.filter(it=>!it.featured);return [...featured,...ig,...rest].slice(0,8)},[gallery,instagramPosts])
   const socialItems=reels.length?reels:Array.from({length:6},(_,i)=>({id:`r${i}`,type:'image',url:`/demo/training-${i+1}.jpg`,thumbnail:'',title:['Prova günü','Bu ekip başka','Karaktere doğru','Tiyatro iyi gelir','Perde arkası','Alkış zamanı'][i]}))
   useEffect(()=>{if(paused||socialItems.length<2)return;const t=setTimeout(()=>setSocialIndex(i=>(i+1)%socialItems.length),5000);return()=>clearTimeout(t)},[paused,socialIndex,socialItems.length])
   useEffect(()=>{const t=setInterval(()=>setStageTab(v=>v==='plays'?'calendar':'plays'),10000);return()=>clearInterval(t)},[])
@@ -122,7 +123,7 @@ export default function Home(){
   const contactBlock=<section id="iletisim" className={testimonials.length?'contact-section has-testimonials':'contact-section'}>
       {testimonials.length>0&&<aside className="contact-frame contact-testimonials"><h3><Quote/> Ne Diyorlar?</h3><div className="testimonial-rotator" onClick={()=>setTestimonialsOpen(true)}><AnimatePresence mode="wait"><motion.figure key={testimonials[testimonialIndex%testimonials.length].id} initial={{opacity:0,y:14}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-14}} transition={{duration:.5}}><div className="rotator-clip"><blockquote ref={testimonialQuoteRef}>{testimonials[testimonialIndex%testimonials.length].content}</blockquote></div><figcaption>{testimonials[testimonialIndex%testimonials.length].name}{testimonials[testimonialIndex%testimonials.length].title?` · ${testimonials[testimonialIndex%testimonials.length].title}`:''}</figcaption></motion.figure></AnimatePresence></div>{testimonials.length>1&&<div className="testimonial-dots">{testimonials.map((t,i)=><button key={t.id} className={i===testimonialIndex%testimonials.length?'active':''} onClick={()=>setTestimonialIndex(i)} aria-label={`${i+1}. yorumu göster`}/>)}</div>}<button className="testimonial-more" onClick={()=>setTestimonialsOpen(true)}>Tümünü gör <ArrowRight/></button></aside>}
       <div className="contact-frame contact-write">
-        <div className="contact-copy"><p className="eyebrow ink">BİR MERHABA YETER</p><h2>{copy.contactTitle}</h2><p>{copy.contactText}</p><div><a href={`https://wa.me/${contact.phone.replace(/\D/g,'')}`} target="_blank"><MessageCircle/> WhatsApp’tan yaz</a><a href={`mailto:${contact.email}`}><Mail/> {contact.email}</a><span><MapPin/> {contact.address}</span></div></div>
+        <div className="contact-copy"><p className="eyebrow ink">BİR MERHABA YETER</p><h2>{copy.contactTitle}</h2><p>{copy.contactText}</p><div><a href={`https://wa.me/${contact.phone.replace(/\D/g,'')}`} target="_blank"><MessageCircle/> WhatsApp’tan yaz</a><a href={`mailto:${contact.email}`}><Mail/> {contact.email}</a><a href={mapsHref(contact.address,contact.mapUrl)} target="_blank" rel="noopener noreferrer"><MapPin/> {contact.address}</a></div></div>
         <form className="contact-teaser" onSubmit={e=>{e.preventDefault();setMessageOpen(true)}} onClick={()=>setMessageOpen(true)}><div className="form-row"><label className="teaser-name">Adınız Soyadınız<input readOnly tabIndex={-1}/></label><label className="teaser-email">E-posta<input readOnly tabIndex={-1}/></label></div><label className="teaser-subject">Konu<select tabIndex={-1} defaultValue=""><option value="">Bir konu seçin</option></select></label><label className="teaser-message">Mesajınız<textarea readOnly tabIndex={-1}/></label></form>
       </div>
     </section>
