@@ -25,14 +25,14 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { postUrl, mediaUrl, mediaType, caption, order, active } = body
 
-    if (!postUrl) {
-      return NextResponse.json({ error: 'Post URL is required' }, { status: 400 })
+    if (!mediaUrl) {
+      return NextResponse.json({ error: 'Media URL is required' }, { status: 400 })
     }
 
     const post = await prisma.instagramPost.create({
       data: {
-        postUrl,
-        mediaUrl: mediaUrl || null,
+        postUrl: postUrl || null,
+        mediaUrl,
         mediaType: mediaType || null,
         caption: caption || null,
         order: order || 0,

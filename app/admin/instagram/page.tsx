@@ -11,7 +11,7 @@ import ImageUploader from '@/components/ImageUploader'
 
 interface InstagramPost {
   id: string
-  postUrl: string
+  postUrl?: string
   mediaUrl?: string
   mediaType?: string
   caption?: string
@@ -81,14 +81,10 @@ export default function AdminInstagram() {
     e.preventDefault()
 
     const url = newPostUrl.trim()
-    if (!url) {
-      alert('Lütfen Instagram post URL\'si girin')
-      return
-    }
 
-    // Validate Instagram URL
-    if (!url.includes('instagram.com')) {
-      alert('Geçerli bir Instagram URL\'si girin (örn: https://www.instagram.com/p/ABC123/)')
+    // If given, it should be a real Instagram link - but it's optional
+    if (url && !url.includes('instagram.com')) {
+      alert('Instagram linki girecekseniz geçerli bir URL girin (örn: https://www.instagram.com/p/ABC123/), ya da bu alanı boş bırakabilirsiniz')
       return
     }
 
@@ -101,7 +97,7 @@ export default function AdminInstagram() {
       const maxOrder = posts.length > 0 ? Math.max(...posts.map(p => p.order)) : -1
       const isVideo = /\.(mp4|webm|mov)(\?|$)/i.test(newMediaUrl)
       await axios.post('/api/instagram-posts', {
-        postUrl: url,
+        postUrl: url || null,
         mediaUrl: newMediaUrl,
         mediaType: isVideo ? 'VIDEO' : 'IMAGE',
         caption: newCaption || null,
@@ -160,7 +156,7 @@ export default function AdminInstagram() {
     setDeleteConfirm({
       show: true,
       postId: post.id,
-      postUrl: post.postUrl
+      postUrl: post.postUrl || post.caption || 'bu içerik'
     })
   }
 
@@ -230,7 +226,7 @@ export default function AdminInstagram() {
         <form onSubmit={addPost} className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10 mb-8">
           <div className="space-y-4">
             <div>
-              <label className="block text-white mb-2 text-sm font-medium">Instagram Post URL</label>
+              <label className="block text-white mb-2 text-sm font-medium">Instagram Linki (opsiyonel)</label>
               <input
                 type="text"
                 value={newPostUrl}
@@ -239,7 +235,7 @@ export default function AdminInstagram() {
                 className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
               />
               <p className="text-white/40 text-xs mt-1">
-                Instagram post, reel veya story URL'sini girin. Örnek: https://www.instagram.com/p/ABC123/
+                Sadece "Instagram'da Görüntüle" linki için kullanılır, boş bırakabilirsiniz. Gerçek bir Instagram gönderisi yoksa doldurmanıza gerek yok.
               </p>
             </div>
 
@@ -250,6 +246,9 @@ export default function AdminInstagram() {
               folder="instagram"
               acceptVideo
             />
+            <p className="text-white/40 text-xs -mt-2">
+              Instagram veya YouTube post linkini buraya yapıştırmayın — bu alan sadece görselin/videonun kendisini kabul eder. Fotoğrafı/videoyu önce bilgisayarınıza indirin, sonra "Dosya Seç" ile yükleyin.
+            </p>
 
             <div>
               <label className="block text-white mb-2 text-sm font-medium">Açıklama (opsiyonel)</label>
@@ -316,16 +315,20 @@ export default function AdminInstagram() {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <InstagramIcon className="w-5 h-5 text-purple-400" />
-                      <span className="text-white font-semibold text-sm truncate">{post.postUrl}</span>
+                      <span className="text-white font-semibold text-sm truncate">{post.caption || post.postUrl || 'İçerik'}</span>
                     </div>
-                    <a
-                      href={post.postUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-purple-400 hover:text-purple-300 text-xs underline"
-                    >
-                      Instagram'da Görüntüle
-                    </a>
+                    {post.postUrl ? (
+                      <a
+                        href={post.postUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-purple-400 hover:text-purple-300 text-xs underline"
+                      >
+                        Instagram'da Görüntüle
+                      </a>
+                    ) : (
+                      <span className="text-white/30 text-xs">Instagram linki yok</span>
+                    )}
                   </div>
 
                   {/* Status */}
@@ -381,10 +384,11 @@ export default function AdminInstagram() {
             Önemli Notlar
           </h3>
           <ul className="text-white/60 text-sm space-y-1 list-disc list-inside">
-            <li>Instagram post, reel veya story URL'sini girebilirsiniz</li>
-            <li>URL formatı: https://www.instagram.com/p/POST_ID/</li>
+            <li>Fotoğraf/video yüklemek zorunludur, Instagram linki opsiyoneldir</li>
+            <li>Instagram/YouTube gönderisinin linkini medya alanına yapıştırmayın — orası sadece doğrudan görsel/video dosyası kabul eder, önce indirip "Dosya Seç" ile yükleyin</li>
             <li>Anasayfadaki hero bölümünün sağındaki telefon görselinde, buraya yüklediğiniz fotoğraf/videolar sırayla oynatılır</li>
             <li>Sarı uyarı ikonu olan postların medyası eksik — anasayfada görünmezler, düzenlemek için silip medya ile tekrar ekleyin</li>
+            <li>Aktif medyalı post yoksa telefon görseli anasayfadan tamamen kalkar (rastgele/demo görsel gösterilmez)</li>
             <li>Pasif postlar ana sayfada görünmez</li>
             <li>Sıralamayı yukarı/aşağı butonlarıyla değiştirebilirsiniz</li>
           </ul>
