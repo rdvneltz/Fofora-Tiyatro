@@ -68,7 +68,11 @@ export default function Home(){
   const [cardMode,setCardMode]=useState(false)
   const {status:authStatus}=useSession()
   const isAdminPreview=cardMode&&authStatus==='authenticated'
-  useEffect(()=>{fetch('/api/testimonials').then(r=>r.ok?r.json():[]).then(data=>{if(Array.isArray(data))setTestimonials(data)}).catch(()=>undefined)},[])
+  const [testimonialsLoaded,setTestimonialsLoaded]=useState(false),[instagramLoaded,setInstagramLoaded]=useState(false)
+  const ready=loaded&&testimonialsLoaded&&instagramLoaded&&authStatus!=='loading'
+  const [overlayVisible,setOverlayVisible]=useState(true)
+  useEffect(()=>{if(!ready)return;const t=setTimeout(()=>setOverlayVisible(false),600);return()=>clearTimeout(t)},[ready])
+  useEffect(()=>{fetch('/api/testimonials').then(r=>r.ok?r.json():[]).then(data=>{if(Array.isArray(data))setTestimonials(data)}).catch(()=>undefined).finally(()=>setTestimonialsLoaded(true))},[])
   useEffect(()=>{testimonialCountRef.current=testimonials.length},[testimonials])
   // A callback ref (not a useEffect keyed on the index) because AnimatePresence's mode="wait" delays
   // mounting the next quote until the previous one's exit animation finishes — an effect fired on index
@@ -95,7 +99,7 @@ export default function Home(){
   },[])
   const [reelOpen,setReelOpen]=useState<ReelItem|null>(null)
   const [instagramPosts,setInstagramPosts]=useState<{id:string;mediaUrl:string;mediaType:string;caption?:string|null}[]>([])
-  useEffect(()=>{fetch('/api/instagram-posts').then(r=>r.ok?r.json():[]).then(data=>{if(Array.isArray(data))setInstagramPosts(data.filter((p:any)=>p.active&&p.mediaUrl))}).catch(()=>undefined)},[])
+  useEffect(()=>{fetch('/api/instagram-posts').then(r=>r.ok?r.json():[]).then(data=>{if(Array.isArray(data))setInstagramPosts(data.filter((p:any)=>p.active&&p.mediaUrl))}).catch(()=>undefined).finally(()=>setInstagramLoaded(true))},[])
   useEffect(()=>{
     Promise.allSettled(['/api/hero-videos','/api/services','/api/blog','/api/team','/api/gallery','/api/contact','/api/settings','/api/calendar'].map(u=>fetch(u).then(r=>r.json()))).then(r=>{
       const value=(i:number)=>r[i].status==='fulfilled'?(r[i] as PromiseFulfilledResult<any>).value:null
@@ -169,9 +173,11 @@ export default function Home(){
   const legalActive=(footerSettings.legalLinks||[]).filter(l=>l.active).sort((a,b)=>a.order-b.order)
   const footerBlock=<footer><a className="brand"><span>Fofora</span><small>TIYATRO</small></a><p>{copy.footerTagline}</p><div><a href={igLink} target="_blank" rel="noopener noreferrer"><Instagram/></a><a href={`mailto:${contact.email}`}><Mail/></a></div>{legalActive.length>0&&<nav className="footer-legal">{legalActive.map(l=><button key={l.title} onClick={()=>setLegalOpen(l)}>{l.title}</button>)}</nav>}<small>{footerSettings.copyrightText||`© ${new Date().getFullYear()} Fofora Tiyatro`}</small></footer>
   const legalModal=legalOpen&&<div className="reel-modal" role="dialog" aria-modal="true" aria-label={legalOpen.title} onClick={()=>setLegalOpen(null)}><button className="modal-close" onClick={()=>setLegalOpen(null)} aria-label="Kapat"><X/></button><div className="reel-modal-inner legal-modal-inner" onClick={e=>e.stopPropagation()}><h3>{legalOpen.title}</h3><p style={{whiteSpace:'pre-wrap'}}>{legalOpen.content}</p></div></div>
+  const siteLoader=overlayVisible&&<div className={ready?'site-loader hide':'site-loader'} aria-hidden={ready}><div className="site-loader-inner"><div className="site-loader-brand"><span>Fofora</span><small>TİYATRO</small></div><div className="site-loader-bar"><span/></div></div></div>
   const messageModal=messageOpen&&<div className="message-modal" role="dialog" aria-modal="true" aria-label="Fofora’ya mesaj gönder"><button className="modal-close" onClick={()=>setMessageOpen(false)} aria-label="Kapat"><X/></button><div><p className="eyebrow ink">BİR MERHABA YETER</p><h2>Bize Yazın.</h2><p>Mesajınız doğrudan ekibimizin gelen kutusuna ulaşır.</p></div><form onSubmit={async e=>{await send(e);setMessageOpen(false)}}><div className="form-row"><label>Adınız Soyadınız<input name="name" required autoFocus/></label><label>Telefon<input name="phone" required/></label></div><label>E-posta<input name="email" type="email"/></label><label>Konu<select name="subject" required defaultValue=""><option value="" disabled>Bir konu seçin</option><option>Eğitimler</option><option>Oyunlar ve bilet</option><option>Okul / kurum iş birliği</option><option>Basın ve iletişim</option><option>Diğer</option></select></label><label>Mesajınız<textarea name="message" rows={6} required/></label><button className="button form-button" disabled={sending}>{sending?'Gönderiliyor…':'Mesajı gönder'} <ArrowRight/></button></form></div>
 
   if(cardMode&&!isAdminPreview) return <>
+    {siteLoader}
     <SiteHeader variant="solid" minimal/>
     <main className="card-page">
       <div className="card-intro"><p className="eyebrow ink">FOFORA TİYATRO</p><h1>{copy.sloganTitle}</h1><p>{copy.sloganText}</p></div>
@@ -184,6 +190,7 @@ export default function Home(){
   </>
 
   return <main className="site-shell">
+    {siteLoader}
     {isAdminPreview&&<div className="admin-preview-banner">Kartvizit modu aktif — bu tam görünümü sadece giriş yapmış admin olarak siz görüyorsunuz. Ziyaretçiler sadece kartvizit ekranını görür.</div>}
     <SiteHeader variant="overlay"/>
     <section id="hero" className="hero-stage"><AnimatePresence mode="wait"><motion.div key={current.id} className="hero-media" initial={{opacity:0,scale:1.04}} animate={{opacity:1,scale:1}} exit={{opacity:0}}>{media?(video?<video src={media} autoPlay muted playsInline loop/>:<Image src={media} alt="" fill priority sizes="100vw"/>):<div className={`hero-placeholder h-${index%2}`}/>}</motion.div></AnimatePresence><div className="hero-scrim"/><AnimatePresence mode="wait"><motion.div key={'c'+current.id} className="hero-copy" initial={{opacity:0,y:30}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-20}} onClick={()=>go(current.actionType,current.actionValue)}><p className="eyebrow">{current.subtitle}</p><h1>{current.title?.split('\n').map(x=><span key={x}>{x}</span>)}</h1><p>{current.description}</p><div className="hero-actions" onClick={e=>e.stopPropagation()}><button className="button acid" onClick={()=>go(current.actionType,current.actionValue)}>{current.actionLabel||'Keşfet'} <ArrowRight/></button>{current.secondaryActionLabel&&<button className="button outline" onClick={()=>go(current.secondaryActionType,current.secondaryActionValue)}>{current.secondaryActionLabel} <ArrowRight/></button>}</div></motion.div></AnimatePresence>
