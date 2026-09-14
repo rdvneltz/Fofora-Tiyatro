@@ -151,8 +151,12 @@ export default function Home(){
     },(cur?.playDuration||7)*1000)
     return()=>clearTimeout(t)
   },[index,paused,slides,repeatTick])
-  const current=slides[index]||fallbackSlides[0],media=path(current),video=/\.(mp4|webm|mov)(\?|$)/i.test(media),reels=useMemo(()=>{const ig=instagramPosts.map(p=>({id:`ig-${p.id}`,type:p.mediaType==='VIDEO'?'video':'image',url:p.mediaUrl,thumbnail:p.mediaUrl,title:p.caption?p.caption.slice(0,40):'Instagram’dan',description:p.caption||undefined}));const galleryItems=gallery.filter(a=>a.active).flatMap(a=>(a.items||[]).filter(it=>it.active));const featured=galleryItems.filter(it=>it.featured),rest=galleryItems.filter(it=>!it.featured);return [...featured,...ig,...rest].slice(0,8)},[gallery,instagramPosts])
-  const socialItems=reels.length?reels:Array.from({length:6},(_,i)=>({id:`r${i}`,type:'image',url:`/demo/training-${i+1}.jpg`,thumbnail:'',title:['Prova günü','Bu ekip başka','Karaktere doğru','Tiyatro iyi gelir','Perde arkası','Alkış zamanı'][i]}))
+  const current=slides[index]||fallbackSlides[0],media=path(current),video=/\.(mp4|webm|mov)(\?|$)/i.test(media)
+  // Bizden Kareler section: gallery only (featured first) - Instagram never mixes in here.
+  const reels=useMemo(()=>{const galleryItems=gallery.filter(a=>a.active).flatMap(a=>(a.items||[]).filter(it=>it.active));const featured=galleryItems.filter(it=>it.featured),rest=galleryItems.filter(it=>!it.featured);return [...featured,...rest].slice(0,8)},[gallery])
+  // Hero phone mockup: Instagram only - gallery never mixes in here.
+  const igItems=useMemo(()=>instagramPosts.map(p=>({id:`ig-${p.id}`,type:p.mediaType==='VIDEO'?'video':'image',url:p.mediaUrl,thumbnail:p.mediaUrl,title:p.caption?p.caption.slice(0,40):'Instagram’dan',description:p.caption||undefined})),[instagramPosts])
+  const socialItems=igItems.length?igItems:Array.from({length:6},(_,i)=>({id:`r${i}`,type:'image',url:`/demo/training-${i+1}.jpg`,thumbnail:'',title:['Prova günü','Bu ekip başka','Karaktere doğru','Tiyatro iyi gelir','Perde arkası','Alkış zamanı'][i]}))
   useEffect(()=>{if(paused||socialItems.length<2)return;const t=setTimeout(()=>setSocialIndex(i=>(i+1)%socialItems.length),5000);return()=>clearTimeout(t)},[paused,socialIndex,socialItems.length])
   useEffect(()=>{const t=setInterval(()=>setStageTab(v=>v==='plays'?'calendar':'plays'),10000);return()=>clearInterval(t)},[])
   const socialCurrent=socialItems[socialIndex%socialItems.length],socialPreviews=Array.from({length:Math.min(4,socialItems.length-1)},(_,i)=>socialItems[(socialIndex+i+1)%socialItems.length])
