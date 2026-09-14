@@ -41,12 +41,6 @@ const sampleNews:Post[] = [
   {id:'n2',title:'Üsküdar’da Tiyatroya Genç Bir Soluk',slug:'uskudar-tiyatro',excerpt:'Yeni dönemde yeni hikâyeler anlatıyoruz.',category:'Bizden',createdAt:'2026-03-03',image:'/demo/story-5.jpg'},
   {id:'n3',title:'Atölyelerimizde Yeni Dönem',slug:'yeni-donem',excerpt:'Yaşına ve hedeflerine uygun programı keşfet.',category:'Eğitim',createdAt:'2026-02-20',image:'/demo/story-6.jpg'},
 ]
-const fallbackTeam:Team[]=[
-  {id:'t1',name:'Zeynep Arslan',title:'Kurucu / Sanat Yönetmeni',image:'/demo/training-3.jpg'},
-  {id:'t2',name:'Murat Can Demir',title:'Eğitmen',image:'/demo/training-4.jpg'},
-  {id:'t3',name:'Elif Kaya',title:'Eğitmen',image:'/demo/training-5.jpg'},
-  {id:'t4',name:'Kerem Yıldız',title:'Eğitmen',image:'/demo/training-2.jpg'},
-]
 const defaultStats=[['12','Oyun'],['350+','Öğrenci'],['28','Öğrenci gösterisi'],['6','Yıllık yolculuk']]
 const ytId=(url:string)=>{if(!url)return '';if(url.includes('youtu.be'))return url.split('youtu.be/')[1]?.split('?')[0]||'';const m=url.split('v=')[1];return m?m.split('&')[0]:url}
 const defaultContent={playsTitle:'Yaklaşan Oyunlar',calendarTitle:'Takvim',educationTitle:'Eğitimler',reelsTitle:'Bizden Kareler',newsTitle:'Bizden Haberler',teamTitle:'Ekibimiz',contactTitle:'Bize Yazın.',contactText:'Soru, fikir, iş birliği ya da eğitim bilgisi… Mesajınız doğrudan ekibimizin gelen kutusuna ulaşsın.',sloganTitle:'“Herkesin anlatacak bir hikâyesi var.”',sloganText:'Fofora Tiyatro Üsküdar’da, hayatın tam içinde.',footerTagline:'Üsküdar’da daha fazla sahne, daha fazla insan için.',whatsappText:'Merhaba, Fofora Tiyatro hakkında bilgi almak istiyorum.'}
@@ -55,7 +49,7 @@ const mapsHref=(address:string,mapUrl?:string)=>mapUrl||`https://www.google.com/
 
 export default function Home(){
   const pathname=usePathname(),base=pathname.startsWith('/yeni')?'/yeni':''
-  const [slides,setSlides]=useState<Slide[]>(fallbackSlides),[services,setServices]=useState<Service[]>(fallbackServices),[posts,setPosts]=useState<Post[]>([]),[team,setTeam]=useState<Team[]>(fallbackTeam),[gallery,setGallery]=useState<Album[]>([]),[calendar,setCalendar]=useState<CalendarItem[]>([])
+  const [slides,setSlides]=useState<Slide[]>(fallbackSlides),[services,setServices]=useState<Service[]>(fallbackServices),[posts,setPosts]=useState<Post[]>([]),[team,setTeam]=useState<Team[]>([]),[gallery,setGallery]=useState<Album[]>([]),[calendar,setCalendar]=useState<CalendarItem[]>([])
   const [copy,setCopy]=useState(defaultContent)
   const [contact,setContact]=useState({phone:'+90 538 496 26 24',email:'foforatiyatro@gmail.com',address:'İcadiye, Üsküdar / İstanbul',mapUrl:''})
   const [impact,setImpact]=useState({title:'Neler Yaptık?',intro:'Her sayı bir prova, her fotoğraf başka bir karşılaşma. Fofora’nın bugüne kadar biriktirdiği hikâyeler.',stats:defaultStats,image:'/demo/story-5.jpg'})

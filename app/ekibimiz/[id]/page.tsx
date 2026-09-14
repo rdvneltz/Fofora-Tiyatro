@@ -42,7 +42,7 @@ export default function EkibimizDetail() {
 
   return <>
     <SiteHeader/>
-    <main className="detail-page">
+    <main className="detail-page team-detail-page">
       <a href={`${base}/ekibimiz`}><ArrowLeft /> {label}’e dön</a>
       <div className="detail-layout">
         <div className="detail-media">
