@@ -99,6 +99,7 @@ export default function Home(){
   },[])
   const [reelOpen,setReelOpen]=useState<ReelItem|null>(null)
   const [phoneMuted,setPhoneMuted]=useState(true)
+  const [phoneModalOpen,setPhoneModalOpen]=useState(false)
   const [instagramPosts,setInstagramPosts]=useState<{id:string;mediaUrl:string;mediaType:string;caption?:string|null}[]>([])
   useEffect(()=>{fetch('/api/instagram-posts').then(r=>r.ok?r.json():[]).then(data=>{if(Array.isArray(data))setInstagramPosts(data.filter((p:any)=>p.active&&p.mediaUrl))}).catch(()=>undefined).finally(()=>setInstagramLoaded(true))},[])
   useEffect(()=>{
@@ -157,9 +158,53 @@ export default function Home(){
   const reels=useMemo(()=>{const galleryItems=gallery.filter(a=>a.active).flatMap(a=>(a.items||[]).filter(it=>it.active));const featured=galleryItems.filter(it=>it.featured),rest=galleryItems.filter(it=>!it.featured);return [...featured,...rest].slice(0,8)},[gallery])
   // Hero phone mockup: Instagram only, no filler when empty - gallery never mixes in here.
   const socialItems=useMemo(()=>instagramPosts.map(p=>({id:`ig-${p.id}`,type:p.mediaType==='VIDEO'?'video':p.mediaType==='YOUTUBE'?'youtube':'image',url:p.mediaUrl,thumbnail:p.mediaType==='YOUTUBE'?`https://img.youtube.com/vi/${p.mediaUrl}/hqdefault.jpg`:p.mediaUrl,title:p.caption?p.caption.slice(0,40):'Instagram’dan',description:p.caption&&p.caption.length>40?p.caption:undefined})),[instagramPosts])
-  useEffect(()=>{if(paused||socialItems.length<2)return;const t=setTimeout(()=>setSocialIndex(i=>(i+1)%socialItems.length),5000);return()=>clearTimeout(t)},[paused,socialIndex,socialItems.length])
-  useEffect(()=>{const t=setInterval(()=>setStageTab(v=>v==='plays'?'calendar':'plays'),10000);return()=>clearInterval(t)},[])
   const socialCurrent=socialItems.length?socialItems[socialIndex%socialItems.length]:null,socialPreviews=socialItems.length>1?Array.from({length:Math.min(4,socialItems.length-1)},(_,i)=>socialItems[(socialIndex+i+1)%socialItems.length]):[]
+  const advanceSocial=useCallback(()=>{setSocialIndex(i=>socialItems.length?(i+1)%socialItems.length:i)},[socialItems.length])
+  // Photos get a fixed dwell time; videos/YouTube advance on their own instead (see onEnded / YT player effect below)
+  useEffect(()=>{
+    if(paused||phoneModalOpen||socialItems.length<2||!socialCurrent||socialCurrent.type!=='image')return
+    const t=setTimeout(advanceSocial,7000)
+    return()=>clearTimeout(t)
+  },[paused,phoneModalOpen,socialIndex,socialItems.length,socialCurrent,advanceSocial])
+  // YouTube has no native onEnded on the iframe - bind the IFrame Player API to detect the end of playback.
+  // Best-effort: if the API never loads/binds, a safety timeout still advances so nothing gets stuck.
+  useEffect(()=>{
+    if(phoneModalOpen||!socialCurrent||socialCurrent.type!=='youtube'||socialItems.length<2)return
+    let destroyed=false,player:any=null
+    const ensureScript=()=>new Promise<void>(resolve=>{
+      const w=window as any
+      if(w.YT&&w.YT.Player)return resolve()
+      const prev=w.onYouTubeIframeAPIReady
+      w.onYouTubeIframeAPIReady=()=>{prev&&prev();resolve()}
+      if(!document.getElementById('youtube-iframe-api')){
+        const tag=document.createElement('script')
+        tag.id='youtube-iframe-api'
+        tag.src='https://www.youtube.com/iframe_api'
+        document.body.appendChild(tag)
+      }
+    })
+    ensureScript().then(()=>{
+      if(destroyed)return
+      try{
+        player=new (window as any).YT.Player('hero-phone-yt-frame',{
+          events:{onStateChange:(e:any)=>{if(e.data===(window as any).YT.PlayerState.ENDED)advanceSocial()}}
+        })
+      }catch{}
+    })
+    const safety=setTimeout(advanceSocial,60000)
+    return()=>{destroyed=true;clearTimeout(safety);try{player&&player.destroy&&player.destroy()}catch{}}
+  },[phoneModalOpen,socialCurrent,socialItems.length,advanceSocial])
+  useEffect(()=>{
+    if(!phoneModalOpen)return
+    const onKey=(e:KeyboardEvent)=>{
+      if(e.key==='Escape')setPhoneModalOpen(false)
+      else if(e.key==='ArrowLeft')setSocialIndex(i=>(i-1+socialItems.length)%socialItems.length)
+      else if(e.key==='ArrowRight')setSocialIndex(i=>(i+1)%socialItems.length)
+    }
+    window.addEventListener('keydown',onKey)
+    return()=>window.removeEventListener('keydown',onKey)
+  },[phoneModalOpen,socialItems.length])
+  useEffect(()=>{const t=setInterval(()=>setStageTab(v=>v==='plays'?'calendar':'plays'),10000);return()=>clearInterval(t)},[])
   const go=(type?:string|null,value?:string|null)=>{if(type==='whatsapp'){const p=contact.phone.replace(/\D/g,'').replace(/^0/,'90');open(`https://wa.me/${p}?text=${encodeURIComponent(value||copy.whatsappText)}`,'_blank')}else if(type==='message')document.getElementById('iletisim')?.scrollIntoView({behavior:'smooth'});else if(type==='section')document.getElementById(value||'')?.scrollIntoView({behavior:'smooth'});else if(value)location.href=location.pathname.startsWith('/yeni')&&value.startsWith('/')&&!value.startsWith('/yeni')?`/yeni${value}`:value}
   const send=async(e:React.FormEvent<HTMLFormElement>)=>{e.preventDefault();setSending(true);const form=e.currentTarget,res=await fetch('/api/inquiries',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.fromEntries(new FormData(form).entries()))});setSending(false);if(res.ok){form.reset();setSent(true)}}
 
@@ -172,6 +217,7 @@ export default function Home(){
     </section>
   const testimonialsModal=testimonialsOpen&&<div className="testimonials-modal" role="dialog" aria-modal="true" aria-label="Tüm yorumlar"><button className="modal-close" onClick={()=>setTestimonialsOpen(false)} aria-label="Kapat"><X/></button><div className="testimonials-modal-inner"><p className="eyebrow ink">NE DİYORLAR?</p><h2>Yorumlar</h2><div className="testimonials-grid">{testimonials.map(t=><article key={t.id}>{t.rating>0&&<div className="stars">{Array.from({length:5},(_,i)=><Star key={i} fill={i<t.rating?'currentColor':'none'}/>)}</div>}<p>“{t.content}”</p><span>{t.name}{t.title?` · ${t.title}`:''}</span></article>)}</div></div></div>
   const reelModal=reelOpen&&<div className="reel-modal" role="dialog" aria-modal="true" aria-label={reelOpen.title||'Sahne akışı'} onClick={()=>setReelOpen(null)}><button className="modal-close" onClick={()=>setReelOpen(null)} aria-label="Kapat"><X/></button><div className="reel-modal-inner" onClick={e=>e.stopPropagation()}><div className="reel-modal-media">{reelOpen.type==='video'?<video src={reelOpen.url} controls autoPlay playsInline/>:reelOpen.type==='youtube'?<iframe src={`https://www.youtube.com/embed/${reelOpen.url}?autoplay=1&playsinline=1`} allow="autoplay; encrypted-media" allowFullScreen title={reelOpen.title||'YouTube video'} style={{position:'absolute',inset:0,width:'100%',height:'100%',border:0}}/>:<Image src={reelOpen.thumbnail||reelOpen.url} alt={reelOpen.title||''} fill sizes="60vw"/>}</div>{(reelOpen.title||reelOpen.description)&&<div className="reel-modal-copy">{reelOpen.title&&<h3>{reelOpen.title}</h3>}{reelOpen.description&&<p>{reelOpen.description}</p>}</div>}</div></div>
+  const phoneModal=<AnimatePresence>{phoneModalOpen&&socialCurrent&&<motion.div className="reel-modal" role="dialog" aria-modal="true" aria-label={socialCurrent.title||'İçerik'} onClick={()=>setPhoneModalOpen(false)} initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}><button className="modal-close" onClick={()=>setPhoneModalOpen(false)} aria-label="Kapat"><X/></button><div className="phone-modal-wrap" onClick={e=>e.stopPropagation()}>{socialItems.length>1&&<button className="phone-modal-nav prev" onClick={()=>setSocialIndex(i=>(i-1+socialItems.length)%socialItems.length)} aria-label="Önceki içerik"><ChevronLeft/></button>}<motion.div className="phone-modal-frame" initial={{scale:.35,opacity:0}} animate={{scale:1,opacity:1}} exit={{scale:.35,opacity:0}} transition={{type:'spring',stiffness:260,damping:24}}><div className="phone-notch"/><div className="phone-modal-media">{socialCurrent.type==='video'?<video key={socialCurrent.id} src={socialCurrent.url} controls autoPlay playsInline onEnded={advanceSocial}/>:socialCurrent.type==='youtube'?<iframe key={socialCurrent.id} src={`https://www.youtube.com/embed/${socialCurrent.url}?autoplay=1&playsinline=1`} allow="autoplay; encrypted-media" allowFullScreen title={socialCurrent.title||'YouTube video'} style={{position:'absolute',inset:0,width:'100%',height:'100%',border:0}}/>:<Image key={socialCurrent.id} src={socialCurrent.thumbnail||socialCurrent.url} alt={socialCurrent.title||''} fill sizes="90vw"/>}</div><div className="phone-modal-copy"><small>ŞİMDİ FOFORA’DA</small><b>{socialCurrent.title||'Sahnenin perde arkası'}</b></div></motion.div>{socialItems.length>1&&<button className="phone-modal-nav next" onClick={()=>setSocialIndex(i=>(i+1)%socialItems.length)} aria-label="Sonraki içerik"><ChevronRight/></button>}</div></motion.div>}</AnimatePresence>
   const socialArr=Array.isArray(footerSettings.socialMedia)?footerSettings.socialMedia:(footerSettings.socialMedia&&typeof footerSettings.socialMedia==='object'?Object.entries(footerSettings.socialMedia as any).map(([platform,url])=>({platform,url:String(url),active:true})):[])
   const igLink=socialArr.find(s=>s.platform==='instagram'&&s.active&&s.url)?.url||'https://instagram.com/foforatiyatro'
   const legalActive=(footerSettings.legalLinks||[]).filter(l=>l.active).sort((a,b)=>a.order-b.order)
@@ -200,7 +246,7 @@ export default function Home(){
     <section id="hero" className="hero-stage"><AnimatePresence mode="wait"><motion.div key={current.id} className="hero-media" initial={{opacity:0,scale:1.04}} animate={{opacity:1,scale:1}} exit={{opacity:0}}>{media?(video?<video src={media} autoPlay muted playsInline loop/>:<Image src={media} alt="" fill priority sizes="100vw"/>):<div className={`hero-placeholder h-${index%2}`}/>}</motion.div></AnimatePresence><div className="hero-scrim"/><AnimatePresence mode="wait"><motion.div key={'c'+current.id} className="hero-copy" initial={{opacity:0,y:30}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-20}} onClick={()=>go(current.actionType,current.actionValue)}><p className="eyebrow">{current.subtitle}</p><h1>{current.title?.split('\n').map(x=><span key={x}>{x}</span>)}</h1><p>{current.description}</p><div className="hero-actions" onClick={e=>e.stopPropagation()}><button className="button acid" onClick={()=>go(current.actionType,current.actionValue)}>{current.actionLabel||'Keşfet'} <ArrowRight/></button>{current.secondaryActionLabel&&<button className="button outline" onClick={()=>go(current.secondaryActionType,current.secondaryActionValue)}>{current.secondaryActionLabel} <ArrowRight/></button>}</div></motion.div></AnimatePresence>
       <div className="hero-controls"><button onClick={()=>setIndex(i=>(i-1+slides.length)%slides.length)}><ChevronLeft/></button><span>{String(index+1).padStart(2,'0')} / {String(slides.length).padStart(2,'0')}</span><button onClick={()=>setIndex(i=>(i+1)%slides.length)}><ChevronRight/></button><button onClick={()=>setPaused(!paused)}>{paused?<Play/>:<Pause/>}</button></div>
       <a className="hero-whatsapp" href={`https://wa.me/${contact.phone.replace(/\D/g,'').replace(/^0/,'90')}?text=${encodeURIComponent(copy.whatsappText)}`} target="_blank" rel="noopener noreferrer" aria-label="Fofora Tiyatro’ya WhatsApp’tan yaz"><MessageCircle/><span>WhatsApp’tan<br/>yaz</span></a>
-      {socialCurrent&&<div className="hero-phone" onClick={()=>setReelOpen(socialCurrent)} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();setReelOpen(socialCurrent)}}} role="button" tabIndex={0} aria-label={`${socialCurrent.title||'İçerik'} — büyüt`}><div className="phone-notch"/>{socialCurrent.type==='video'?<video key={socialCurrent.id} src={socialCurrent.url} autoPlay muted={phoneMuted} loop playsInline/>:socialCurrent.type==='youtube'?<iframe key={socialCurrent.id} src={`https://www.youtube.com/embed/${socialCurrent.url}?autoplay=1&mute=${phoneMuted?1:0}&loop=1&playlist=${socialCurrent.url}&controls=0&modestbranding=1&playsinline=1`} allow="autoplay; encrypted-media" title={socialCurrent.title||'YouTube video'} style={{position:'absolute',inset:0,width:'100%',height:'100%',border:0}}/>:<Image key={socialCurrent.id} src={socialCurrent.thumbnail||socialCurrent.url} alt="Sahne akışı" fill sizes="420px"/>}{(socialCurrent.type==='video'||socialCurrent.type==='youtube')&&<button className="phone-mute" onClick={e=>{e.stopPropagation();setPhoneMuted(m=>!m)}} aria-label={phoneMuted?'Sesi aç':'Sesi kapat'}>{phoneMuted?<VolumeX size={16}/>:<Volume2 size={16}/>}</button>}<div className="phone-caption"><small>ŞİMDİ FOFORA’DA</small><b>{socialCurrent.title||'Sahnenin perde arkası'}</b></div></div>}
+      {socialCurrent&&<div className="hero-phone" onClick={()=>setPhoneModalOpen(true)} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();setPhoneModalOpen(true)}}} role="button" tabIndex={0} aria-label={`${socialCurrent.title||'İçerik'} — büyüt`}><div className="phone-notch"/>{!phoneModalOpen&&(socialCurrent.type==='video'?<video key={socialCurrent.id} src={socialCurrent.url} autoPlay muted={phoneMuted} playsInline onEnded={advanceSocial} onError={advanceSocial}/>:socialCurrent.type==='youtube'?<iframe id="hero-phone-yt-frame" key={socialCurrent.id} src={`https://www.youtube.com/embed/${socialCurrent.url}?autoplay=1&mute=${phoneMuted?1:0}&controls=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=${typeof window!=='undefined'?encodeURIComponent(window.location.origin):''}`} allow="autoplay; encrypted-media" title={socialCurrent.title||'YouTube video'} style={{position:'absolute',inset:0,width:'100%',height:'100%',border:0}}/>:<Image key={socialCurrent.id} src={socialCurrent.thumbnail||socialCurrent.url} alt="Sahne akışı" fill sizes="420px"/>)}{!phoneModalOpen&&(socialCurrent.type==='video'||socialCurrent.type==='youtube')&&<button className="phone-mute" onClick={e=>{e.stopPropagation();setPhoneMuted(m=>!m)}} aria-label={phoneMuted?'Sesi aç':'Sesi kapat'}>{phoneMuted?<VolumeX size={16}/>:<Volume2 size={16}/>}</button>}<div className="phone-caption"><small>ŞİMDİ FOFORA’DA</small><b>{socialCurrent.title||'Sahnenin perde arkası'}</b></div></div>}
       {socialPreviews.length>0&&<div className="hero-previews">{socialPreviews.map((item,i)=><button key={item.id} onClick={()=>setSocialIndex((socialIndex+i+1)%socialItems.length)} aria-label={`${item.title||'Sıradaki içerik'} önizlemesi`}>{item.type==='video'?<video src={item.url} muted playsInline/>:<Image src={item.thumbnail||item.url} alt={item.title||''} fill sizes="140px"/>}<span>{String((socialIndex+i+2)%socialItems.length||socialItems.length).padStart(2,'0')}</span></button>)}</div>}
     </section>
     <section className="now-strip"><h2>{copy.nowTitle}</h2>{copy.nowItems.map((x:string[],i:number)=><div key={i}><small>{x[0]}</small><strong>{i===2&&posts[0]?.title?posts[0].title:x[1]}</strong></div>)}</section>
@@ -213,6 +259,7 @@ export default function Home(){
     {contactBlock}
     {testimonialsModal}
     {reelModal}
+    {phoneModal}
     {footerBlock}
     {legalModal}
     {messageModal}
