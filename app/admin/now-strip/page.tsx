@@ -58,10 +58,12 @@ function ItemForm({ initial, onSave, onCancel, saving }: { initial: typeof empty
     <div className="bg-navy-900/60 rounded-lg p-4 border border-blue-500/30 space-y-3">
       <div className="grid sm:grid-cols-2 gap-3">
         <label className="text-white/70 text-xs font-medium">Kısa etiket (opsiyonel)
-          <input value={v.label} onChange={e => set('label', e.target.value)} placeholder="SIRADAKİ OYUN" className="mt-1 w-full px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white text-sm placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          <input value={v.label} onChange={e => set('label', e.target.value)} placeholder="SIRADAKİ OYUN" maxLength={30} className="mt-1 w-full px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white text-sm placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          <span className="block mt-1 text-white/30 text-[10px]">{v.label.length}/30 — şeritte tek satırda görünür, uzunu kesilir</span>
         </label>
         <label className="text-white/70 text-xs font-medium">Ana metin *
-          <input value={v.text} onChange={e => set('text', e.target.value)} placeholder="Yeni sezon kayıtları başladı" className="mt-1 w-full px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white text-sm placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          <input value={v.text} onChange={e => set('text', e.target.value)} placeholder="Yeni sezon kayıtları başladı" maxLength={70} className="mt-1 w-full px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white text-sm placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          <span className="block mt-1 text-white/30 text-[10px]">{v.text.length}/70 — şeritte tek satırda görünür, uzunu kesilir</span>
         </label>
       </div>
       <label className="block text-white/70 text-xs font-medium">Tıklayınca ne olsun?
