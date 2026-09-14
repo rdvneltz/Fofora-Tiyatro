@@ -28,6 +28,7 @@ export default function TeamPage() {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingMember, setEditingMember] = useState<TeamMember | null>(null)
+  const [imageUploading, setImageUploading] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
     title: '',
@@ -62,6 +63,10 @@ export default function TeamPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (imageUploading) {
+      alert('Fotoğraf hâlâ yükleniyor, lütfen yükleme bitene kadar bekleyin.')
+      return
+    }
     try {
       if (editingMember) {
         await axios.put('/api/team', { id: editingMember.id, ...formData })
@@ -79,6 +84,7 @@ export default function TeamPage() {
 
   const handleEdit = (member: TeamMember) => {
     setEditingMember(member)
+    setImageUploading(false)
     setFormData({
       name: member.name,
       title: member.title,
@@ -99,6 +105,15 @@ export default function TeamPage() {
       fetchTeam()
     } catch (error) {
       console.error('Silme başarısız', error)
+    }
+  }
+
+  const toggleActive = async (member: TeamMember) => {
+    try {
+      await axios.put('/api/team', { ...member, active: !member.active })
+      fetchTeam()
+    } catch (error) {
+      console.error('Durum güncellenemedi', error)
     }
   }
 
@@ -124,6 +139,7 @@ export default function TeamPage() {
             onClick={() => {
               setShowForm(true)
               setEditingMember(null)
+              setImageUploading(false)
               setFormData({ name: '', title: '', bio: '', image: '', email: '', phone: '', order: 0, active: true })
             }}
             className="bg-gradient-to-r from-gold-600 to-gold-500 text-white px-6 py-3 rounded-lg flex items-center gap-2 hover:from-gold-700 hover:to-gold-600"
@@ -143,6 +159,7 @@ export default function TeamPage() {
               <ImageUploader
                 currentUrl={formData.image}
                 onUrlChange={(url) => setFormData({ ...formData, image: url })}
+                onUploadingChange={setImageUploading}
                 label="Ekip Üyesi Fotoğrafı"
                 folder="images/team"
               />
@@ -208,13 +225,17 @@ export default function TeamPage() {
                   />
                 </div>
               </div>
-              <div className="flex gap-4">
+              <div className="flex items-center gap-4">
                 <button
                   type="submit"
-                  className="bg-gradient-to-r from-green-600 to-green-500 text-white px-6 py-3 rounded-lg hover:from-green-700 hover:to-green-600"
+                  disabled={imageUploading}
+                  className="bg-gradient-to-r from-green-600 to-green-500 text-white px-6 py-3 rounded-lg hover:from-green-700 hover:to-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Kaydet
+                  {imageUploading ? 'Fotoğraf yükleniyor…' : 'Kaydet'}
                 </button>
+                {imageUploading && (
+                  <span className="text-gold-400 text-sm">Fotoğraf yüklenene kadar bekleyin, aksi halde eski fotoğraf kaydedilir.</span>
+                )}
                 <button
                   type="button"
                   onClick={() => {
@@ -232,29 +253,46 @@ export default function TeamPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {team.map((member) => (
-            <div key={member.id} className="glass rounded-xl p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h3 className="text-xl font-bold text-white">{member.name}</h3>
-                  <p className="text-gold-400">{member.title}</p>
+            <div key={member.id} className={`glass rounded-xl p-6 ${!member.active ? 'opacity-50' : ''}`}>
+              <div className="flex items-start gap-4 mb-4">
+                <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-navy-900/50 border border-white/10 flex-shrink-0">
+                  {member.image ? (
+                    <Image src={member.image} alt={member.name} fill sizes="64px" className="object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-white/30 text-xs text-center px-1">Fotoğraf yok</div>
+                  )}
                 </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleEdit(member)}
-                    className="text-blue-400 hover:text-blue-300"
-                  >
-                    <Edit className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(member.id)}
-                    className="text-red-400 hover:text-red-300"
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </button>
+                <div className="flex-1 flex items-start justify-between">
+                  <div>
+                    <h3 className="text-xl font-bold text-white">{member.name}</h3>
+                    <p className="text-gold-400">{member.title}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleEdit(member)}
+                      className="text-blue-400 hover:text-blue-300"
+                    >
+                      <Edit className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(member.id)}
+                      className="text-red-400 hover:text-red-300"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  </div>
                 </div>
               </div>
               <p className="text-white/70 text-sm mb-2">{member.bio.substring(0, 100)}...</p>
-              <div className="text-gold-500 text-xs">Sıra: {member.order}</div>
+              <div className="flex items-center justify-between">
+                <div className="text-gold-500 text-xs">Sıra: {member.order}</div>
+                <button
+                  onClick={() => toggleActive(member)}
+                  className={`text-xs px-3 py-1 rounded-full font-semibold ${member.active ? 'bg-green-500/20 text-green-400' : 'bg-white/10 text-white/50'}`}
+                >
+                  {member.active ? 'Yayında' : 'Pasif'}
+                </button>
+              </div>
             </div>
           ))}
         </div>

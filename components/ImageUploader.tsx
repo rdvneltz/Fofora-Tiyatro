@@ -10,6 +10,7 @@ interface ImageUploaderProps {
   label?: string
   folder?: string
   acceptVideo?: boolean
+  onUploadingChange?: (uploading: boolean) => void
 }
 
 export default function ImageUploader({
@@ -17,7 +18,8 @@ export default function ImageUploader({
   onUrlChange,
   label = 'Fotoğraf',
   folder = 'images',
-  acceptVideo = false
+  acceptVideo = false,
+  onUploadingChange
 }: ImageUploaderProps) {
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
@@ -65,6 +67,7 @@ export default function ImageUploader({
     if (!fileToUpload) return
 
     setUploading(true)
+    onUploadingChange?.(true)
     setUploadProgress(0)
     setImageError(false)
 
@@ -116,6 +119,7 @@ export default function ImageUploader({
       setUploadProgress(0)
     } finally {
       setUploading(false)
+      onUploadingChange?.(false)
     }
   }
 
