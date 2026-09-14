@@ -47,6 +47,10 @@ interface HeroVideo {
   endsAt?: string | null
 }
 
+function isImageFile(fileName: string): boolean {
+  return /\.(jpe?g|png|webp|gif|avif)(\?|#|$)/i.test(fileName)
+}
+
 export default function AdminVideos() {
   const { data: session, status } = useSession()
   const router = useRouter()
@@ -54,11 +58,14 @@ export default function AdminVideos() {
   const [loading, setLoading] = useState(true)
   const [newVideoName, setNewVideoName] = useState('')
   const [videoFiles, setVideoFiles] = useState<File[]>([])
+  const [videoPreviews, setVideoPreviews] = useState<string[]>([])
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [showProgress, setShowProgress] = useState(false)
   const [currentUploadIndex, setCurrentUploadIndex] = useState(0)
   const [totalFiles, setTotalFiles] = useState(0)
+  const [fileStatuses, setFileStatuses] = useState<{ name: string; preview: string; isImage: boolean; status: 'pending' | 'uploading' | 'done' | 'error' }[]>([])
+  const [uploadSummary, setUploadSummary] = useState<{ succeeded: number; failed: number } | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; videoId: string | null; videoName: string }>({
     show: false,
     videoId: null,
@@ -116,10 +123,21 @@ export default function AdminVideos() {
     const files = e.target.files
     if (files && files.length > 0) {
       const fileArray = Array.from(files)
+      videoPreviews.forEach(url => URL.revokeObjectURL(url))
       setVideoFiles(fileArray)
+      setVideoPreviews(fileArray.map(f => URL.createObjectURL(f)))
       setTotalFiles(fileArray.length)
-      setNewVideoName(fileArray[0].name)
+      setUploadSummary(null)
     }
+  }
+
+  const clearSelectedFiles = () => {
+    videoPreviews.forEach(url => URL.revokeObjectURL(url))
+    setVideoFiles([])
+    setVideoPreviews([])
+    setTotalFiles(0)
+    setFileStatuses([])
+    setUploadSummary(null)
   }
 
   const uploadSingleVideo = async (file: File, index: number, total: number) => {
@@ -161,31 +179,36 @@ export default function AdminVideos() {
     setShowProgress(true)
     setUploadProgress(0)
     setCurrentUploadIndex(0)
+    setUploadSummary(null)
+    setFileStatuses(videoFiles.map((f, i) => ({
+      name: f.name,
+      preview: videoPreviews[i],
+      isImage: f.type.startsWith('image/'),
+      status: 'pending'
+    })))
 
     const uploadedUrls: string[] = []
 
     try {
       for (let i = 0; i < videoFiles.length; i++) {
         setCurrentUploadIndex(i + 1)
+        setUploadProgress(0)
+        setFileStatuses(prev => prev.map((s, idx) => idx === i ? { ...s, status: 'uploading' } : s))
         const publicUrl = await uploadSingleVideo(videoFiles[i], i, videoFiles.length)
         if (publicUrl) {
           uploadedUrls.push(publicUrl)
+          setFileStatuses(prev => prev.map((s, idx) => idx === i ? { ...s, status: 'done' } : s))
+        } else {
+          setFileStatuses(prev => prev.map((s, idx) => idx === i ? { ...s, status: 'error' } : s))
         }
       }
 
-      setTimeout(() => {
-        setShowProgress(false)
-        setUploadProgress(0)
-        setCurrentUploadIndex(0)
-      }, 2000)
-
+      setUploadSummary({ succeeded: uploadedUrls.length, failed: videoFiles.length - uploadedUrls.length })
       return uploadedUrls
     } catch (error) {
       console.error('Toplu video yükleme hatası:', error)
       alert('Bazı videolar yüklenemedi. Lütfen kontrol edin.')
-      setShowProgress(false)
-      setUploadProgress(0)
-      setCurrentUploadIndex(0)
+      setUploadSummary({ succeeded: uploadedUrls.length, failed: videoFiles.length - uploadedUrls.length })
       return uploadedUrls
     } finally {
       setUploading(false)
@@ -215,9 +238,10 @@ export default function AdminVideos() {
         }
 
         setNewVideoName('')
+        videoPreviews.forEach(url => URL.revokeObjectURL(url))
         setVideoFiles([])
+        setVideoPreviews([])
         fetchVideos()
-        alert(`${uploadedFileNames.length} video başarıyla eklendi!`)
       } catch (error) {
         alert('Videolar yüklendi ancak veritabanına eklenemedi')
       }
@@ -239,6 +263,14 @@ export default function AdminVideos() {
     } else {
       alert('Lütfen bir video dosyası yükleyin veya dosya adı girin')
     }
+  }
+
+  const dismissProgress = () => {
+    setShowProgress(false)
+    setFileStatuses([])
+    setUploadSummary(null)
+    setUploadProgress(0)
+    setCurrentUploadIndex(0)
   }
 
   const moveVideo = async (index: number, direction: 'up' | 'down') => {
@@ -424,11 +456,7 @@ export default function AdminVideos() {
                 {videoFiles.length > 0 && (
                   <button
                     type="button"
-                    onClick={() => {
-                      setVideoFiles([])
-                      setNewVideoName('')
-                      setTotalFiles(0)
-                    }}
+                    onClick={clearSelectedFiles}
                     className="px-4 py-3 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg font-medium transition-all"
                   >
                     Temizle
@@ -437,9 +465,27 @@ export default function AdminVideos() {
               </div>
               <p className="text-white/40 text-xs mt-1">
                 {videoFiles.length > 0
-                  ? `${videoFiles.length} medya dosyası seçildi`
+                  ? `${videoFiles.length} medya dosyası seçildi — yüklemeden önce ne seçtiğinizi aşağıda görebilirsiniz`
                   : 'JPG, PNG, WebP, MP4 veya WebM. Birden fazla dosya seçebilirsiniz.'}
               </p>
+
+              {/* Selected file previews - upload'a basmadan önce ne yüklenecek net görünsün */}
+              {videoFiles.length > 0 && (
+                <div className="flex flex-wrap gap-3 mt-3">
+                  {videoFiles.map((file, i) => (
+                    <div key={i} className="w-28">
+                      <div className="w-28 h-20 rounded-lg overflow-hidden bg-navy-900/60 border border-white/10">
+                        {file.type.startsWith('video/') ? (
+                          <video src={videoPreviews[i]} className="w-full h-full object-cover" muted preload="metadata" />
+                        ) : (
+                          <img src={videoPreviews[i]} alt="" className="w-full h-full object-cover" />
+                        )}
+                      </div>
+                      <p className="text-white/40 text-[10px] mt-1 truncate" title={file.name}>{file.name}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="flex items-center gap-4">
@@ -478,7 +524,7 @@ export default function AdminVideos() {
           </div>
         </form>
 
-        {/* Upload Progress Bar */}
+        {/* Upload Progress + Sonuç Özeti */}
         {showProgress && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
@@ -486,31 +532,72 @@ export default function AdminVideos() {
             exit={{ opacity: 0, height: 0 }}
             className="bg-gradient-to-r from-gold-500/20 to-gold-600/20 backdrop-blur-lg rounded-xl p-6 border border-gold-500/30 mb-6"
           >
-            <div className="flex items-center gap-4 mb-3">
-              <div className="w-10 h-10 rounded-full bg-gold-500/30 flex items-center justify-center">
-                <VideoIcon className="w-5 h-5 text-gold-400 animate-pulse" />
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-10 h-10 rounded-full bg-gold-500/30 flex items-center justify-center flex-shrink-0">
+                <VideoIcon className={`w-5 h-5 text-gold-400 ${!uploadSummary ? 'animate-pulse' : ''}`} />
               </div>
               <div className="flex-1">
                 <h3 className="text-white font-semibold text-lg">
-                  {totalFiles > 1
-                    ? `Medya Yükleniyor... (${currentUploadIndex}/${totalFiles})`
-                    : 'Medya Yükleniyor...'}
+                  {uploadSummary
+                    ? `Yükleme tamamlandı: ${uploadSummary.succeeded} başarılı${uploadSummary.failed > 0 ? `, ${uploadSummary.failed} başarısız` : ''}`
+                    : totalFiles > 1
+                      ? `Medya Yükleniyor... (${currentUploadIndex}/${totalFiles})`
+                      : 'Medya Yükleniyor...'}
                 </h3>
-                <p className="text-white/60 text-sm">
-                  Lütfen bekleyin, dosya Cloudflare R2 alanına yükleniyor.
-                </p>
+                {!uploadSummary && (
+                  <p className="text-white/60 text-sm">
+                    Lütfen bekleyin, dosya Cloudflare R2 alanına yükleniyor.
+                  </p>
+                )}
               </div>
-              <div className="text-2xl font-bold text-gold-400">{uploadProgress}%</div>
+              {!uploadSummary && <div className="text-2xl font-bold text-gold-400">{uploadProgress}%</div>}
+              {uploadSummary && (
+                <button
+                  type="button"
+                  onClick={dismissProgress}
+                  className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-medium transition-all"
+                >
+                  Kapat
+                </button>
+              )}
             </div>
 
-            <div className="w-full bg-white/10 rounded-full h-3 overflow-hidden">
-              <motion.div
-                className="h-full bg-gradient-to-r from-gold-500 to-gold-400 rounded-full"
-                initial={{ width: '0%' }}
-                animate={{ width: `${uploadProgress}%` }}
-                transition={{ duration: 0.3, ease: 'easeOut' }}
-              />
-            </div>
+            {!uploadSummary && (
+              <div className="w-full bg-white/10 rounded-full h-3 overflow-hidden mb-4">
+                <motion.div
+                  className="h-full bg-gradient-to-r from-gold-500 to-gold-400 rounded-full"
+                  initial={{ width: '0%' }}
+                  animate={{ width: `${uploadProgress}%` }}
+                  transition={{ duration: 0.3, ease: 'easeOut' }}
+                />
+              </div>
+            )}
+
+            {/* Her dosya için ayrı durum + önizleme - hangi dosyanın yüklendiği/başarısız olduğu net görünsün */}
+            {fileStatuses.length > 0 && (
+              <div className="flex flex-wrap gap-3">
+                {fileStatuses.map((f, i) => (
+                  <div key={i} className="w-24">
+                    <div className={`relative w-24 h-16 rounded-lg overflow-hidden border ${
+                      f.status === 'error' ? 'border-red-500/60' : f.status === 'done' ? 'border-green-500/60' : 'border-white/10'
+                    }`}>
+                      {f.isImage ? (
+                        <img src={f.preview} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <video src={f.preview} className="w-full h-full object-cover" muted preload="metadata" />
+                      )}
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                        {f.status === 'uploading' && <div className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin" />}
+                        {f.status === 'done' && <span className="text-green-400 text-xl font-bold">✓</span>}
+                        {f.status === 'error' && <span className="text-red-400 text-xl font-bold">✕</span>}
+                        {f.status === 'pending' && <span className="text-white/50 text-xs">Sırada</span>}
+                      </div>
+                    </div>
+                    <p className="text-white/40 text-[10px] mt-1 truncate" title={f.name}>{f.name}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </motion.div>
         )}
 
@@ -543,11 +630,23 @@ export default function AdminVideos() {
                     </div>
                   </div>
 
+                  {/* Thumbnail */}
+                  <div className="w-24 h-16 rounded-lg overflow-hidden bg-navy-900/60 border border-white/10 flex-shrink-0">
+                    {isImageFile(video.fileName) ? (
+                      <img src={video.fileName} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <video src={video.fileName} className="w-full h-full object-cover" muted preload="metadata" />
+                    )}
+                  </div>
+
                   {/* Video Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <VideoIcon className="w-5 h-5 text-gold-500 flex-shrink-0" />
                       <span className="text-white font-semibold truncate">{video.fileName.split('/').pop()}</span>
+                      <span className="px-2 py-0.5 bg-white/10 text-white/50 text-xs rounded-full flex-shrink-0">
+                        {isImageFile(video.fileName) ? 'Görsel' : 'Video'}
+                      </span>
                       {video.featured && (
                         <span className="flex items-center gap-1 px-2 py-0.5 bg-gold-500/20 text-gold-400 text-xs rounded-full">
                           <Star className="w-3 h-3" fill="currentColor" />
@@ -712,11 +811,20 @@ export default function AdminVideos() {
               </div>
 
               <div className="space-y-6">
-                {/* Video Name (readonly) */}
+                {/* Video Name (readonly) + önizleme */}
                 <div>
-                  <label className="block text-white/60 text-sm mb-2">Video Dosyası</label>
-                  <div className="px-4 py-3 bg-white/5 rounded-lg text-white/80 border border-white/10 truncate">
-                    {editingVideo.fileName.split('/').pop()}
+                  <label className="block text-white/60 text-sm mb-2">Medya Dosyası</label>
+                  <div className="flex items-center gap-3">
+                    <div className="w-24 h-16 rounded-lg overflow-hidden bg-navy-900/60 border border-white/10 flex-shrink-0">
+                      {isImageFile(editingVideo.fileName) ? (
+                        <img src={editingVideo.fileName} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <video src={editingVideo.fileName} className="w-full h-full object-cover" muted controls preload="metadata" />
+                      )}
+                    </div>
+                    <div className="flex-1 px-4 py-3 bg-white/5 rounded-lg text-white/80 border border-white/10 truncate">
+                      {editingVideo.fileName.split('/').pop()}
+                    </div>
                   </div>
                 </div>
 
