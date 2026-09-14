@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Upload, X, Image as ImageIcon, AlertTriangle, Copy, Check } from 'lucide-react'
 import axios from 'axios'
 
@@ -30,6 +30,18 @@ export default function ImageUploader({
   // Keep the local blob preview separate from the remote URL
   const localPreviewRef = useRef<string>('')
   const uniqueId = useRef(`file-upload-${folder}-${Math.random().toString(36).slice(2, 8)}`)
+
+  // currentUrl can change from outside (e.g. an auto-fetch elsewhere on the page resolving a URL) -
+  // manualUrl/preview only mirror it at mount otherwise, so without this the new value never shows up.
+  useEffect(() => {
+    if (currentUrl !== manualUrl) {
+      setManualUrl(currentUrl)
+      setPreview(currentUrl)
+      localPreviewRef.current = ''
+      setImageError(false)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUrl])
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]

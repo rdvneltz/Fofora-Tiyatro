@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { ChevronUp, ChevronDown, Trash2, Plus, Instagram as InstagramIcon, ArrowLeft, AlertTriangle, Link2, X } from 'lucide-react'
+import { ChevronUp, ChevronDown, Trash2, Plus, Instagram as InstagramIcon, ArrowLeft, AlertTriangle, Link2, X, Loader2 } from 'lucide-react'
 import axios from 'axios'
 import Link from 'next/link'
 import ImageUploader from '@/components/ImageUploader'
@@ -24,13 +24,16 @@ export default function AdminInstagram() {
   const router = useRouter()
   const [posts, setPosts] = useState<InstagramPost[]>([])
   const [loading, setLoading] = useState(true)
-  const [newPostUrl, setNewPostUrl] = useState('')
+  const [adding, setAdding] = useState(false)
   const [newMediaUrl, setNewMediaUrl] = useState('')
   const [newMediaType, setNewMediaType] = useState<'IMAGE' | 'VIDEO' | 'YOUTUBE' | ''>('')
   const [newCaption, setNewCaption] = useState('')
   const [fetchUrl, setFetchUrl] = useState('')
   const [fetching, setFetching] = useState(false)
-  const [syncing, setSyncing] = useState(false)
+  // Disables every list action while any one of them is in flight, so a slow request can't be double-fired
+  const [listBusy, setListBusy] = useState(false)
+  // Which single post is being toggled/deleted right now, purely to show a spinner on that row's button
+  const [actingId, setActingId] = useState<string | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; postId: string | null; postUrl: string }>({
     show: false,
     postId: null,
@@ -55,28 +58,6 @@ export default function AdminInstagram() {
       console.error('Failed to fetch Instagram posts', error)
     } finally {
       setLoading(false)
-    }
-  }
-
-  const syncInstagram = async () => {
-    if (syncing) return
-
-    setSyncing(true)
-    try {
-      const { data } = await axios.post('/api/instagram-posts/sync')
-
-      if (data.success) {
-        alert(`✅ ${data.count} Instagram post senkronize edildi!`)
-        fetchPosts()
-      } else {
-        alert('❌ Instagram senkronizasyonu başarısız oldu')
-      }
-    } catch (error: any) {
-      console.error('Instagram sync error:', error)
-      const errorMsg = error.response?.data?.details || error.response?.data?.error || 'Bilinmeyen hata'
-      alert(`❌ Hata: ${errorMsg}\n\nLütfen .env.local dosyasında INSTAGRAM_ACCESS_TOKEN ve INSTAGRAM_USER_ID değerlerini kontrol edin.`)
-    } finally {
-      setSyncing(false)
     }
   }
 
@@ -106,43 +87,38 @@ export default function AdminInstagram() {
 
   const addPost = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    const url = newPostUrl.trim()
-
-    // If given, it should be a real Instagram link - but it's optional
-    if (url && !url.includes('instagram.com')) {
-      alert('Instagram linki girecekseniz geçerli bir URL girin (örn: https://www.instagram.com/p/ABC123/), ya da bu alanı boş bırakabilirsiniz')
-      return
-    }
+    if (adding) return
 
     if (!newMediaUrl) {
       alert('Ana sayfadaki telefon görselinde oynatılması için bir fotoğraf/video ekleyin')
       return
     }
 
+    setAdding(true)
     try {
       const maxOrder = posts.length > 0 ? Math.max(...posts.map(p => p.order)) : -1
       const mediaType = newMediaType || (/\.(mp4|webm|mov)(\?|$)/i.test(newMediaUrl) ? 'VIDEO' : 'IMAGE')
       await axios.post('/api/instagram-posts', {
-        postUrl: url || null,
         mediaUrl: newMediaUrl,
         mediaType,
         caption: newCaption || null,
         order: maxOrder + 1,
         active: true
       })
-      setNewPostUrl('')
       setNewMediaUrl('')
       setNewMediaType('')
       setNewCaption('')
-      fetchPosts()
+      await fetchPosts()
     } catch (error) {
       alert('Post eklenemedi')
+    } finally {
+      setAdding(false)
     }
   }
 
   const movePost = async (index: number, direction: 'up' | 'down') => {
     if (
+      listBusy ||
       (direction === 'up' && index === 0) ||
       (direction === 'down' && index === posts.length - 1)
     ) {
@@ -157,26 +133,38 @@ export default function AdminInstagram() {
     newPosts[index] = newPosts[targetIndex]
     newPosts[targetIndex] = temp
 
-    // Update orders
-    for (let i = 0; i < newPosts.length; i++) {
-      await axios.put('/api/instagram-posts', {
-        id: newPosts[i].id,
-        order: i
-      })
+    setListBusy(true)
+    try {
+      // Update orders
+      for (let i = 0; i < newPosts.length; i++) {
+        await axios.put('/api/instagram-posts', {
+          id: newPosts[i].id,
+          order: i
+        })
+      }
+      await fetchPosts()
+    } catch (error) {
+      alert('Sıralama güncellenemedi')
+    } finally {
+      setListBusy(false)
     }
-
-    fetchPosts()
   }
 
   const toggleActive = async (post: InstagramPost) => {
+    if (listBusy) return
+    setListBusy(true)
+    setActingId(post.id)
     try {
       await axios.put('/api/instagram-posts', {
         id: post.id,
         active: !post.active
       })
-      fetchPosts()
+      await fetchPosts()
     } catch (error) {
       alert('Güncelleme başarısız oldu')
+    } finally {
+      setListBusy(false)
+      setActingId(null)
     }
   }
 
@@ -190,16 +178,20 @@ export default function AdminInstagram() {
 
   const confirmDelete = async () => {
     const { postId } = deleteConfirm
-    if (!postId) return
+    if (!postId || listBusy) return
 
+    setListBusy(true)
+    setActingId(postId)
     try {
       await axios.delete(`/api/instagram-posts?id=${postId}`)
-      alert('Post başarıyla silindi')
       setDeleteConfirm({ show: false, postId: null, postUrl: '' })
-      fetchPosts()
+      await fetchPosts()
     } catch (error) {
       alert('Silme işlemi başarısız oldu')
       setDeleteConfirm({ show: false, postId: null, postUrl: '' })
+    } finally {
+      setListBusy(false)
+      setActingId(null)
     }
   }
 
@@ -220,53 +212,20 @@ export default function AdminInstagram() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-4">
-              <Link href="/admin/dashboard" className="text-gold-500 hover:text-gold-400">
-                <ArrowLeft className="w-6 h-6" />
-              </Link>
-              <h1 className="text-4xl font-bold text-white">Instagram Post Yönetimi</h1>
-            </div>
-            <button
-              onClick={syncInstagram}
-              disabled={syncing}
-              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-pink-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {syncing ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  Senkronize Ediliyor...
-                </>
-              ) : (
-                <>
-                  <InstagramIcon className="w-5 h-5" />
-                  Instagram'dan Çek
-                </>
-              )}
-            </button>
+          <div className="flex items-center gap-4 mb-4">
+            <Link href="/admin/dashboard" className="text-gold-500 hover:text-gold-400">
+              <ArrowLeft className="w-6 h-6" />
+            </Link>
+            <h1 className="text-4xl font-bold text-white">Instagram Post Yönetimi</h1>
           </div>
           <p className="text-white/60">
-            {posts.length} Instagram post yönetiliyor. Instagram'dan otomatik çekebilir veya manuel ekleyebilirsiniz.
+            {posts.length} içerik yönetiliyor. Aşağıya bir link yapıştırıp otomatik çekebilir ya da kendiniz yükleyebilirsiniz.
           </p>
         </div>
 
         {/* Add Post Form */}
         <form onSubmit={addPost} className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10 mb-8">
           <div className="space-y-4">
-            <div>
-              <label className="block text-white mb-2 text-sm font-medium">Instagram Linki (opsiyonel)</label>
-              <input
-                type="text"
-                value={newPostUrl}
-                onChange={(e) => setNewPostUrl(e.target.value)}
-                placeholder="https://www.instagram.com/p/ABC123/"
-                className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
-              />
-              <p className="text-white/40 text-xs mt-1">
-                Sadece "Instagram'da Görüntüle" linki için kullanılır, boş bırakabilirsiniz. Gerçek bir Instagram gönderisi yoksa doldurmanıza gerek yok.
-              </p>
-            </div>
-
             <div>
               <label className="block text-white mb-2 text-sm font-medium">Anasayfadaki telefonda oynatılacak fotoğraf/video</label>
               <div className="flex gap-2">
@@ -276,24 +235,30 @@ export default function AdminInstagram() {
                   onChange={(e) => setFetchUrl(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); fetchFromUrl() } }}
                   placeholder="Instagram, YouTube ya da bir görsel linki yapıştırın"
-                  className="flex-1 px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  disabled={fetching}
+                  className="flex-1 px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:opacity-60"
                 />
                 <button
                   type="button"
                   onClick={fetchFromUrl}
                   disabled={fetching || !fetchUrl.trim()}
-                  className="flex items-center gap-2 px-5 py-3 bg-white/10 hover:bg-white/20 text-white rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-2 px-5 py-3 bg-white/10 hover:bg-white/20 text-white rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed min-w-[110px] justify-center"
                 >
                   {fetching ? (
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <><Loader2 className="w-5 h-5 animate-spin" /> Çekiliyor...</>
                   ) : (
                     <><Link2 className="w-5 h-5" /> Çek</>
                   )}
                 </button>
               </div>
               <p className="text-white/40 text-xs mt-1">
-Instagram post/reel linkleri ve YouTube linkleri otomatik oynatılır, diğer site linkleri için sistem sayfadan görseli/videoyu bulup kendi sunucumuza indirir. Nadiren çekemezse aşağıdan dosyayı manuel yükleyin.
+                Instagram post/reel linkleri ve YouTube linkleri otomatik oynatılır, diğer site linkleri için sistem sayfadan görseli/videoyu bulup kendi sunucumuza indirir. Nadiren çekemezse aşağıdan dosyayı manuel yükleyin.
               </p>
+              {fetching && (
+                <p className="text-purple-300 text-xs mt-2 flex items-center gap-1.5">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> Medya indiriliyor ve sunucumuza yükleniyor, bu birkaç saniye sürebilir…
+                </p>
+              )}
             </div>
 
             {newMediaType === 'YOUTUBE' && newMediaUrl ? (
@@ -320,22 +285,25 @@ Instagram post/reel linkleri ve YouTube linkleri otomatik oynatılır, diğer si
             )}
 
             <div>
-              <label className="block text-white mb-2 text-sm font-medium">Açıklama (opsiyonel)</label>
+              <label className="block text-white mb-2 text-sm font-medium">Başlık (opsiyonel)</label>
               <input
                 type="text"
                 value={newCaption}
                 onChange={(e) => setNewCaption(e.target.value)}
-                placeholder="Telefon önizlemesinde gösterilecek kısa başlık"
+                placeholder="Örn: Prova günü"
                 className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
               />
+              <p className="text-white/40 text-xs mt-1">
+                Ana sayfada telefonun altındaki sabit "ŞİMDİ FOFORA'DA" yazısı her zaman kalır — burası sadece onun altındaki kalın başlığı belirler. Boş bırakırsanız "Instagram'dan" yazar.
+              </p>
             </div>
 
             <button
               type="submit"
-              className="flex items-center justify-center gap-2 w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-pink-700 transition-all"
+              disabled={adding || !newMediaUrl}
+              className="flex items-center justify-center gap-2 w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-pink-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Plus className="w-5 h-5" />
-              Ekle
+              {adding ? <><Loader2 className="w-5 h-5 animate-spin" /> Ekleniyor...</> : <><Plus className="w-5 h-5" /> Ekle</>}
             </button>
           </div>
         </form>
@@ -344,7 +312,7 @@ Instagram post/reel linkleri ve YouTube linkleri otomatik oynatılır, diğer si
         <div className="space-y-4">
           {posts.length === 0 ? (
             <div className="bg-white/5 rounded-xl p-12 text-center">
-              <p className="text-white/60 text-lg">Henüz Instagram post eklenmemiş</p>
+              <p className="text-white/60 text-lg">Henüz içerik eklenmemiş</p>
             </div>
           ) : (
             posts.map((post, index) => (
@@ -354,11 +322,11 @@ Instagram post/reel linkleri ve YouTube linkleri otomatik oynatılır, diğer si
                 animate={{ opacity: 1, y: 0 }}
                 className={`bg-white/5 backdrop-blur-lg rounded-xl p-6 border transition-all ${
                   post.active ? 'border-purple-500/50' : 'border-white/10'
-                }`}
+                } ${actingId === post.id ? 'opacity-60' : ''}`}
               >
-                <div className="flex items-center gap-6">
+                <div className="flex flex-wrap items-center gap-4">
                   {/* Order Number */}
-                  <div className="flex flex-col items-center">
+                  <div className="flex-shrink-0 flex flex-col items-center">
                     <div className="text-white/40 text-xs mb-1">Sıra</div>
                     <div className="bg-white/10 rounded-lg px-4 py-2 text-white font-bold text-xl min-w-[60px] text-center">
                       {index + 1}
@@ -366,7 +334,7 @@ Instagram post/reel linkleri ve YouTube linkleri otomatik oynatılır, diğer si
                   </div>
 
                   {/* Media Thumbnail */}
-                  <div className="w-16 h-16 rounded-lg overflow-hidden bg-navy-900/50 border border-white/10 flex-shrink-0 flex items-center justify-center">
+                  <div className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden bg-navy-900/50 border border-white/10 flex items-center justify-center">
                     {post.mediaUrl ? (
                       post.mediaType === 'VIDEO' ? (
                         <video src={post.mediaUrl} className="w-full h-full object-cover" muted />
@@ -383,12 +351,12 @@ Instagram post/reel linkleri ve YouTube linkleri otomatik oynatılır, diğer si
                   </div>
 
                   {/* Post Info */}
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-[160px]">
                     <div className="flex items-center gap-2 mb-2">
-                      <InstagramIcon className="w-5 h-5 text-purple-400" />
-                      <span className="text-white font-semibold text-sm truncate">{post.caption || post.postUrl || 'İçerik'}</span>
+                      <InstagramIcon className="w-5 h-5 text-purple-400 flex-shrink-0" />
+                      <span className="text-white font-semibold text-sm truncate">{post.caption || 'Başlıksız içerik'}</span>
                     </div>
-                    {post.postUrl ? (
+                    {post.postUrl && (
                       <a
                         href={post.postUrl}
                         target="_blank"
@@ -397,51 +365,54 @@ Instagram post/reel linkleri ve YouTube linkleri otomatik oynatılır, diğer si
                       >
                         Instagram'da Görüntüle
                       </a>
-                    ) : (
-                      <span className="text-white/30 text-xs">Instagram linki yok</span>
                     )}
                   </div>
 
-                  {/* Status */}
-                  <button
-                    onClick={() => toggleActive(post)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium border-2 transition-all ${
-                      post.active
-                        ? 'bg-green-500/20 text-green-400 border-green-500/50 hover:bg-green-500/30'
-                        : 'bg-gray-500/20 text-gray-400 border-gray-500/50 hover:bg-gray-500/30'
-                    }`}
-                  >
-                    {post.active ? 'Aktif' : 'Pasif'}
-                  </button>
-
-                  {/* Move Controls */}
-                  <div className="flex flex-col gap-1">
+                  {/* Actions */}
+                  <div className="flex-shrink-0 flex items-center gap-2 ml-auto">
+                    {/* Status */}
                     <button
-                      onClick={() => movePost(index, 'up')}
-                      disabled={index === 0}
-                      className="p-2 rounded-lg bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                      title="Yukarı Taşı"
+                      onClick={() => toggleActive(post)}
+                      disabled={listBusy}
+                      className={`flex items-center justify-center gap-1.5 min-w-[76px] px-4 py-2 rounded-lg text-sm font-medium border-2 transition-all disabled:cursor-not-allowed ${
+                        post.active
+                          ? 'bg-green-500/20 text-green-400 border-green-500/50 hover:bg-green-500/30'
+                          : 'bg-gray-500/20 text-gray-400 border-gray-500/50 hover:bg-gray-500/30'
+                      }`}
                     >
-                      <ChevronUp className="w-5 h-5 text-white" />
+                      {actingId === post.id ? <Loader2 className="w-4 h-4 animate-spin" /> : (post.active ? 'Aktif' : 'Pasif')}
                     </button>
+
+                    {/* Move Controls */}
+                    <div className="flex flex-col gap-1">
+                      <button
+                        onClick={() => movePost(index, 'up')}
+                        disabled={listBusy || index === 0}
+                        className="p-2 rounded-lg bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                        title="Yukarı Taşı"
+                      >
+                        <ChevronUp className="w-5 h-5 text-white" />
+                      </button>
+                      <button
+                        onClick={() => movePost(index, 'down')}
+                        disabled={listBusy || index === posts.length - 1}
+                        className="p-2 rounded-lg bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                        title="Aşağı Taşı"
+                      >
+                        <ChevronDown className="w-5 h-5 text-white" />
+                      </button>
+                    </div>
+
+                    {/* Delete */}
                     <button
-                      onClick={() => movePost(index, 'down')}
-                      disabled={index === posts.length - 1}
-                      className="p-2 rounded-lg bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                      title="Aşağı Taşı"
+                      onClick={() => handleDeleteClick(post)}
+                      disabled={listBusy}
+                      className="p-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                      title="Sil"
                     >
-                      <ChevronDown className="w-5 h-5 text-white" />
+                      {actingId === post.id ? <Loader2 className="w-5 h-5 text-red-400 animate-spin" /> : <Trash2 className="w-5 h-5 text-red-400" />}
                     </button>
                   </div>
-
-                  {/* Delete */}
-                  <button
-                    onClick={() => handleDeleteClick(post)}
-                    className="p-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 transition-all"
-                    title="Sil"
-                  >
-                    <Trash2 className="w-5 h-5 text-red-400" />
-                  </button>
                 </div>
               </motion.div>
             ))
@@ -463,6 +434,7 @@ Instagram post/reel linkleri ve YouTube linkleri otomatik oynatılır, diğer si
             <li>Aktif medyalı post yoksa telefon görseli anasayfadan tamamen kalkar (rastgele/demo görsel gösterilmez)</li>
             <li>Pasif postlar ana sayfada görünmez</li>
             <li>Sıralamayı yukarı/aşağı butonlarıyla değiştirebilirsiniz</li>
+            <li>Ziyaretçiler telefon görseline tıklayıp içeriği sesli ve büyük ekranda açabilir</li>
           </ul>
         </div>
       </div>
