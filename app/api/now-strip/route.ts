@@ -16,9 +16,7 @@ export async function GET() {
       orderBy: { order: 'asc' },
       include: { items: { orderBy: { order: 'asc' } } }
     })
-    const response = NextResponse.json(blocks)
-    response.headers.set('Cache-Control', 'public, max-age=30, stale-while-revalidate=120')
-    return response
+    return NextResponse.json(blocks)
   } catch (error) {
     return NextResponse.json({ error: 'Şerit verileri alınamadı' }, { status: 500 })
   }
