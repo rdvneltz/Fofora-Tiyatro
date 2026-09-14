@@ -4,13 +4,17 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { ChevronUp, ChevronDown, Trash2, Plus, Instagram as InstagramIcon, ArrowLeft } from 'lucide-react'
+import { ChevronUp, ChevronDown, Trash2, Plus, Instagram as InstagramIcon, ArrowLeft, AlertTriangle } from 'lucide-react'
 import axios from 'axios'
 import Link from 'next/link'
+import ImageUploader from '@/components/ImageUploader'
 
 interface InstagramPost {
   id: string
   postUrl: string
+  mediaUrl?: string
+  mediaType?: string
+  caption?: string
   order: number
   active: boolean
 }
@@ -21,6 +25,8 @@ export default function AdminInstagram() {
   const [posts, setPosts] = useState<InstagramPost[]>([])
   const [loading, setLoading] = useState(true)
   const [newPostUrl, setNewPostUrl] = useState('')
+  const [newMediaUrl, setNewMediaUrl] = useState('')
+  const [newCaption, setNewCaption] = useState('')
   const [syncing, setSyncing] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; postId: string | null; postUrl: string }>({
     show: false,
@@ -86,14 +92,25 @@ export default function AdminInstagram() {
       return
     }
 
+    if (!newMediaUrl) {
+      alert('Ana sayfadaki telefon görselinde oynatılması için bir fotoğraf/video yükleyin')
+      return
+    }
+
     try {
       const maxOrder = posts.length > 0 ? Math.max(...posts.map(p => p.order)) : -1
+      const isVideo = /\.(mp4|webm|mov)(\?|$)/i.test(newMediaUrl)
       await axios.post('/api/instagram-posts', {
         postUrl: url,
+        mediaUrl: newMediaUrl,
+        mediaType: isVideo ? 'VIDEO' : 'IMAGE',
+        caption: newCaption || null,
         order: maxOrder + 1,
         active: true
       })
       setNewPostUrl('')
+      setNewMediaUrl('')
+      setNewCaption('')
       fetchPosts()
     } catch (error) {
       alert('Post eklenemedi')
@@ -214,26 +231,44 @@ export default function AdminInstagram() {
           <div className="space-y-4">
             <div>
               <label className="block text-white mb-2 text-sm font-medium">Instagram Post URL</label>
-              <div className="flex gap-4">
-                <input
-                  type="text"
-                  value={newPostUrl}
-                  onChange={(e) => setNewPostUrl(e.target.value)}
-                  placeholder="https://www.instagram.com/p/ABC123/"
-                  className="flex-1 px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                />
-                <button
-                  type="submit"
-                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-pink-700 transition-all"
-                >
-                  <Plus className="w-5 h-5" />
-                  Ekle
-                </button>
-              </div>
+              <input
+                type="text"
+                value={newPostUrl}
+                onChange={(e) => setNewPostUrl(e.target.value)}
+                placeholder="https://www.instagram.com/p/ABC123/"
+                className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              />
               <p className="text-white/40 text-xs mt-1">
                 Instagram post, reel veya story URL'sini girin. Örnek: https://www.instagram.com/p/ABC123/
               </p>
             </div>
+
+            <ImageUploader
+              currentUrl={newMediaUrl}
+              onUrlChange={setNewMediaUrl}
+              label="Anasayfadaki telefonda oynatılacak fotoğraf/video"
+              folder="instagram"
+              acceptVideo
+            />
+
+            <div>
+              <label className="block text-white mb-2 text-sm font-medium">Açıklama (opsiyonel)</label>
+              <input
+                type="text"
+                value={newCaption}
+                onChange={(e) => setNewCaption(e.target.value)}
+                placeholder="Telefon önizlemesinde gösterilecek kısa başlık"
+                className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="flex items-center justify-center gap-2 w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-pink-700 transition-all"
+            >
+              <Plus className="w-5 h-5" />
+              Ekle
+            </button>
           </div>
         </form>
 
@@ -260,6 +295,21 @@ export default function AdminInstagram() {
                     <div className="bg-white/10 rounded-lg px-4 py-2 text-white font-bold text-xl min-w-[60px] text-center">
                       {index + 1}
                     </div>
+                  </div>
+
+                  {/* Media Thumbnail */}
+                  <div className="w-16 h-16 rounded-lg overflow-hidden bg-navy-900/50 border border-white/10 flex-shrink-0 flex items-center justify-center">
+                    {post.mediaUrl ? (
+                      post.mediaType === 'VIDEO' ? (
+                        <video src={post.mediaUrl} className="w-full h-full object-cover" muted />
+                      ) : (
+                        <img src={post.mediaUrl} alt="" className="w-full h-full object-cover" />
+                      )
+                    ) : (
+                      <span title="Anasayfada gösterilecek medya eksik">
+                        <AlertTriangle className="w-6 h-6 text-yellow-500" />
+                      </span>
+                    )}
                   </div>
 
                   {/* Post Info */}
@@ -333,7 +383,8 @@ export default function AdminInstagram() {
           <ul className="text-white/60 text-sm space-y-1 list-disc list-inside">
             <li>Instagram post, reel veya story URL'sini girebilirsiniz</li>
             <li>URL formatı: https://www.instagram.com/p/POST_ID/</li>
-            <li>Postlar otomatik olarak Instagram embed ile görüntülenir</li>
+            <li>Anasayfadaki hero bölümünün sağındaki telefon görselinde, buraya yüklediğiniz fotoğraf/videolar sırayla oynatılır</li>
+            <li>Sarı uyarı ikonu olan postların medyası eksik — anasayfada görünmezler, düzenlemek için silip medya ile tekrar ekleyin</li>
             <li>Pasif postlar ana sayfada görünmez</li>
             <li>Sıralamayı yukarı/aşağı butonlarıyla değiştirebilirsiniz</li>
           </ul>

@@ -23,7 +23,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Delete all existing posts
+    // Delete all existing posts (cleaning up any manually-uploaded R2 media first)
+    const existingPosts = await prisma.instagramPost.findMany({ where: { mediaUrl: { not: null } } })
+    if (existingPosts.length) {
+      const { safeDeleteR2Url } = await import('@/lib/r2')
+      await Promise.all(existingPosts.map((p) => p.mediaUrl && safeDeleteR2Url(p.mediaUrl)))
+    }
     await prisma.instagramPost.deleteMany({})
 
     // Insert new posts
