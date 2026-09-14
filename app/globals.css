@@ -246,10 +246,11 @@ footer p,footer>small{color:#c56a79;font-weight:600}footer p{font-size:clamp(.72
 
 /* "Şimdi Fofora'da" şeridi - admin yönetimli tasarımlar (maddeler / kayan yazı / öne çıkan duyuru) ve tıklama davranışları (modal / aşağı açılır panel). Bu blok dosyanın en altına eklendiği için, üstteki tüm .now-strip{...} / .now-strip>*{...} tekrarlarıyla eşit özgüllükte olan kurallar burada kazanır - breakpoint sırası önemli değil. */
 .now-strip{position:relative}
+.now-strip-cell{min-width:0}
 .now-strip-cell.clickable{cursor:pointer}
 .now-strip-cell.clickable:hover strong{text-decoration:underline}
-.now-strip small{color:var(--wine);text-transform:uppercase;letter-spacing:.1em;opacity:1}
-.now-strip strong{color:var(--ink);font-weight:600;line-height:1.3;letter-spacing:-.01em}
+.now-strip small{color:var(--wine);text-transform:uppercase;letter-spacing:.1em;opacity:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.now-strip strong{color:var(--ink);font-weight:600;line-height:1.3;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 
 .now-strip.mode-marquee{display:flex;align-items:center;gap:1.6rem;padding:0 2.3vw;overflow:hidden}
 .now-strip.mode-marquee h2{flex-shrink:0;white-space:nowrap;margin:0}
@@ -263,14 +264,16 @@ footer p,footer>small{color:#c56a79;font-weight:600}footer p{font-size:clamp(.72
 @keyframes now-strip-scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 @media (prefers-reduced-motion:reduce){.now-strip-marquee-track{animation:none}}
 
-.now-strip.mode-spotlight{display:flex;align-items:center;justify-content:center;gap:1.6vw;padding:0 2.3vw;text-align:center}
-.now-strip-spotlight-eyebrow{font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--wine);opacity:1;display:block;margin-bottom:4px}
-.now-strip-spotlight-copy{display:flex;flex-direction:column;gap:3px}
-.now-strip-spotlight-label{font-size:.62rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--wine);opacity:1}
-.now-strip-spotlight-copy strong{font-family:Georgia,serif;font-size:1.15rem;color:var(--ink);font-weight:600}
-.now-strip-spotlight-cta{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:999px;background:var(--ink);color:var(--paper);font-size:.68rem;font-weight:700;letter-spacing:.03em;border:0;cursor:pointer;white-space:nowrap;transition:opacity .2s}
-.now-strip-spotlight-cta:hover{opacity:.8}
-.now-strip-spotlight-cta svg{width:14px}
+.now-strip.mode-spotlight{display:flex;align-items:center;justify-content:center;gap:1.6vw;padding:0 2.3vw;text-align:center;overflow:hidden}
+.now-strip-spotlight{max-width:100%;min-width:0}
+.now-strip-spotlight.clickable{cursor:pointer}
+.now-strip-spotlight-eyebrow{font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--wine);opacity:1;display:block;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.now-strip-spotlight-copy{display:flex;flex-direction:column;gap:3px;min-width:0}
+.now-strip-spotlight-label{font-size:.62rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--wine);opacity:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.now-strip-spotlight-copy strong{font-family:Georgia,serif;font-size:1.15rem;color:var(--ink);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.now-strip-spotlight-cta{display:inline-flex;align-items:center;gap:5px;margin-top:6px;font-size:.66rem;font-weight:700;letter-spacing:.03em;color:var(--wine);border-bottom:1px solid var(--wine);padding-bottom:2px;white-space:nowrap;transition:opacity .2s}
+.now-strip-spotlight.clickable:hover .now-strip-spotlight-cta{opacity:.65}
+.now-strip-spotlight-cta svg{width:12px}
 
 .now-strip-expand{position:fixed;z-index:200;background:var(--paper);color:var(--ink);border:1px solid #c9c3b7;border-top:0;box-shadow:0 14px 30px rgba(0,0,0,.18);overflow:hidden;display:flex;flex-wrap:wrap;gap:16px;padding:20px 2.3vw}
 .now-strip-expand-close{position:absolute;top:10px;right:14px;background:none;border:0;cursor:pointer;color:inherit;opacity:.5}
