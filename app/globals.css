@@ -334,3 +334,11 @@ footer p,footer>small{color:#c56a79;font-weight:600}footer p{font-size:clamp(.72
 .team-grid a>div{position:relative;aspect-ratio:4/5;background:#2b1719}
 @media (min-width:901px) and (max-width:1199px), (min-width:901px) and (max-aspect-ratio:4/3){.team-grid a{flex:0 0 180px}.team-grid a>div{height:180px}}
 @media (min-width:901px) and (max-width:1199px){.team-grid a{flex:0 0 180px}.team-grid a>div{height:180px}}
+
+/* Ekip üyesi detay sayfası: foto solda sabit (sticky) kalsın, tek ekrana sığsın,
+   sadece sağdaki yazı sütunu kaysın. Diğer detay sayfa tiplerini etkilememesi için
+   .team-detail-page ile sınırlandırılmış. */
+@media(min-width:801px){
+  .team-detail-page .detail-layout{align-items:start}
+  .team-detail-page .detail-media{position:sticky;top:104px;min-height:0;height:calc(100svh - 144px);max-height:640px}
+}
