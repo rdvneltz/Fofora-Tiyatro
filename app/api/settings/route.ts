@@ -9,11 +9,21 @@ export async function GET() {
       orderBy: { updatedAt: 'desc' }
     })
     const session = await getServerSession(authOptions)
-    const publicSettings = settings && !session
-      ? (({ inquiryEmailRecipients, ...safe }) => safe)(settings)
-      : settings
-    const response = NextResponse.json(publicSettings)
-    response.headers.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=300')
+
+    // Oturumsuz (herkese açık) istekler inquiryEmailRecipients hariç, paylaşımlı önbelleğe
+    // alınabilir bir yanıt alır. Admin isteği ise tam veriyi (alıcı e-postalar dahil) alır ve
+    // bu yanıt ASLA paylaşımlı/CDN önbelleğine düşmemeli - aksi halde (a) admin panelinde
+    // ayarlar rastgele "kayboluyor" gibi görünür (herkese açık, alıcısız sürüm cache'e düşüp
+    // admin'e de servis edilir) ve (b) alıcı e-postalar önbellek üzerinden sızabilir.
+    if (!session) {
+      const publicSettings = settings ? (({ inquiryEmailRecipients, ...safe }) => safe)(settings) : settings
+      const response = NextResponse.json(publicSettings)
+      response.headers.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=300')
+      return response
+    }
+
+    const response = NextResponse.json(settings)
+    response.headers.set('Cache-Control', 'private, no-store')
     return response
   } catch (error) {
     return NextResponse.json({ error: 'Veri alınamadı' }, { status: 500 })

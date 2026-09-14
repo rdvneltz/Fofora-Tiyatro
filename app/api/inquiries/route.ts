@@ -53,15 +53,24 @@ export async function POST(request: NextRequest) {
     })
 
     // Mesaj her durumda önce inbox'a kaydedilir; e-posta bildirimi başarısız olsa da kaybolmaz.
+    // Gönderilemezse sebebi Inquiry kaydına yazılır - admin gelen kutusunda tam olarak neyin
+    // eksik olduğunu (ayar kapalı / alıcı yok / RESEND_API_KEY tanımsız / Resend hatası) görür.
     try {
-      const settings = await prisma.siteSettings.findFirst()
-      if (settings?.inquiryEmailEnabled && settings.inquiryEmailRecipients.length) {
+      const settings = await prisma.siteSettings.findFirst({ orderBy: { updatedAt: 'desc' } })
+      if (!settings?.inquiryEmailEnabled) {
+        await prisma.inquiry.update({ where: { id: inquiry.id }, data: { emailNotificationError: 'E-posta bildirimi Site Ayarları\'nda kapalı.' } })
+      } else {
         const { sendInquiryEmail } = await import('@/lib/inquiry-email')
-        const delivered = await sendInquiryEmail(inquiry, settings.inquiryEmailRecipients)
-        if (delivered) await prisma.inquiry.update({ where: { id: inquiry.id }, data: { emailNotificationSent: true } })
+        const result = await sendInquiryEmail(inquiry, settings.inquiryEmailRecipients)
+        if (result.success) {
+          await prisma.inquiry.update({ where: { id: inquiry.id }, data: { emailNotificationSent: true, emailNotificationError: null } })
+        } else {
+          await prisma.inquiry.update({ where: { id: inquiry.id }, data: { emailNotificationError: result.error } })
+        }
       }
-    } catch (mailError) {
+    } catch (mailError: any) {
       console.error('Inquiry email notification failed', mailError)
+      await prisma.inquiry.update({ where: { id: inquiry.id }, data: { emailNotificationError: `Beklenmeyen hata: ${mailError?.message || String(mailError)}` } }).catch(() => undefined)
     }
 
     return NextResponse.json(inquiry, { status: 201 })
