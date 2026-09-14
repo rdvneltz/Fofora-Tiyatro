@@ -45,9 +45,13 @@ const blockTypes = [
   { value: 'marquee', label: 'Kayan Yazı', hint: 'Tek satırda akan metin', icon: ArrowLeftRight, defaultHeading: '' },
   { value: 'spotlight', label: 'Öne Çıkan Duyuru', hint: 'Tek büyük vurgu + buton', icon: Megaphone, defaultHeading: '' },
 ]
-const sectionOptions = [
-  ['', 'Seçiniz'], ['hero', 'Üst kısım (Hero)'], ['oyunlar', 'Oyunlar / Takvim'], ['egitimler', 'Eğitimler'],
-  ['neler-yaptik', 'Neler Yaptık'], ['haberler', 'Bizden Haberler'], ['ekip', 'Ekibimiz'], ['iletisim', 'İletişim'],
+// The homepage is a non-scrolling single-screen layout on desktop (every section already
+// visible at once), so "scroll to a section" doesn't make sense there - this instead picks
+// one of the site's dedicated pages to navigate to.
+const pageOptions = [
+  ['', 'Seçiniz'], ['/', 'Ana Sayfa'], ['/oyunlar', 'Oyunlar / Takvim'], ['/egitimler', 'Eğitimler'],
+  ['/neler-yaptik', 'Neler Yaptık'], ['/haberler', 'Bizden Haberler'], ['/bizden-kareler', 'Bizden Kareler'],
+  ['/ekibimiz', 'Ekibimiz'], ['/hakkimizda', 'Hakkımızda'], ['/iletisim', 'İletişim'],
 ]
 const emptyItemForm = { label: '', text: '', clickAction: 'none', linkUrl: '', sectionId: '', modalMediaType: '', modalMediaUrl: '', modalTitle: '', modalBody: '', ctaLabel: '' }
 
@@ -72,7 +76,7 @@ function ItemForm({ initial, onSave, onCancel, saving }: { initial: typeof empty
           <option value="modal">Modal aç (yazı + foto/video)</option>
           <option value="expand">Aşağı doğru genişlet (şeridin altında açılsın)</option>
           <option value="link">Bir bağlantıya git</option>
-          <option value="section">Sayfada bir bölüme kaydır</option>
+          <option value="section">Bir sayfaya git</option>
         </select>
       </label>
       {v.clickAction === 'link' && (
@@ -81,9 +85,9 @@ function ItemForm({ initial, onSave, onCancel, saving }: { initial: typeof empty
         </label>
       )}
       {v.clickAction === 'section' && (
-        <label className="block text-white/70 text-xs font-medium">Bölüm
+        <label className="block text-white/70 text-xs font-medium">Sayfa
           <select value={v.sectionId} onChange={e => set('sectionId', e.target.value)} className="mt-1 w-full px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-            {sectionOptions.map(([val, label]) => <option key={val} value={val}>{label}</option>)}
+            {pageOptions.map(([val, label]) => <option key={val} value={val}>{label}</option>)}
           </select>
         </label>
       )}
@@ -397,7 +401,7 @@ export default function AdminNowStrip() {
           <ul className="text-white/60 text-sm space-y-1 list-disc list-inside">
             <li><b>Maddeler</b> tasarımı hepsini yan yana sabit gösterir (mevcut görünüm); <b>Kayan Yazı</b> maddeleri tek satırda kaydırır; <b>Öne Çıkan Duyuru</b> ilk aktif maddeyi büyük bir buton ile gösterir</li>
             <li>Birden fazla tasarım eklerseniz, her biri kendi süresi kadar gösterilip otomatik sıradakine geçilir</li>
-            <li>Her maddeye ayrı ayrı tıklama davranışı tanımlayabilirsiniz: modal, aşağı açılır panel, bağlantı ya da sayfada bir bölüme kaydırma</li>
+            <li>Her maddeye ayrı ayrı tıklama davranışı tanımlayabilirsiniz: modal, aşağı açılır panel, bir bağlantı ya da sitedeki bir sayfaya gitme</li>
             <li>Pasif tasarımlar ve pasif maddeler ana sayfada görünmez</li>
           </ul>
         </div>
@@ -406,10 +410,18 @@ export default function AdminNowStrip() {
   )
 }
 
+// A link without "/" or "http(s)://" (e.g. someone typing "www.youtube.com") is not a valid
+// site-relative path - treat anything that isn't explicitly one of those as an external URL.
+function normalizeLinkUrl(url: string) {
+  const trimmed = url.trim()
+  if (!trimmed || trimmed.startsWith('/') || /^https?:\/\//i.test(trimmed)) return trimmed
+  return `https://${trimmed}`
+}
+
 function cleanItem(v: typeof emptyItemForm) {
   return {
     label: v.label || null, text: v.text, clickAction: v.clickAction,
-    linkUrl: (v.clickAction === 'none' || v.clickAction === 'section') ? null : v.linkUrl || null,
+    linkUrl: (v.clickAction === 'none' || v.clickAction === 'section') ? null : (v.linkUrl ? normalizeLinkUrl(v.linkUrl) : null),
     sectionId: v.clickAction === 'section' ? v.sectionId || null : null,
     modalMediaType: (v.clickAction === 'modal' || v.clickAction === 'expand') ? v.modalMediaType || null : null,
     modalMediaUrl: (v.clickAction === 'modal' || v.clickAction === 'expand') ? v.modalMediaUrl || null : null,
