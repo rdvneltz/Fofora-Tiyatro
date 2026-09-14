@@ -1,4 +1,4 @@
 const CACHE='fofora-shell-v1'
 self.addEventListener('install',()=>self.skipWaiting())
 self.addEventListener('activate',event=>event.waitUntil(self.clients.claim()))
-self.addEventListener('fetch',event=>{if(event.request.method!=='GET')return;event.respondWith(fetch(event.request).catch(()=>caches.match(event.request)))})
+self.addEventListener('fetch',event=>{if(event.request.method!=='GET')return;event.respondWith(fetch(event.request).catch(async()=>(await caches.match(event.request))||Response.error()))})
