@@ -218,6 +218,40 @@ model GalleryItem {
   updatedAt   DateTime @updatedAt
 }
 
+// "Şu Anda Fofora'da" şeridi - tasarımlar (blok) ve içerikleri (madde)
+model NowStripBlock {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  type            String   @default("items") // items | marquee | spotlight
+  heading         String?  // items/spotlight için üstte gösterilen küçük başlık
+  order           Int      @default(0)
+  active          Boolean  @default(true)
+  durationSeconds Int      @default(8) // birden fazla aktif blok varsa bu blok kaç saniye gösterilip diğerine geçilecek
+  marqueeSpeed    Int      @default(28) // marquee: bir turun kaç saniyede tamamlanacağı
+  items           NowStripItem[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model NowStripItem {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  blockId        String   @db.ObjectId
+  block          NowStripBlock @relation(fields: [blockId], references: [id], onDelete: Cascade)
+  label          String?  // küçük üst etiket, örn. "SIRADAKİ OYUN"
+  text           String   // ana metin/başlık
+  order          Int      @default(0)
+  active         Boolean  @default(true)
+  clickAction    String   @default("none") // none | modal | expand | link | section
+  linkUrl        String?  // clickAction=link
+  sectionId      String?  // clickAction=section (sayfadaki bir bölüm id'si)
+  modalMediaType String?  // image | video | youtube
+  modalMediaUrl  String?
+  modalTitle     String?
+  modalBody      String?
+  ctaLabel       String?  // spotlight tasarımındaki buton metni / modal aksiyon metni
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
 // Gelen Kutusu - İletişim/Kayıt Talepleri
 model Inquiry {
   id              String   @id @default(auto()) @map("_id") @db.ObjectId

@@ -243,3 +243,45 @@ footer p,footer>small{color:#c56a79;font-weight:600}footer p{font-size:clamp(.72
 .testimonial-dots button.active{width:16px}
 .testimonial-more{font-size:.54rem;gap:5px}
 }
+
+/* "Şimdi Fofora'da" şeridi - admin yönetimli tasarımlar (maddeler / kayan yazı / öne çıkan duyuru) ve tıklama davranışları (modal / aşağı açılır panel). Bu blok dosyanın en altına eklendiği için, üstteki tüm .now-strip{...} / .now-strip>*{...} tekrarlarıyla eşit özgüllükte olan kurallar burada kazanır - breakpoint sırası önemli değil. */
+.now-strip{position:relative}
+.now-strip-cell.clickable{cursor:pointer}
+.now-strip-cell.clickable:hover strong{text-decoration:underline}
+
+.now-strip.mode-marquee{display:flex;align-items:center;gap:1.6rem;padding:0 2.3vw;overflow:hidden}
+.now-strip.mode-marquee h2{flex-shrink:0;white-space:nowrap;margin:0}
+.now-strip-marquee{flex:1;min-width:0;overflow:hidden}
+.now-strip-marquee-track{display:flex;align-items:baseline;gap:3.5rem;width:max-content;white-space:nowrap;animation:now-strip-scroll var(--now-marquee-duration,28s) linear infinite}
+.now-strip-marquee:hover .now-strip-marquee-track{animation-play-state:paused}
+.now-strip-marquee-item{font-family:Georgia,serif;font-size:.9rem}
+.now-strip-marquee-item b{font-size:.62rem;font-weight:700;letter-spacing:.04em;opacity:.65;margin-right:.4em}
+.now-strip-marquee-item.clickable{cursor:pointer}
+.now-strip-marquee-item.clickable:hover{text-decoration:underline}
+@keyframes now-strip-scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@media (prefers-reduced-motion:reduce){.now-strip-marquee-track{animation:none}}
+
+.now-strip.mode-spotlight{display:flex;align-items:center;justify-content:center;gap:1.6vw;padding:0 2.3vw;text-align:center}
+.now-strip-spotlight-eyebrow{font-size:.6rem;font-weight:700;letter-spacing:.08em;opacity:.6;display:block;margin-bottom:4px}
+.now-strip-spotlight-copy{display:flex;flex-direction:column;gap:2px}
+.now-strip-spotlight-label{font-size:.62rem;font-weight:700;letter-spacing:.05em;opacity:.65}
+.now-strip-spotlight-copy strong{font-family:Georgia,serif;font-size:1.05rem}
+.now-strip-spotlight-cta{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:999px;background:var(--ink);color:var(--paper);font-size:.68rem;font-weight:700;letter-spacing:.03em;border:0;cursor:pointer;white-space:nowrap;transition:opacity .2s}
+.now-strip-spotlight-cta:hover{opacity:.8}
+.now-strip-spotlight-cta svg{width:14px}
+
+.now-strip-expand{position:fixed;z-index:200;background:var(--paper);color:var(--ink);border:1px solid #c9c3b7;border-top:0;box-shadow:0 14px 30px rgba(0,0,0,.18);overflow:hidden;display:flex;flex-wrap:wrap;gap:16px;padding:20px 2.3vw}
+.now-strip-expand-close{position:absolute;top:10px;right:14px;background:none;border:0;cursor:pointer;color:inherit;opacity:.5}
+.now-strip-expand-close:hover{opacity:1}
+.now-strip-expand-media{position:relative;width:220px;max-width:100%;height:150px;border-radius:8px;overflow:hidden;background:#111;flex-shrink:0}
+.now-strip-expand-media video{width:100%;height:100%;object-fit:cover}
+.now-strip-expand-media iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.now-strip-expand-copy{flex:1;min-width:220px;padding-right:24px}
+.now-strip-expand-copy h4{font-family:Georgia,serif;font-size:1.1rem;margin:0 0 6px}
+.now-strip-expand-copy p{font-size:.78rem;line-height:1.5;opacity:.8;margin:0 0 10px}
+
+@media (max-width:900px){
+.now-strip.mode-marquee,.now-strip.mode-spotlight{padding:14px 5vw;height:auto!important;min-height:0}
+.now-strip.mode-spotlight{flex-direction:column;text-align:center;gap:8px;padding:18px 5vw}
+.now-strip-expand{box-shadow:none;border-left:0;border-right:0}
+}
