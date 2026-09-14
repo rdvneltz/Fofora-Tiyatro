@@ -9,6 +9,24 @@ import axios from 'axios'
 import Link from 'next/link'
 import ImageUploader from '@/components/ImageUploader'
 
+interface NavItem {
+  key: string
+  label: string
+  href: string
+  active: boolean
+}
+
+const DEFAULT_NAV_ROUTES: { key: string; href: string }[] = [
+  { key: 'oyunlar', href: '/oyunlar' },
+  { key: 'egitimler', href: '/egitimler' },
+  { key: 'neler-yaptik', href: '/neler-yaptik' },
+  { key: 'bizden-kareler', href: '/bizden-kareler' },
+  { key: 'hakkimizda', href: '/hakkimizda' },
+  { key: 'haberler', href: '/haberler' },
+  { key: 'ekibimiz', href: '/ekibimiz' },
+  { key: 'iletisim', href: '/iletisim' },
+]
+
 interface SiteSettings {
   id?: string
   siteName: string
@@ -20,18 +38,7 @@ interface SiteSettings {
   secondaryColor: string
   footerText?: string
   socialMedia?: any
-  sectionVisibility?: {
-    hero: boolean
-    services: boolean
-    about: boolean
-    team: boolean
-    testimonials: boolean
-    instagram: boolean
-    blog: boolean
-    contact: boolean
-    gallery: boolean
-  }
-  sectionOrder?: string[]
+  navigation?: NavItem[]
   heroVideoClickToNext?: boolean
   inquiryEmailEnabled?: boolean
   inquiryEmailRecipients?: string[]
@@ -52,18 +59,7 @@ export default function AdminSettings() {
       { platform: 'instagram', url: '', active: false },
       { platform: 'youtube', url: '', active: false }
     ],
-    sectionVisibility: {
-      hero: true,
-      services: true,
-      about: true,
-      team: true,
-      testimonials: true,
-      instagram: true,
-      blog: true,
-      contact: true,
-      gallery: true,
-    },
-    sectionOrder: ['hero', 'services', 'about', 'team', 'testimonials', 'gallery', 'instagram', 'blog', 'contact'],
+    navigation: [],
     heroVideoClickToNext: true,
     inquiryEmailEnabled: false,
     inquiryEmailRecipients: [],
@@ -94,37 +90,27 @@ export default function AdminSettings() {
               { platform: 'youtube', url: '', active: false }
             ]
 
-        // Ensure gallery is in sectionVisibility and sectionOrder
-        const sectionVisibility = data.sectionVisibility || {}
-        if (sectionVisibility.gallery === undefined) sectionVisibility.gallery = true
-
-        const sectionOrder = data.sectionOrder || ['hero', 'services', 'about', 'team', 'testimonials', 'gallery', 'instagram', 'blog', 'contact']
-        if (!sectionOrder.includes('gallery')) {
-          // Insert gallery before instagram if possible
-          const instagramIndex = sectionOrder.indexOf('instagram')
-          if (instagramIndex >= 0) {
-            sectionOrder.splice(instagramIndex, 0, 'gallery')
-          } else {
-            sectionOrder.push('gallery')
-          }
+        // Navigation: use the saved custom nav if present, otherwise seed from the
+        // same effective labels the public SiteHeader currently falls back to, so
+        // nothing appears to change under the admin until they actually save here.
+        const defaultNavLabels: Record<string, string> = {
+          oyunlar: data.homepageContent?.playsTitle || 'Oyunlar',
+          egitimler: data.homepageContent?.educationTitle || 'Eğitimler',
+          'neler-yaptik': data.impactTitle || 'Neler Yaptık?',
+          'bizden-kareler': data.homepageContent?.reelsTitle || 'Bizden Kareler',
+          hakkimizda: 'Hakkımızda',
+          haberler: data.homepageContent?.newsTitle || 'Bizden Haberler',
+          ekibimiz: data.homepageContent?.teamTitle || 'Ekibimiz',
+          iletisim: 'İletişim',
         }
+        const navigation: NavItem[] = Array.isArray(data.navigation) && data.navigation.length
+          ? data.navigation
+          : DEFAULT_NAV_ROUTES.map(r => ({ key: r.key, href: r.href, active: true, label: defaultNavLabels[r.key] }))
 
         setSettings({
           ...data,
           socialMedia,
-          sectionVisibility: {
-            hero: true,
-            services: true,
-            about: true,
-            team: true,
-            testimonials: true,
-            instagram: true,
-            blog: true,
-            contact: true,
-            gallery: true,
-            ...sectionVisibility,
-          },
-          sectionOrder,
+          navigation,
           heroVideoClickToNext: data.heroVideoClickToNext !== undefined ? data.heroVideoClickToNext : true,
         })
       }
@@ -135,47 +121,32 @@ export default function AdminSettings() {
     }
   }
 
-  const moveSectionUp = (index: number) => {
-    if (index === 0 || !settings.sectionOrder) return
-    const newOrder = [...settings.sectionOrder]
-    const temp = newOrder[index]
-    newOrder[index] = newOrder[index - 1]
-    newOrder[index - 1] = temp
-    setSettings({ ...settings, sectionOrder: newOrder })
+  const moveNavUp = (index: number) => {
+    if (index === 0 || !settings.navigation) return
+    const nav = [...settings.navigation]
+    ;[nav[index - 1], nav[index]] = [nav[index], nav[index - 1]]
+    setSettings({ ...settings, navigation: nav })
   }
 
-  const moveSectionDown = (index: number) => {
-    if (!settings.sectionOrder || index === settings.sectionOrder.length - 1) return
-    const newOrder = [...settings.sectionOrder]
-    const temp = newOrder[index]
-    newOrder[index] = newOrder[index + 1]
-    newOrder[index + 1] = temp
-    setSettings({ ...settings, sectionOrder: newOrder })
+  const moveNavDown = (index: number) => {
+    if (!settings.navigation || index === settings.navigation.length - 1) return
+    const nav = [...settings.navigation]
+    ;[nav[index], nav[index + 1]] = [nav[index + 1], nav[index]]
+    setSettings({ ...settings, navigation: nav })
   }
 
-  const getSectionName = (sectionId: string) => {
-    const labels: Record<string, string> = {
-      hero: 'Hero Bölümü',
-      services: 'Programlar',
-      about: 'Hakkımızda',
-      team: 'Ekip',
-      testimonials: 'Yorumlar',
-      gallery: 'Galeri',
-      instagram: 'Instagram',
-      blog: 'Blog',
-      contact: 'İletişim'
-    }
-    return labels[sectionId] || sectionId
+  const toggleNavActive = (index: number) => {
+    if (!settings.navigation) return
+    const nav = [...settings.navigation]
+    nav[index] = { ...nav[index], active: !nav[index].active }
+    setSettings({ ...settings, navigation: nav })
   }
 
-  const toggleSectionVisibility = (sectionKey: string) => {
-    setSettings({
-      ...settings,
-      sectionVisibility: {
-        ...settings.sectionVisibility!,
-        [sectionKey]: !settings.sectionVisibility?.[sectionKey as keyof typeof settings.sectionVisibility]
-      }
-    })
+  const updateNavLabel = (index: number, label: string) => {
+    if (!settings.navigation) return
+    const nav = [...settings.navigation]
+    nav[index] = { ...nav[index], label }
+    setSettings({ ...settings, navigation: nav })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -359,20 +330,21 @@ export default function AdminSettings() {
             </p>
           </div>
 
-          {/* Sayfa Bölümleri Yönetimi - Merged Section */}
+          {/* Navigasyon Menüsü */}
           <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
-            <h3 className="text-2xl font-bold text-white mb-4">Sayfa Bölümleri Yönetimi</h3>
-            <p className="text-white/60 text-sm mb-2">
-              Bölümlerin görünürlüğünü ve sırasını buradan yönetebilirsiniz.
-              Yukarı/aşağı ok tuşları ile sıralamayı, toggle ile görünürlüğü ayarlayın.
+            <h3 className="text-2xl font-bold text-white mb-4">Navigasyon Menüsü</h3>
+            <p className="text-white/60 text-sm mb-6">
+              Üst menüde (navbar) hangi sayfaların, hangi isimle ve hangi sırayla görüneceğini buradan yönetin.
+              Yukarı/aşağı ok tuşları ile sıralamayı, Aktif/Pasif ile görünürlüğü, metin kutusuyla ismini değiştirin.
+              Pasif yaptığınız bir sayfa menüden kalkar ama sayfanın kendisi silinmez — linkini bilen biri yine açabilir.
+              Not: bu sadece üst menüyü kontrol eder; anasayfanın kendi bölüm sırası (Oyunlar, Eğitimler, Neler Yaptık vb. bloklarının anasayfadaki dizilişi) sabittir ve buradan değişmez.
             </p>
-            <p className="text-amber-300/80 text-sm mb-6">⚠ Bu bölüm henüz herkese açık ana sayfaya bağlı değil: buradaki değişiklikler şu an sitede görünür bir etki yapmıyor. Ana sayfa, tek ekrana sığacak şekilde özel olarak tasarlandığından (sabit CSS grid), görünürlük/sıra kontrolü güvenle eklenmeden önce o tasarımın ayrıca uyarlanması gerekiyor.</p>
 
             <div className="space-y-3">
-              {settings.sectionOrder?.map((sectionKey, index) => (
+              {settings.navigation?.map((item, index) => (
                 <motion.div
-                  key={sectionKey}
-                  className="bg-white/5 rounded-lg p-4 border border-white/10 flex items-center gap-4"
+                  key={item.key}
+                  className="bg-white/5 rounded-lg p-4 border border-white/10 flex items-center gap-4 flex-wrap"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: index * 0.05 }}
@@ -382,29 +354,35 @@ export default function AdminSettings() {
                     {index + 1}
                   </div>
 
-                  {/* Section name */}
-                  <div className="flex-1 text-white font-medium">
-                    {getSectionName(sectionKey)}
+                  {/* Label + route */}
+                  <div className="flex-1 min-w-[180px]">
+                    <input
+                      type="text"
+                      value={item.label}
+                      onChange={(e) => updateNavLabel(index, e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white text-sm focus:outline-none focus:ring-2 focus:ring-gold-500"
+                    />
+                    <span className="text-white/30 text-xs font-mono mt-1 block">{item.href}</span>
                   </div>
 
                   {/* Visibility toggle */}
                   <button
                     type="button"
-                    onClick={() => toggleSectionVisibility(sectionKey)}
+                    onClick={() => toggleNavActive(index)}
                     className={`px-4 py-2 rounded-lg text-sm font-medium border-2 transition-all ${
-                      settings.sectionVisibility?.[sectionKey as keyof typeof settings.sectionVisibility]
+                      item.active
                         ? 'bg-green-500/20 text-green-400 border-green-500/50'
                         : 'bg-gray-500/20 text-gray-400 border-gray-500/50'
                     }`}
                   >
-                    {settings.sectionVisibility?.[sectionKey as keyof typeof settings.sectionVisibility] ? 'Aktif' : 'Pasif'}
+                    {item.active ? 'Aktif' : 'Pasif'}
                   </button>
 
                   {/* Order controls */}
                   <div className="flex gap-1">
                     <button
                       type="button"
-                      onClick={() => moveSectionUp(index)}
+                      onClick={() => moveNavUp(index)}
                       disabled={index === 0}
                       className="p-2 rounded-lg bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                     >
@@ -412,8 +390,8 @@ export default function AdminSettings() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => moveSectionDown(index)}
-                      disabled={index === settings.sectionOrder!.length - 1}
+                      onClick={() => moveNavDown(index)}
+                      disabled={index === settings.navigation!.length - 1}
                       className="p-2 rounded-lg bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                     >
                       <ChevronDown className="w-5 h-5 text-white" />
