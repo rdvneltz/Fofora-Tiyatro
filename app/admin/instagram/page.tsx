@@ -292,7 +292,7 @@ export default function AdminInstagram() {
                 </button>
               </div>
               <p className="text-white/40 text-xs mt-1">
-                YouTube linkleri otomatik oynatılır. Diğer siteler için sistem sayfadan görseli/videoyu bulup kendi sunucumuza indirir — Instagram genelde bunu engellediği için çalışmayabilir, o zaman aşağıdan dosyayı manuel yükleyin.
+Instagram post/reel linkleri ve YouTube linkleri otomatik oynatılır, diğer site linkleri için sistem sayfadan görseli/videoyu bulup kendi sunucumuza indirir. Nadiren çekemezse aşağıdan dosyayı manuel yükleyin.
               </p>
             </div>
 
@@ -456,8 +456,8 @@ export default function AdminInstagram() {
           </h3>
           <ul className="text-white/60 text-sm space-y-1 list-disc list-inside">
             <li>Fotoğraf/video eklemek zorunludur, Instagram linki opsiyoneldir</li>
-            <li>"Çek" kutusuna bir link yapıştırıp otomatik çekebilirsiniz: YouTube linkleri direkt oynatılır, çoğu web sitesi için görsel otomatik indirilip sunucumuza yüklenir</li>
-            <li>Instagram, otomatik çekmeyi genelde engeller — bu durumda fotoğrafı/videoyu bilgisayarınıza indirip "Dosya Seç" ile manuel yükleyin</li>
+            <li>"Çek" kutusuna bir Instagram post/reel linki, YouTube linki ya da bir görsel linki yapıştırıp otomatik çekebilirsiniz</li>
+            <li>Otomatik çekme başarısız olursa (nadiren olabilir), fotoğrafı/videoyu bilgisayarınıza indirip "Dosya Seç" ile manuel yükleyin</li>
             <li>Anasayfadaki hero bölümünün sağındaki telefon görselinde, buraya eklediğiniz fotoğraf/video/YouTube içerikleri sırayla oynatılır</li>
             <li>Sarı uyarı ikonu olan postların medyası eksik — anasayfada görünmezler, düzenlemek için silip medya ile tekrar ekleyin</li>
             <li>Aktif medyalı post yoksa telefon görseli anasayfadan tamamen kalkar (rastgele/demo görsel gösterilmez)</li>

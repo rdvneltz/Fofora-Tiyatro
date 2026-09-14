@@ -33,6 +33,33 @@ function isSafeUrl(input: string): boolean {
   }
 }
 
+function isInstagramUrl(url: string): boolean {
+  try {
+    return /(^|\.)instagram\.com$/i.test(new URL(url).hostname)
+  } catch {
+    return false
+  }
+}
+
+// Instagram blocks plain server-to-server requests (see the og:image fallback below),
+// so a real post's media is resolved through a subscribed RapidAPI Instagram downloader instead.
+async function fetchInstagramViaRapidApi(postUrl: string): Promise<{ url: string; isVideo: boolean } | null> {
+  const apiKey = process.env.RAPIDAPI_KEY
+  const apiHost = process.env.RAPIDAPI_INSTAGRAM_HOST
+  if (!apiKey || !apiHost) return null
+
+  const res = await fetch(`https://${apiHost}/convert?url=${encodeURIComponent(postUrl)}`, {
+    headers: { 'x-rapidapi-key': apiKey, 'x-rapidapi-host': apiHost },
+  })
+  if (!res.ok) return null
+  const data = await res.json()
+  const first = Array.isArray(data?.media) ? data.media[0] : null
+  const resolvedUrl = first?.url || first?.thumbnail
+  if (!resolvedUrl) return null
+
+  return downloadAndUpload(resolvedUrl)
+}
+
 function decodeEntities(s: string): string {
   return s.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>')
 }
@@ -84,6 +111,22 @@ export async function POST(request: NextRequest) {
       }
       const oembed = await oembedRes.json()
       return NextResponse.json({ mediaUrl: youtubeId, mediaType: 'YOUTUBE', caption: oembed.title || null })
+    }
+
+    // Instagram: try the RapidAPI downloader first (og:image scraping below reliably gets blocked by Instagram)
+    if (isInstagramUrl(url)) {
+      try {
+        const viaApi = await fetchInstagramViaRapidApi(url)
+        if (viaApi) {
+          return NextResponse.json({ mediaUrl: viaApi.url, mediaType: viaApi.isVideo ? 'VIDEO' : 'IMAGE' })
+        }
+      } catch (e: any) {
+        console.error('RapidAPI Instagram fetch error:', e)
+      }
+      return NextResponse.json(
+        { error: 'Instagram\'dan medya çekilemedi. Fotoğrafı/videoyu indirip "Dosya Seç" ile manuel yükleyin.' },
+        { status: 422 }
+      )
     }
 
     const pageRes = await fetch(url, { headers: { 'User-Agent': FETCH_UA } })
