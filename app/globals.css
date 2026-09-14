@@ -328,3 +328,9 @@ footer p,footer>small{color:#c56a79;font-weight:600}footer p{font-size:clamp(.72
 .event-day-group{max-width:1180px;margin:0 auto 22px}
 .event-day-heading{font-family:Georgia,serif;font-size:1.2rem;text-transform:capitalize;color:#681d2a;margin:0 0 10px 4px}
 .event-day-group .event-list{margin-bottom:0}
+
+/* Ekip kartları artık detay sayfasına giden <a> - eski .team-grid article kuralları etiket
+   değiştiği için artık eşleşmiyor, aynı kuralları <a> için burada tekrarlıyoruz. */
+.team-grid a>div{position:relative;aspect-ratio:4/5;background:#2b1719}
+@media (min-width:901px) and (max-width:1199px), (min-width:901px) and (max-aspect-ratio:4/3){.team-grid a{flex:0 0 180px}.team-grid a>div{height:180px}}
+@media (min-width:901px) and (max-width:1199px){.team-grid a{flex:0 0 180px}.team-grid a>div{height:180px}}

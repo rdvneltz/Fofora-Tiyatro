@@ -8,6 +8,7 @@ import Link from 'next/link'
 import axios from 'axios'
 import Image from 'next/image'
 import ImageUploader from '@/components/ImageUploader'
+import FocalPointPicker from '@/components/FocalPointPicker'
 
 interface TeamMember {
   id: string
@@ -15,11 +16,16 @@ interface TeamMember {
   title: string
   bio: string
   image: string
+  imagePosX?: number
+  imagePosY?: number
   email?: string
   phone?: string
+  linkedin?: string
   order: number
   active: boolean
 }
+
+const emptyForm = { name: '', title: '', bio: '', image: '', imagePosX: 50, imagePosY: 50, email: '', phone: '', linkedin: '', order: 0, active: true }
 
 export default function TeamPage() {
   const { status } = useSession()
@@ -29,16 +35,7 @@ export default function TeamPage() {
   const [showForm, setShowForm] = useState(false)
   const [editingMember, setEditingMember] = useState<TeamMember | null>(null)
   const [imageUploading, setImageUploading] = useState(false)
-  const [formData, setFormData] = useState({
-    name: '',
-    title: '',
-    bio: '',
-    image: '',
-    email: '',
-    phone: '',
-    order: 0,
-    active: true,
-  })
+  const [formData, setFormData] = useState(emptyForm)
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -75,7 +72,7 @@ export default function TeamPage() {
       }
       setShowForm(false)
       setEditingMember(null)
-      setFormData({ name: '', title: '', bio: '', image: '', email: '', phone: '', order: 0, active: true })
+      setFormData(emptyForm)
       fetchTeam()
     } catch (error) {
       console.error('İşlem başarısız', error)
@@ -90,8 +87,11 @@ export default function TeamPage() {
       title: member.title,
       bio: member.bio,
       image: member.image,
+      imagePosX: member.imagePosX ?? 50,
+      imagePosY: member.imagePosY ?? 50,
       email: member.email || '',
       phone: member.phone || '',
+      linkedin: member.linkedin || '',
       order: member.order,
       active: member.active,
     })
@@ -140,7 +140,7 @@ export default function TeamPage() {
               setShowForm(true)
               setEditingMember(null)
               setImageUploading(false)
-              setFormData({ name: '', title: '', bio: '', image: '', email: '', phone: '', order: 0, active: true })
+              setFormData(emptyForm)
             }}
             className="bg-gradient-to-r from-gold-600 to-gold-500 text-white px-6 py-3 rounded-lg flex items-center gap-2 hover:from-gold-700 hover:to-gold-600"
           >
@@ -163,6 +163,15 @@ export default function TeamPage() {
                 label="Ekip Üyesi Fotoğrafı"
                 folder="images/team"
               />
+
+              {formData.image && (
+                <FocalPointPicker
+                  imageUrl={formData.image}
+                  posX={formData.imagePosX}
+                  posY={formData.imagePosY}
+                  onChange={(x, y) => setFormData({ ...formData, imagePosX: x, imagePosY: y })}
+                />
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -196,7 +205,7 @@ export default function TeamPage() {
                   required
                 />
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-white mb-2">Email</label>
                   <input
@@ -212,6 +221,16 @@ export default function TeamPage() {
                     type="text"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-white mb-2">LinkedIn</label>
+                  <input
+                    type="text"
+                    value={formData.linkedin}
+                    onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
+                    placeholder="https://linkedin.com/in/..."
                     className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white"
                   />
                 </div>
@@ -257,7 +276,7 @@ export default function TeamPage() {
               <div className="flex items-start gap-4 mb-4">
                 <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-navy-900/50 border border-white/10 flex-shrink-0">
                   {member.image ? (
-                    <Image src={member.image} alt={member.name} fill sizes="64px" className="object-cover" />
+                    <Image src={member.image} alt={member.name} fill sizes="64px" className="object-cover" style={{ objectPosition: `${member.imagePosX ?? 50}% ${member.imagePosY ?? 50}%` }} />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-white/30 text-xs text-center px-1">Fotoğraf yok</div>
                   )}
