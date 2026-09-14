@@ -16,6 +16,8 @@ type Album = { id:string; active:boolean; items:{ id:string; type:string; url:st
 type ReelItem = { id:string; type:string; url:string; thumbnail?:string; title?:string; description?:string }
 type CalendarItem = { id:string; title:string; type:string; date:string; startTime:string }
 type TestimonialItem = { id:string; name:string; title:string; content:string; rating:number }
+type StripItem = { id:string; label?:string|null; text:string; order:number; active:boolean; clickAction:string; linkUrl?:string|null; sectionId?:string|null; modalMediaType?:string|null; modalMediaUrl?:string|null; modalTitle?:string|null; modalBody?:string|null; ctaLabel?:string|null }
+type StripBlock = { id:string; type:string; heading?:string|null; order:number; active:boolean; durationSeconds:number; marqueeSpeed:number; items:StripItem[] }
 
 const fallbackSlides:Slide[] = [
   {id:'welcome',fileName:'/demo/hero-stage.png',title:'Sahne Senin.\nHikâyen Burada Başlıyor.',subtitle:'FOFORA TİYATRO',description:'Oyna. Öğren. Üret. Birlikte büyü.',actionType:'section',actionValue:'egitimler',actionLabel:'Eğitimleri keşfet',secondaryActionType:'message',secondaryActionLabel:'Bize yaz',active:true,order:0},
@@ -46,7 +48,13 @@ const fallbackTeam:Team[]=[
   {id:'t4',name:'Kerem Yıldız',title:'Eğitmen',image:'/demo/training-2.jpg'},
 ]
 const defaultStats=[['12','Oyun'],['350+','Öğrenci'],['28','Öğrenci gösterisi'],['6','Yıllık yolculuk']]
-const defaultContent={nowTitle:'Şu Anda Fofora’da',nowItems:[['SIRADAKİ OYUN','Yeni sezon hazırlıkları başladı'],['KAYITLAR','Çocuk, genç ve yetişkin grupları'],['BİZDEN HABERLER','Sahnede büyüyen bir topluluk']],playsTitle:'Yaklaşan Oyunlar',calendarTitle:'Takvim',educationTitle:'Eğitimler',reelsTitle:'Bizden Kareler',newsTitle:'Bizden Haberler',teamTitle:'Ekibimiz',contactTitle:'Bize Yazın.',contactText:'Soru, fikir, iş birliği ya da eğitim bilgisi… Mesajınız doğrudan ekibimizin gelen kutusuna ulaşsın.',sloganTitle:'“Herkesin anlatacak bir hikâyesi var.”',sloganText:'Fofora Tiyatro Üsküdar’da, hayatın tam içinde.',footerTagline:'Üsküdar’da daha fazla sahne, daha fazla insan için.',whatsappText:'Merhaba, Fofora Tiyatro hakkında bilgi almak istiyorum.'}
+const fallbackNowStrip:StripBlock[]=[{id:'fallback',type:'items',heading:'Şu Anda Fofora’da',order:0,active:true,durationSeconds:8,marqueeSpeed:28,items:[
+  {id:'fb1',label:'SIRADAKİ OYUN',text:'Yeni sezon hazırlıkları başladı',order:0,active:true,clickAction:'none'},
+  {id:'fb2',label:'KAYITLAR',text:'Çocuk, genç ve yetişkin grupları',order:1,active:true,clickAction:'none'},
+  {id:'fb3',label:'BİZDEN HABERLER',text:'Sahnede büyüyen bir topluluk',order:2,active:true,clickAction:'none'},
+]}]
+const ytId=(url:string)=>{if(!url)return '';if(url.includes('youtu.be'))return url.split('youtu.be/')[1]?.split('?')[0]||'';const m=url.split('v=')[1];return m?m.split('&')[0]:url}
+const defaultContent={playsTitle:'Yaklaşan Oyunlar',calendarTitle:'Takvim',educationTitle:'Eğitimler',reelsTitle:'Bizden Kareler',newsTitle:'Bizden Haberler',teamTitle:'Ekibimiz',contactTitle:'Bize Yazın.',contactText:'Soru, fikir, iş birliği ya da eğitim bilgisi… Mesajınız doğrudan ekibimizin gelen kutusuna ulaşsın.',sloganTitle:'“Herkesin anlatacak bir hikâyesi var.”',sloganText:'Fofora Tiyatro Üsküdar’da, hayatın tam içinde.',footerTagline:'Üsküdar’da daha fazla sahne, daha fazla insan için.',whatsappText:'Merhaba, Fofora Tiyatro hakkında bilgi almak istiyorum.'}
 const path=(s:Slide)=>!s.fileName?'':s.fileName.startsWith('/')?s.fileName:s.fileName.startsWith('http')?s.fileName.replace(/https?:\/\/pub-[a-z0-9]+\.r2\.dev/,'https://cdn.foforatiyatro.com'):`/videos/${s.fileName}`
 const mapsHref=(address:string,mapUrl?:string)=>mapUrl||`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`
 
@@ -62,6 +70,12 @@ export default function Home(){
   const [legalOpen,setLegalOpen]=useState<{title:string;content:string}|null>(null)
   const playRepeatRef=useRef(0),[repeatTick,setRepeatTick]=useState(0)
   const [stageTab,setStageTab]=useState<'plays'|'calendar'>('plays'),[messageOpen,setMessageOpen]=useState(false)
+  const [nowBlocks,setNowBlocks]=useState<StripBlock[]>(fallbackNowStrip)
+  const [nowBlockIndex,setNowBlockIndex]=useState(0)
+  const [nowModalItem,setNowModalItem]=useState<StripItem|null>(null)
+  const [nowExpandId,setNowExpandId]=useState<string|null>(null)
+  const nowStripRef=useRef<HTMLElement>(null)
+  const [expandPos,setExpandPos]=useState<{top:number;left:number;width:number}|null>(null)
   const [testimonials,setTestimonials]=useState<TestimonialItem[]>([]),[testimonialsOpen,setTestimonialsOpen]=useState(false)
   const [testimonialIndex,setTestimonialIndex]=useState(0)
   const testimonialCountRef=useRef(0),testimonialTimerRef=useRef<ReturnType<typeof setTimeout>>()
@@ -103,7 +117,7 @@ export default function Home(){
   const [instagramPosts,setInstagramPosts]=useState<{id:string;mediaUrl:string;mediaType:string;caption?:string|null}[]>([])
   useEffect(()=>{fetch('/api/instagram-posts').then(r=>r.ok?r.json():[]).then(data=>{if(Array.isArray(data))setInstagramPosts(data.filter((p:any)=>p.active&&p.mediaUrl))}).catch(()=>undefined).finally(()=>setInstagramLoaded(true))},[])
   useEffect(()=>{
-    Promise.allSettled(['/api/hero-videos','/api/services','/api/blog','/api/team','/api/gallery','/api/contact','/api/settings','/api/calendar'].map(u=>fetch(u).then(r=>r.json()))).then(r=>{
+    Promise.allSettled(['/api/hero-videos','/api/services','/api/blog','/api/team','/api/gallery','/api/contact','/api/settings','/api/calendar','/api/now-strip'].map(u=>fetch(u).then(r=>r.json()))).then(r=>{
       const value=(i:number)=>r[i].status==='fulfilled'?(r[i] as PromiseFulfilledResult<any>).value:null
       const settings=value(6)
       if(Array.isArray(value(0))&&value(0).length){
@@ -139,6 +153,7 @@ export default function Home(){
       if(settings?.cardModeEnabled)setCardMode(true)
       if(settings)setFooterSettings({copyrightText:settings.copyrightText,legalLinks:settings.legalLinks,socialMedia:settings.socialMedia})
       if(Array.isArray(value(7)))setCalendar(value(7))
+      if(Array.isArray(value(8))&&value(8).length)setNowBlocks(value(8))
       setLoaded(true)
     })
   },[])
@@ -205,6 +220,34 @@ export default function Home(){
     return()=>window.removeEventListener('keydown',onKey)
   },[phoneModalOpen,socialItems.length])
   useEffect(()=>{const t=setInterval(()=>setStageTab(v=>v==='plays'?'calendar':'plays'),10000);return()=>clearInterval(t)},[])
+  const activeNowBlocks=useMemo(()=>nowBlocks.filter(b=>b.active&&b.items.some(i=>i.active)).map(b=>({...b,items:b.items.filter(i=>i.active)})),[nowBlocks])
+  const activeNowBlock=activeNowBlocks.length?activeNowBlocks[nowBlockIndex%activeNowBlocks.length]:null
+  useEffect(()=>{
+    if(activeNowBlocks.length<2)return
+    const t=setTimeout(()=>setNowBlockIndex(i=>(i+1)%activeNowBlocks.length),(activeNowBlock?.durationSeconds||8)*1000)
+    return()=>clearTimeout(t)
+  },[nowBlockIndex,activeNowBlocks,activeNowBlock])
+  useEffect(()=>{setNowExpandId(null)},[nowBlockIndex])
+  // The expand panel needs to sit outside the strip's own scroll/overflow box (it clips absolutely-positioned
+  // overflow on the one-screen desktop breakpoint), so it's position:fixed and measured off the strip's own rect instead.
+  useEffect(()=>{
+    if(!nowExpandId){setExpandPos(null);return}
+    const update=()=>{const r=nowStripRef.current?.getBoundingClientRect();if(r)setExpandPos({top:r.bottom,left:r.left,width:r.width})}
+    update()
+    window.addEventListener('resize',update)
+    window.addEventListener('scroll',update,true)
+    return()=>{window.removeEventListener('resize',update);window.removeEventListener('scroll',update,true)}
+  },[nowExpandId])
+  const handleStripClick=(item:StripItem)=>{
+    if(item.clickAction==='modal')return setNowModalItem(item)
+    if(item.clickAction==='expand')return setNowExpandId(id=>id===item.id?null:item.id)
+    if(item.clickAction==='section')return document.getElementById(item.sectionId||'')?.scrollIntoView({behavior:'smooth'})
+    if(item.clickAction==='link'&&item.linkUrl){
+      if(/^https?:\/\//.test(item.linkUrl))open(item.linkUrl,'_blank')
+      else location.href=base&&item.linkUrl.startsWith('/')&&!item.linkUrl.startsWith('/yeni')?`${base}${item.linkUrl}`:item.linkUrl
+    }
+  }
+  const nowExpandItem=activeNowBlock?.items.find(i=>i.id===nowExpandId)||null
   const go=(type?:string|null,value?:string|null)=>{if(type==='whatsapp'){const p=contact.phone.replace(/\D/g,'').replace(/^0/,'90');open(`https://wa.me/${p}?text=${encodeURIComponent(value||copy.whatsappText)}`,'_blank')}else if(type==='message')document.getElementById('iletisim')?.scrollIntoView({behavior:'smooth'});else if(type==='section')document.getElementById(value||'')?.scrollIntoView({behavior:'smooth'});else if(value)location.href=location.pathname.startsWith('/yeni')&&value.startsWith('/')&&!value.startsWith('/yeni')?`/yeni${value}`:value}
   const send=async(e:React.FormEvent<HTMLFormElement>)=>{e.preventDefault();setSending(true);const form=e.currentTarget,res=await fetch('/api/inquiries',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.fromEntries(new FormData(form).entries()))});setSending(false);if(res.ok){form.reset();setSent(true)}}
 
@@ -223,6 +266,7 @@ export default function Home(){
   const legalActive=(footerSettings.legalLinks||[]).filter(l=>l.active).sort((a,b)=>a.order-b.order)
   const footerBlock=<footer><a className="brand"><span>Fofora</span><small>TIYATRO</small></a><p>{copy.footerTagline}</p><div><a href={igLink} target="_blank" rel="noopener noreferrer"><Instagram/></a><a href={`mailto:${contact.email}`}><Mail/></a></div>{legalActive.length>0&&<nav className="footer-legal">{legalActive.map(l=><button key={l.title} onClick={()=>setLegalOpen(l)}>{l.title}</button>)}</nav>}<small>{footerSettings.copyrightText||`© ${new Date().getFullYear()} Fofora Tiyatro`}</small></footer>
   const legalModal=legalOpen&&<div className="reel-modal" role="dialog" aria-modal="true" aria-label={legalOpen.title} onClick={()=>setLegalOpen(null)}><button className="modal-close" onClick={()=>setLegalOpen(null)} aria-label="Kapat"><X/></button><div className="reel-modal-inner legal-modal-inner" onClick={e=>e.stopPropagation()}><h3>{legalOpen.title}</h3><p style={{whiteSpace:'pre-wrap'}}>{legalOpen.content}</p></div></div>
+  const nowStripModal=nowModalItem&&<div className="reel-modal" role="dialog" aria-modal="true" aria-label={nowModalItem.modalTitle||nowModalItem.text} onClick={()=>setNowModalItem(null)}><button className="modal-close" onClick={()=>setNowModalItem(null)} aria-label="Kapat"><X/></button><div className="reel-modal-inner" onClick={e=>e.stopPropagation()}>{nowModalItem.modalMediaType&&nowModalItem.modalMediaUrl&&<div className="reel-modal-media">{nowModalItem.modalMediaType==='video'?<video src={nowModalItem.modalMediaUrl} controls autoPlay playsInline/>:nowModalItem.modalMediaType==='youtube'?<iframe src={`https://www.youtube.com/embed/${ytId(nowModalItem.modalMediaUrl)}?autoplay=1&playsinline=1`} allow="autoplay; encrypted-media" allowFullScreen title={nowModalItem.modalTitle||nowModalItem.text} style={{position:'absolute',inset:0,width:'100%',height:'100%',border:0}}/>:<Image src={nowModalItem.modalMediaUrl} alt={nowModalItem.modalTitle||''} fill sizes="60vw"/>}</div>}<div className="reel-modal-copy"><h3>{nowModalItem.modalTitle||nowModalItem.text}</h3>{nowModalItem.modalBody&&<p>{nowModalItem.modalBody}</p>}{nowModalItem.linkUrl&&<a className="button acid" href={nowModalItem.linkUrl} target={/^https?:\/\//.test(nowModalItem.linkUrl)?'_blank':undefined} rel="noopener noreferrer">{nowModalItem.ctaLabel||'Devamını gör'} <ArrowRight/></a>}</div></div></div>
   const siteLoader=overlayVisible&&<div className={ready?'site-loader hide':'site-loader'} aria-hidden={ready}><div className="site-loader-inner"><div className="site-loader-brand"><span>Fofora</span><small>TİYATRO</small></div><div className="site-loader-bar"><span/></div></div></div>
   const messageModal=messageOpen&&<div className="message-modal" role="dialog" aria-modal="true" aria-label="Fofora’ya mesaj gönder"><button className="modal-close" onClick={()=>setMessageOpen(false)} aria-label="Kapat"><X/></button><div><p className="eyebrow ink">BİR MERHABA YETER</p><h2>Bize Yazın.</h2><p>Mesajınız doğrudan ekibimizin gelen kutusuna ulaşır.</p></div><form onSubmit={async e=>{await send(e);setMessageOpen(false)}}><div className="form-row"><label>Adınız Soyadınız<input name="name" required autoFocus/></label><label>Telefon<input name="phone" required/></label></div><label>E-posta<input name="email" type="email"/></label><label>Konu<select name="subject" required defaultValue=""><option value="" disabled>Bir konu seçin</option><option>Eğitimler</option><option>Oyunlar ve bilet</option><option>Okul / kurum iş birliği</option><option>Basın ve iletişim</option><option>Diğer</option></select></label><label>Mesajınız<textarea name="message" rows={6} required/></label><button className="button form-button" disabled={sending}>{sending?'Gönderiliyor…':'Mesajı gönder'} <ArrowRight/></button></form></div>
 
@@ -249,7 +293,7 @@ export default function Home(){
       {socialCurrent&&<div className="hero-phone" onClick={()=>setPhoneModalOpen(true)} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();setPhoneModalOpen(true)}}} role="button" tabIndex={0} aria-label={`${socialCurrent.title||'İçerik'} — büyüt`}><div className="phone-notch"/>{!phoneModalOpen&&(socialCurrent.type==='video'?<video key={socialCurrent.id} src={socialCurrent.url} autoPlay muted={phoneMuted} playsInline onEnded={advanceSocial} onError={advanceSocial}/>:socialCurrent.type==='youtube'?<iframe id="hero-phone-yt-frame" key={socialCurrent.id} src={`https://www.youtube.com/embed/${socialCurrent.url}?autoplay=1&mute=${phoneMuted?1:0}&controls=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=${typeof window!=='undefined'?encodeURIComponent(window.location.origin):''}`} allow="autoplay; encrypted-media" title={socialCurrent.title||'YouTube video'} style={{position:'absolute',inset:0,width:'100%',height:'100%',border:0}}/>:<Image key={socialCurrent.id} src={socialCurrent.thumbnail||socialCurrent.url} alt="Sahne akışı" fill sizes="420px"/>)}{!phoneModalOpen&&(socialCurrent.type==='video'||socialCurrent.type==='youtube')&&<button className="phone-mute" onClick={e=>{e.stopPropagation();setPhoneMuted(m=>!m)}} aria-label={phoneMuted?'Sesi aç':'Sesi kapat'}>{phoneMuted?<VolumeX size={16}/>:<Volume2 size={16}/>}</button>}<div className="phone-caption"><small>ŞİMDİ FOFORA’DA</small><b>{socialCurrent.title||'Sahnenin perde arkası'}</b></div></div>}
       {socialPreviews.length>0&&<div className="hero-previews">{socialPreviews.map((item,i)=><button key={item.id} onClick={()=>setSocialIndex((socialIndex+i+1)%socialItems.length)} aria-label={`${item.title||'Sıradaki içerik'} önizlemesi`}>{item.type==='video'?<video src={item.url} muted playsInline/>:<Image src={item.thumbnail||item.url} alt={item.title||''} fill sizes="140px"/>}<span>{String((socialIndex+i+2)%socialItems.length||socialItems.length).padStart(2,'0')}</span></button>)}</div>}
     </section>
-    <section className="now-strip"><h2>{copy.nowTitle}</h2>{copy.nowItems.map((x:string[],i:number)=><div key={i}><small>{x[0]}</small><strong>{i===2&&posts[0]?.title?posts[0].title:x[1]}</strong></div>)}</section>
+    <AnimatePresence mode="wait">{activeNowBlock&&<motion.section ref={nowStripRef} key={activeNowBlock.id} className={`now-strip mode-${activeNowBlock.type}`} initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} transition={{duration:.4}}>{activeNowBlock.type==='marquee'?<>{activeNowBlock.heading&&<h2>{activeNowBlock.heading}</h2>}<div className="now-strip-marquee"><div className="now-strip-marquee-track" style={{'--now-marquee-duration':`${activeNowBlock.marqueeSpeed}s`} as any}>{[0,1].map(dup=>activeNowBlock.items.map(item=><span key={`${dup}-${item.id}`} className={item.clickAction!=='none'?'now-strip-marquee-item clickable':'now-strip-marquee-item'} {...(item.clickAction!=='none'?{onClick:()=>handleStripClick(item),role:'button',tabIndex:0,onKeyDown:(e:React.KeyboardEvent)=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();handleStripClick(item)}}}:{})}>{item.label&&<b>{item.label} — </b>}{item.text}</span>))}</div></div></>:activeNowBlock.type==='spotlight'?(activeNowBlock.items[0]?<div className="now-strip-spotlight">{activeNowBlock.heading&&<small className="now-strip-spotlight-eyebrow">{activeNowBlock.heading}</small>}<div className="now-strip-spotlight-copy">{activeNowBlock.items[0].label&&<span className="now-strip-spotlight-label">{activeNowBlock.items[0].label}</span>}<strong>{activeNowBlock.items[0].text}</strong></div>{activeNowBlock.items[0].clickAction!=='none'&&<button className="now-strip-spotlight-cta" onClick={()=>handleStripClick(activeNowBlock.items[0])}>{activeNowBlock.items[0].ctaLabel||'Devamını gör'} <ArrowRight/></button>}</div>:null):<>{activeNowBlock.heading&&<h2>{activeNowBlock.heading}</h2>}{activeNowBlock.items.map(item=><div key={item.id} className={item.clickAction!=='none'?'now-strip-cell clickable':'now-strip-cell'} {...(item.clickAction!=='none'?{onClick:()=>handleStripClick(item),role:'button',tabIndex:0,onKeyDown:(e:React.KeyboardEvent)=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();handleStripClick(item)}}}:{})}>{item.label&&<small>{item.label}</small>}<strong>{item.text}</strong></div>)}</>}<AnimatePresence>{nowExpandItem&&expandPos&&<motion.div className="now-strip-expand" style={{top:expandPos.top,left:expandPos.left,width:expandPos.width}} initial={{opacity:0,height:0}} animate={{opacity:1,height:'auto'}} exit={{opacity:0,height:0}}><button className="now-strip-expand-close" onClick={()=>setNowExpandId(null)} aria-label="Kapat"><X size={16}/></button>{nowExpandItem.modalMediaType&&nowExpandItem.modalMediaUrl&&<div className="now-strip-expand-media">{nowExpandItem.modalMediaType==='video'?<video src={nowExpandItem.modalMediaUrl} controls autoPlay playsInline/>:nowExpandItem.modalMediaType==='youtube'?<iframe src={`https://www.youtube.com/embed/${ytId(nowExpandItem.modalMediaUrl)}`} allow="autoplay; encrypted-media" allowFullScreen title={nowExpandItem.modalTitle||nowExpandItem.text}/>:<Image src={nowExpandItem.modalMediaUrl} alt={nowExpandItem.modalTitle||''} fill sizes="90vw"/>}</div>}<div className="now-strip-expand-copy">{(nowExpandItem.modalTitle||nowExpandItem.text)&&<h4>{nowExpandItem.modalTitle||nowExpandItem.text}</h4>}{nowExpandItem.modalBody&&<p>{nowExpandItem.modalBody}</p>}{nowExpandItem.linkUrl&&<a className="button outline" href={nowExpandItem.linkUrl} target={/^https?:\/\//.test(nowExpandItem.linkUrl)?'_blank':undefined} rel="noopener noreferrer">{nowExpandItem.ctaLabel||'Devamını gör'} <ArrowRight/></a>}</div></motion.div>}</AnimatePresence></motion.section>}</AnimatePresence>
     <section id="oyunlar" className="section dark-section"><div className="stage-tabs"><div><button className={stageTab==='plays'?'active':''} onClick={()=>setStageTab('plays')}>{copy.playsTitle}</button><button className={stageTab==='calendar'?'active':''} onClick={()=>setStageTab('calendar')}>{copy.calendarTitle}</button></div><a href={`${base}/oyunlar`}>Tümünü gör <ArrowRight/></a></div>{stageTab==='plays'?<div className="poster-grid">{(!loaded?Array.from({length:4},(_,i)=>({id:`sk-${i}`,skeleton:true})):(posts.filter(p=>/oyun|etkinlik/i.test(p.category)).slice(0,4).length?posts.filter(p=>/oyun|etkinlik/i.test(p.category)).slice(0,4):samplePosts)).map((p:any,i)=>p.skeleton?<div className={`poster p-${i} skeleton-block`} key={p.id}/>:<a className={`poster p-${i}`} key={p.id} href={`${base}/haberler/${p.slug}`} aria-label={`${p.title} detayını aç`}>{p.image&&<Image src={p.image} alt="" fill sizes="30vw"/>}<span>0{i+1}</span><div><small>{p.category}</small><h3>{p.title}</h3><p>{p.excerpt}</p></div></a>)}</div>:<div className="calendar-list">{(!loaded?Array.from({length:4},(_,i)=>({id:`sk-${i}`,skeleton:true})):(calendar.length?calendar.slice(0,4):[['PZT 14','17:30','Çocuk Tiyatro Atölyesi'],['SALI 15','19:30','Yetişkin Oyunculuk'],['CMT 19','20:00','Fiyonk — Oyun'],['PAZ 20','13:00','Genç Grup Provası']])).map((x:any)=>x.skeleton?<article className="skeleton-block" key={x.id}/>:<article key={x.id||x[0]}><strong>{x.id?new Date(x.date).toLocaleDateString('tr-TR',{weekday:'short',day:'2-digit'}).toUpperCase():x[0]}</strong><b>{x.startTime||x[1]}</b><span>{x.title||x[2]}{x.location?` · ${x.location}`:''}</span></article>)}</div>}</section>
     <section id="egitimler" className="section paper-section"><Heading eyebrow="SAHNEYE ÇIK" title={copy.educationTitle} href={`${base}/egitimler`} light/><div className="education-grid">{services.slice(0,5).map((s,i)=><a className="education-card" key={s.id} href={`${base}/egitimler/${s.id}`}><div className={`education-visual e-${i}`}>{s.image&&<Image src={s.image} alt={s.title} fill sizes="20vw"/>}</div><small>{s.ageGroup}{s.duration&&` • ${s.duration}`}</small><h3>{s.title}</h3><p>{s.description}</p></a>)}</div><aside className="slogan-panel"><strong>{copy.sloganTitle}</strong><span>{copy.sloganText}</span></aside></section>
     <section id="neler-yaptik" className="impact-section"><div className="impact-intro"><p className="eyebrow">BİRLİKTE BÜYÜDÜK</p><h2>{impact.title}</h2><p>{impact.intro}</p></div><div className="impact-numbers">{impact.stats.map((s:string[],i:number)=><motion.div key={s[1]} initial={{opacity:0,y:20}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{delay:i*.1}}><strong>{s[0]}</strong><span>{s[1]}</span></motion.div>)}</div><div className="impact-collage"><Image src={impact.image} alt="Fofora geçmişinden" fill sizes="30vw"/><b>2019</b><strong>PERDE<br/>AÇILDI</strong><b>2026</b><p>Sahnede büyüyen<br/>bir topluluk.</p></div></section>
@@ -260,6 +304,7 @@ export default function Home(){
     {testimonialsModal}
     {reelModal}
     {phoneModal}
+    {nowStripModal}
     {footerBlock}
     {legalModal}
     {messageModal}
