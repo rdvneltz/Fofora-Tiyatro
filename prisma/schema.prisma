@@ -37,6 +37,8 @@ model TeamMember {
   title       String
   bio         String
   image       String
+  imagePosX   Float    @default(50) // fotoğrafın kare/dikdörtgen kırpımlarda hangi noktasının gösterileceği (0-100, object-position)
+  imagePosY   Float    @default(50)
   email       String?
   phone       String?
   linkedin    String?
