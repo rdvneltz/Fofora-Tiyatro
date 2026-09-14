@@ -80,7 +80,12 @@ export default function AdminSettings() {
 
   const fetchSettings = async () => {
     try {
-      const { data } = await axios.get('/api/settings')
+      // /api/settings ayrıca herkese açık sayfalarca da çağrılıyor ve o yanıt tarayıcının HTTP
+      // önbelleğinde saklanabiliyor (inquiryEmailRecipients hariç). Aynı URL admin panelinde de
+      // kullanılırsa tarayıcı bu eski/eksik yanıtı geri verebilir - bildirim e-postası ayarları
+      // admin ekranında boş görünür. Önbelleği baypas etmek için her istekte benzersiz bir sorgu
+      // parametresi ekliyoruz.
+      const { data } = await axios.get(`/api/settings?_=${Date.now()}`)
       if (data) {
         // Ensure socialMedia is an array
         const socialMedia = Array.isArray(data.socialMedia)

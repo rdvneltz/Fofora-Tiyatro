@@ -34,6 +34,7 @@ interface Inquiry {
   repliedAt?: string
   createdAt: string
   emailNotificationSent?: boolean
+  emailNotificationError?: string | null
 }
 
 export default function InboxPage() {
@@ -313,11 +314,16 @@ export default function InboxPage() {
                           {new Date(selectedInquiry.createdAt).toLocaleString('tr-TR')}
                         </span>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <Mail className={`w-4 h-4 ${selectedInquiry.emailNotificationSent ? 'text-green-400' : 'text-white/30'}`} />
-                        <span className={`text-sm ${selectedInquiry.emailNotificationSent ? 'text-green-400' : 'text-white/40'}`}>
-                          {selectedInquiry.emailNotificationSent ? 'E-posta bildirimi gönderildi' : 'E-posta bildirimi gönderilmedi (Site Ayarları\'nda kapalı olabilir veya RESEND_API_KEY tanımlı değil)'}
-                        </span>
+                      <div className="flex items-start gap-3">
+                        <Mail className={`w-4 h-4 mt-0.5 flex-shrink-0 ${selectedInquiry.emailNotificationSent ? 'text-green-400' : 'text-red-400'}`} />
+                        <div>
+                          <span className={`text-sm ${selectedInquiry.emailNotificationSent ? 'text-green-400' : 'text-red-400'}`}>
+                            {selectedInquiry.emailNotificationSent ? 'E-posta bildirimi gönderildi' : 'E-posta bildirimi gönderilemedi'}
+                          </span>
+                          {!selectedInquiry.emailNotificationSent && selectedInquiry.emailNotificationError && (
+                            <p className="text-white/50 text-xs mt-1">{selectedInquiry.emailNotificationError}</p>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
