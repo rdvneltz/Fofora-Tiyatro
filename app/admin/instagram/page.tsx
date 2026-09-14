@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { ChevronUp, ChevronDown, Trash2, Plus, Instagram as InstagramIcon, ArrowLeft, AlertTriangle } from 'lucide-react'
+import { ChevronUp, ChevronDown, Trash2, Plus, Instagram as InstagramIcon, ArrowLeft, AlertTriangle, Link2, X } from 'lucide-react'
 import axios from 'axios'
 import Link from 'next/link'
 import ImageUploader from '@/components/ImageUploader'
@@ -26,7 +26,10 @@ export default function AdminInstagram() {
   const [loading, setLoading] = useState(true)
   const [newPostUrl, setNewPostUrl] = useState('')
   const [newMediaUrl, setNewMediaUrl] = useState('')
+  const [newMediaType, setNewMediaType] = useState<'IMAGE' | 'VIDEO' | 'YOUTUBE' | ''>('')
   const [newCaption, setNewCaption] = useState('')
+  const [fetchUrl, setFetchUrl] = useState('')
+  const [fetching, setFetching] = useState(false)
   const [syncing, setSyncing] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; postId: string | null; postUrl: string }>({
     show: false,
@@ -77,6 +80,30 @@ export default function AdminInstagram() {
     }
   }
 
+  const fetchFromUrl = async () => {
+    const url = fetchUrl.trim()
+    if (!url || fetching) return
+
+    setFetching(true)
+    try {
+      const { data } = await axios.post('/api/instagram-posts/fetch-media', { url })
+      setNewMediaUrl(data.mediaUrl)
+      setNewMediaType(data.mediaType)
+      if (data.caption && !newCaption) setNewCaption(data.caption)
+      setFetchUrl('')
+    } catch (error: any) {
+      const msg = error.response?.data?.error || 'Medya çekilemedi'
+      alert(`❌ ${msg}`)
+    } finally {
+      setFetching(false)
+    }
+  }
+
+  const clearMedia = () => {
+    setNewMediaUrl('')
+    setNewMediaType('')
+  }
+
   const addPost = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -89,23 +116,24 @@ export default function AdminInstagram() {
     }
 
     if (!newMediaUrl) {
-      alert('Ana sayfadaki telefon görselinde oynatılması için bir fotoğraf/video yükleyin')
+      alert('Ana sayfadaki telefon görselinde oynatılması için bir fotoğraf/video ekleyin')
       return
     }
 
     try {
       const maxOrder = posts.length > 0 ? Math.max(...posts.map(p => p.order)) : -1
-      const isVideo = /\.(mp4|webm|mov)(\?|$)/i.test(newMediaUrl)
+      const mediaType = newMediaType || (/\.(mp4|webm|mov)(\?|$)/i.test(newMediaUrl) ? 'VIDEO' : 'IMAGE')
       await axios.post('/api/instagram-posts', {
         postUrl: url || null,
         mediaUrl: newMediaUrl,
-        mediaType: isVideo ? 'VIDEO' : 'IMAGE',
+        mediaType,
         caption: newCaption || null,
         order: maxOrder + 1,
         active: true
       })
       setNewPostUrl('')
       setNewMediaUrl('')
+      setNewMediaType('')
       setNewCaption('')
       fetchPosts()
     } catch (error) {
@@ -239,16 +267,57 @@ export default function AdminInstagram() {
               </p>
             </div>
 
-            <ImageUploader
-              currentUrl={newMediaUrl}
-              onUrlChange={setNewMediaUrl}
-              label="Anasayfadaki telefonda oynatılacak fotoğraf/video"
-              folder="instagram"
-              acceptVideo
-            />
-            <p className="text-white/40 text-xs -mt-2">
-              Instagram veya YouTube post linkini buraya yapıştırmayın — bu alan sadece görselin/videonun kendisini kabul eder. Fotoğrafı/videoyu önce bilgisayarınıza indirin, sonra "Dosya Seç" ile yükleyin.
-            </p>
+            <div>
+              <label className="block text-white mb-2 text-sm font-medium">Anasayfadaki telefonda oynatılacak fotoğraf/video</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={fetchUrl}
+                  onChange={(e) => setFetchUrl(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); fetchFromUrl() } }}
+                  placeholder="Instagram, YouTube ya da bir görsel linki yapıştırın"
+                  className="flex-1 px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+                <button
+                  type="button"
+                  onClick={fetchFromUrl}
+                  disabled={fetching || !fetchUrl.trim()}
+                  className="flex items-center gap-2 px-5 py-3 bg-white/10 hover:bg-white/20 text-white rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {fetching ? (
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <><Link2 className="w-5 h-5" /> Çek</>
+                  )}
+                </button>
+              </div>
+              <p className="text-white/40 text-xs mt-1">
+Instagram post/reel linkleri ve YouTube linkleri otomatik oynatılır, diğer site linkleri için sistem sayfadan görseli/videoyu bulup kendi sunucumuza indirir. Nadiren çekemezse aşağıdan dosyayı manuel yükleyin.
+              </p>
+            </div>
+
+            {newMediaType === 'YOUTUBE' && newMediaUrl ? (
+              <div className="flex items-center gap-4 p-4 bg-white/5 rounded-lg border border-white/10">
+                <img src={`https://img.youtube.com/vi/${newMediaUrl}/hqdefault.jpg`} alt="" className="w-24 h-16 object-cover rounded" />
+                <div className="flex-1 text-white/70 text-sm">YouTube videosu seçildi, ana sayfada otomatik oynatılacak.</div>
+                <button type="button" onClick={clearMedia} className="p-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 transition-all" title="Kaldır">
+                  <X className="w-4 h-4 text-red-400" />
+                </button>
+              </div>
+            ) : (
+              <>
+                <ImageUploader
+                  currentUrl={newMediaUrl}
+                  onUrlChange={(u) => { setNewMediaUrl(u); setNewMediaType('') }}
+                  label="Veya kendiniz yükleyin"
+                  folder="instagram"
+                  acceptVideo
+                />
+                <p className="text-white/40 text-xs -mt-2">
+                  Instagram veya YouTube post linkini bu alana yapıştırmayın — burası sadece görselin/videonun kendisini kabul eder. Yukarıdaki "Çek" başarısız olursa, fotoğrafı/videoyu bilgisayarınıza indirip "Dosya Seç" ile yükleyin.
+                </p>
+              </>
+            )}
 
             <div>
               <label className="block text-white mb-2 text-sm font-medium">Açıklama (opsiyonel)</label>
@@ -301,6 +370,8 @@ export default function AdminInstagram() {
                     {post.mediaUrl ? (
                       post.mediaType === 'VIDEO' ? (
                         <video src={post.mediaUrl} className="w-full h-full object-cover" muted />
+                      ) : post.mediaType === 'YOUTUBE' ? (
+                        <img src={`https://img.youtube.com/vi/${post.mediaUrl}/hqdefault.jpg`} alt="" className="w-full h-full object-cover" />
                       ) : (
                         <img src={post.mediaUrl} alt="" className="w-full h-full object-cover" />
                       )
@@ -384,9 +455,10 @@ export default function AdminInstagram() {
             Önemli Notlar
           </h3>
           <ul className="text-white/60 text-sm space-y-1 list-disc list-inside">
-            <li>Fotoğraf/video yüklemek zorunludur, Instagram linki opsiyoneldir</li>
-            <li>Instagram/YouTube gönderisinin linkini medya alanına yapıştırmayın — orası sadece doğrudan görsel/video dosyası kabul eder, önce indirip "Dosya Seç" ile yükleyin</li>
-            <li>Anasayfadaki hero bölümünün sağındaki telefon görselinde, buraya yüklediğiniz fotoğraf/videolar sırayla oynatılır</li>
+            <li>Fotoğraf/video eklemek zorunludur, Instagram linki opsiyoneldir</li>
+            <li>"Çek" kutusuna bir Instagram post/reel linki, YouTube linki ya da bir görsel linki yapıştırıp otomatik çekebilirsiniz</li>
+            <li>Otomatik çekme başarısız olursa (nadiren olabilir), fotoğrafı/videoyu bilgisayarınıza indirip "Dosya Seç" ile manuel yükleyin</li>
+            <li>Anasayfadaki hero bölümünün sağındaki telefon görselinde, buraya eklediğiniz fotoğraf/video/YouTube içerikleri sırayla oynatılır</li>
             <li>Sarı uyarı ikonu olan postların medyası eksik — anasayfada görünmezler, düzenlemek için silip medya ile tekrar ekleyin</li>
             <li>Aktif medyalı post yoksa telefon görseli anasayfadan tamamen kalkar (rastgele/demo görsel gösterilmez)</li>
             <li>Pasif postlar ana sayfada görünmez</li>

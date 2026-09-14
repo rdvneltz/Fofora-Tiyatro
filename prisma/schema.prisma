@@ -180,7 +180,7 @@ model InstagramPost {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   postUrl     String?  // Optional: Instagram post URL to link back to (e.g., https://www.instagram.com/p/ABC123/)
   mediaUrl    String?  // Direct CDN image/video URL from the Graph API (expires ~24h, refreshed by the daily sync)
-  mediaType   String?  // IMAGE, VIDEO or CAROUSEL_ALBUM
+  mediaType   String?  // IMAGE, VIDEO, YOUTUBE (mediaUrl holds the YouTube video id, embedded via iframe) or CAROUSEL_ALBUM
   caption     String?
   order       Int      @default(0)
   active      Boolean  @default(true)
