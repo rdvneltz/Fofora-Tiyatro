@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+
+// Record already gone (e.g. a duplicate click deleted it a moment earlier) - treat as success, not a server error
+function isRecordNotFound(error: unknown) {
+  return error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025'
+}
 
 // GET - Fetch all Instagram posts
 export async function GET() {
@@ -9,9 +15,7 @@ export async function GET() {
     const posts = await prisma.instagramPost.findMany({
       orderBy: { order: 'asc' }
     })
-    const response = NextResponse.json(posts)
-    response.headers.set('Cache-Control', 'public, max-age=30, stale-while-revalidate=120')
-    return response
+    return NextResponse.json(posts)
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch Instagram posts' }, { status: 500 })
   }
@@ -82,6 +86,9 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json(post)
   } catch (error) {
+    if (isRecordNotFound(error)) {
+      return NextResponse.json({ error: 'Post already removed' }, { status: 404 })
+    }
     return NextResponse.json({ error: 'Failed to update Instagram post' }, { status: 500 })
   }
 }
@@ -99,7 +106,11 @@ export async function DELETE(request: NextRequest) {
     }
 
     const existing = await prisma.instagramPost.findUnique({ where: { id } })
-    if (existing?.mediaUrl) {
+    if (!existing) {
+      // Already gone (e.g. a duplicate click) - deleting it is already done
+      return NextResponse.json({ success: true })
+    }
+    if (existing.mediaUrl) {
       const { safeDeleteR2Url } = await import('@/lib/r2')
       await safeDeleteR2Url(existing.mediaUrl)
     }
@@ -110,6 +121,9 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
+    if (isRecordNotFound(error)) {
+      return NextResponse.json({ success: true })
+    }
     return NextResponse.json({ error: 'Failed to delete Instagram post' }, { status: 500 })
   }
 }
