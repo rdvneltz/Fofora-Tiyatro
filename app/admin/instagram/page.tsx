@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { ChevronUp, ChevronDown, Trash2, Plus, Instagram as InstagramIcon, ArrowLeft, AlertTriangle, Link2, X, Loader2 } from 'lucide-react'
+import { ChevronUp, ChevronDown, Trash2, Plus, Instagram as InstagramIcon, ArrowLeft, AlertTriangle, Link2, X, Loader2, Pencil, Check } from 'lucide-react'
 import axios from 'axios'
 import Link from 'next/link'
 import ImageUploader from '@/components/ImageUploader'
@@ -34,6 +34,8 @@ export default function AdminInstagram() {
   const [listBusy, setListBusy] = useState(false)
   // Which single post is being toggled/deleted right now, purely to show a spinner on that row's button
   const [actingId, setActingId] = useState<string | null>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editCaption, setEditCaption] = useState('')
   const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; postId: string | null; postUrl: string }>({
     show: false,
     postId: null,
@@ -159,6 +161,35 @@ export default function AdminInstagram() {
         id: post.id,
         active: !post.active
       })
+      await fetchPosts()
+    } catch (error) {
+      alert('Güncelleme başarısız oldu')
+    } finally {
+      setListBusy(false)
+      setActingId(null)
+    }
+  }
+
+  const startEdit = (post: InstagramPost) => {
+    setEditingId(post.id)
+    setEditCaption(post.caption || '')
+  }
+
+  const cancelEdit = () => {
+    setEditingId(null)
+    setEditCaption('')
+  }
+
+  const saveEdit = async (id: string) => {
+    if (listBusy) return
+    setListBusy(true)
+    setActingId(id)
+    try {
+      await axios.put('/api/instagram-posts', {
+        id,
+        caption: editCaption.trim() || null
+      })
+      setEditingId(null)
       await fetchPosts()
     } catch (error) {
       alert('Güncelleme başarısız oldu')
@@ -352,19 +383,59 @@ export default function AdminInstagram() {
 
                   {/* Post Info */}
                   <div className="flex-1 min-w-[160px]">
-                    <div className="flex items-center gap-2 mb-2">
-                      <InstagramIcon className="w-5 h-5 text-purple-400 flex-shrink-0" />
-                      <span className="text-white font-semibold text-sm truncate">{post.caption || 'Başlıksız içerik'}</span>
-                    </div>
-                    {post.postUrl && (
-                      <a
-                        href={post.postUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-purple-400 hover:text-purple-300 text-xs underline"
-                      >
-                        Instagram'da Görüntüle
-                      </a>
+                    {editingId === post.id ? (
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={editCaption}
+                          onChange={(e) => setEditCaption(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); saveEdit(post.id) } else if (e.key === 'Escape') cancelEdit() }}
+                          placeholder="Başlık"
+                          autoFocus
+                          className="flex-1 px-3 py-2 rounded-lg bg-white/10 border border-purple-500/50 text-white text-sm placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        />
+                        <button
+                          onClick={() => saveEdit(post.id)}
+                          disabled={listBusy}
+                          className="p-2 rounded-lg bg-green-500/20 hover:bg-green-500/30 disabled:opacity-40 transition-all"
+                          title="Kaydet"
+                        >
+                          {actingId === post.id ? <Loader2 className="w-4 h-4 text-green-400 animate-spin" /> : <Check className="w-4 h-4 text-green-400" />}
+                        </button>
+                        <button
+                          onClick={cancelEdit}
+                          disabled={listBusy}
+                          className="p-2 rounded-lg bg-white/10 hover:bg-white/20 disabled:opacity-40 transition-all"
+                          title="İptal"
+                        >
+                          <X className="w-4 h-4 text-white" />
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-2 mb-2">
+                          <InstagramIcon className="w-5 h-5 text-purple-400 flex-shrink-0" />
+                          <span className="text-white font-semibold text-sm truncate">{post.caption || 'Başlıksız içerik'}</span>
+                          <button
+                            onClick={() => startEdit(post)}
+                            disabled={listBusy}
+                            className="p-1 rounded hover:bg-white/10 disabled:opacity-40 transition-all flex-shrink-0"
+                            title="Başlığı düzenle"
+                          >
+                            <Pencil className="w-3.5 h-3.5 text-white/50" />
+                          </button>
+                        </div>
+                        {post.postUrl && (
+                          <a
+                            href={post.postUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-purple-400 hover:text-purple-300 text-xs underline"
+                          >
+                            Instagram'da Görüntüle
+                          </a>
+                        )}
+                      </>
                     )}
                   </div>
 
