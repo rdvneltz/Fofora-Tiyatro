@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions)
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     const body = await request.json()
-    const { postUrl, order, active } = body
+    const { postUrl, mediaUrl, mediaType, caption, order, active } = body
 
     if (!postUrl) {
       return NextResponse.json({ error: 'Post URL is required' }, { status: 400 })
@@ -32,6 +32,9 @@ export async function POST(request: NextRequest) {
     const post = await prisma.instagramPost.create({
       data: {
         postUrl,
+        mediaUrl: mediaUrl || null,
+        mediaType: mediaType || null,
+        caption: caption || null,
         order: order || 0,
         active: active !== undefined ? active : true
       }
@@ -49,14 +52,26 @@ export async function PUT(request: NextRequest) {
     const session = await getServerSession(authOptions)
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     const body = await request.json()
-    const { id, postUrl, order, active } = body
+    const { id, postUrl, mediaUrl, mediaType, caption, order, active } = body
 
     if (!id) {
       return NextResponse.json({ error: 'Post ID is required' }, { status: 400 })
     }
 
+    // Check if media changed - delete old one from R2
+    if (mediaUrl !== undefined) {
+      const existing = await prisma.instagramPost.findUnique({ where: { id } })
+      if (existing?.mediaUrl && existing.mediaUrl !== mediaUrl) {
+        const { safeDeleteR2Url } = await import('@/lib/r2')
+        await safeDeleteR2Url(existing.mediaUrl)
+      }
+    }
+
     const updateData: any = {}
     if (postUrl !== undefined) updateData.postUrl = postUrl
+    if (mediaUrl !== undefined) updateData.mediaUrl = mediaUrl
+    if (mediaType !== undefined) updateData.mediaType = mediaType
+    if (caption !== undefined) updateData.caption = caption
     if (order !== undefined) updateData.order = order
     if (active !== undefined) updateData.active = active
 
@@ -81,6 +96,12 @@ export async function DELETE(request: NextRequest) {
 
     if (!id) {
       return NextResponse.json({ error: 'Post ID is required' }, { status: 400 })
+    }
+
+    const existing = await prisma.instagramPost.findUnique({ where: { id } })
+    if (existing?.mediaUrl) {
+      const { safeDeleteR2Url } = await import('@/lib/r2')
+      await safeDeleteR2Url(existing.mediaUrl)
     }
 
     await prisma.instagramPost.delete({
