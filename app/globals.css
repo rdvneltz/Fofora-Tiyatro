@@ -252,6 +252,19 @@ footer p,footer>small{color:#c56a79;font-weight:600}footer p{font-size:clamp(.72
 .now-strip small{color:var(--wine);text-transform:uppercase;letter-spacing:.1em;opacity:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .now-strip strong{color:var(--ink);font-weight:600;line-height:1.3;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 
+/* Maddeler tasarımı: eskiden sabit 3 sütunluk bir grid'di, 4. madde eklenince görünmez oluyordu (grid
+   sütun sayısını aşan öğeler örtük bir sonraki satıra düşüyor, o da sabit yükseklikli şeritte kırpılıyor).
+   Artık maddeler esnek bir sırada: az madde varsa mevcut boşluğu doldurup eşit paylaşıyor (flex-grow),
+   madde sayısı sığmayacak kadar artınca metinler küçülüp okunaksızlaşmak yerine (flex-shrink:0) şerit
+   kendi içinde yatay olarak kaydırılabiliyor. */
+.now-strip.mode-items{display:flex;align-items:stretch}
+.now-strip.mode-items>h2{flex-shrink:0}
+.now-strip-items-track{display:flex;flex-direction:row;flex:1;min-width:0;padding:0;border-right:0;justify-content:flex-start;overflow-x:auto;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}
+.now-strip-items-track::-webkit-scrollbar{height:5px}
+.now-strip-items-track::-webkit-scrollbar-track{background:transparent}
+.now-strip-items-track::-webkit-scrollbar-thumb{background:rgba(17,16,15,.22);border-radius:3px}
+.now-strip-items-track .now-strip-cell{padding:10px 1.8vw;border-right:1px solid #c9c3b7;display:flex;flex-direction:column;justify-content:center;flex:1 0 190px;scroll-snap-align:start}
+
 .now-strip.mode-marquee{display:flex;align-items:center;gap:1.6rem;padding:0 2.3vw;overflow:hidden}
 .now-strip.mode-marquee h2{flex-shrink:0;white-space:nowrap;margin:0}
 .now-strip-marquee{flex:1;min-width:0;overflow:hidden}
